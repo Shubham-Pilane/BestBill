@@ -1,0 +1,8 @@
+node_modules
+npm-debug.log
+.env
+gcp-key.json
+Dockerfile
+.dockerignore
+.git
+.gitignore
