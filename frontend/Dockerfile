@@ -1,5 +1,6 @@
 # Stage 1: Build the React application
-FROM node:18-slim as build
+# Upgrade to Node 20 as required by Tailwind 4 and React Router 7
+FROM node:20-slim as build
 WORKDIR /app
 
 # Copy package files and install dependencies
@@ -15,9 +16,7 @@ FROM nginx:stable-alpine
 # Copy build files from the previous stage
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Expose port (Cloud Run will look at this, but usually port 80 is mapped)
+# Expose port 80
 EXPOSE 80
 
-# Cloud Run needs the port to be configurable via PORT env var in some cases,
-# but Nginx runs on 80 by default. This is the simplest way.
 CMD ["nginx", "-g", "daemon off;"]
