@@ -12,7 +12,7 @@ router.get('/', auth, async (req, res) => {
        (SELECT id FROM orders WHERE table_id = t.id AND status = 'active' LIMIT 1) as active_order_id 
        FROM tables t 
        WHERE t.hotel_id = $1 
-       ORDER BY CAST(NULLIF(t.table_number, '') AS INTEGER) ASC`,
+       ORDER BY t.floor ASC, CAST(NULLIF(t.table_number, '') AS INTEGER) ASC`,
       [req.user.hotel_id]
     );
     res.json(tables.rows);
@@ -24,21 +24,38 @@ router.get('/', auth, async (req, res) => {
 
 // Create tables (Batch create)
 router.post('/batch', auth, async (req, res) => {
-  const { tableNumbers } = req.body;
+  const { tableNumbers, floor } = req.body;
   if (!tableNumbers || tableNumbers.length === 0) return res.status(400).json({ message: 'No tables provided' });
   
   try {
-    const values = tableNumbers.map((num, i) => `($1, '${num}')`).join(',');
-    // Note: Parameterized multi-insert is safer but complex for unknown lengths. 
-    // Since tableNumbers are strings from prompt, we trust basic sanitation or use specific $ placeholders.
-    // For simplicity here, we'll do them one by one or trust the prompt input.
+    const floorValue = floor || 'Floor 1';
     for (const num of tableNumbers) {
-       await db.query('INSERT INTO tables (hotel_id, table_number) VALUES ($1, $2)', [req.user.hotel_id, num]);
+       await db.query('INSERT INTO tables (hotel_id, table_number, floor) VALUES ($1, $2, $3)', [req.user.hotel_id, num, floorValue]);
     }
-    res.status(201).json({ message: 'Tables created' });
+    res.status(201).json({ message: 'Tables created securely' });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error creating tables' });
+    res.status(500).json({ message: 'Error establishing table infrastructure' });
+  }
+});
+
+// Update table details
+router.put('/:id', auth, async (req, res) => {
+  const { id } = req.params;
+  const { table_number, capacity, floor } = req.body;
+  try {
+    const result = await db.query(
+      'UPDATE tables SET table_number = $1, capacity = $2, floor = $3 WHERE id = $4 AND hotel_id = $5 RETURNING *',
+      [table_number, capacity, floor, id, req.user.hotel_id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ message: 'Table not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '23505') {
+       return res.status(400).json({ message: 'Table with this configuration already exists on this floor.' });
+    }
+    console.error(err);
+    res.status(500).json({ message: 'Swap Config protocol failed' });
   }
 });
 
@@ -141,7 +158,7 @@ router.post('/:tableId/bill', auth, async (req, res) => {
   const { discount_percentage } = req.body;
   
   try {
-    const hotelRes = await db.query('SELECT gst_percentage FROM hotels WHERE id = $1', [req.user.hotel_id]);
+    const hotelRes = await db.query('SELECT name, phone, location, gst_percentage FROM hotels WHERE id = $1', [req.user.hotel_id]);
     const gstRate = parseFloat(hotelRes.rows[0].gst_percentage || 5);
 
     const order = await db.query('SELECT id FROM orders WHERE table_id = $1 AND status = $2', [tableId, 'active']);
@@ -176,7 +193,10 @@ router.post('/:tableId/bill', auth, async (req, res) => {
       subtotal: subtotal,
       total_amount: finalAmount,
       gst_percentage: gstRate,
-      items: billItems.rows
+      items: billItems.rows,
+      hotel_name: hotelRes.rows[0].name,
+      hotel_phone: hotelRes.rows[0].phone,
+      hotel_location: hotelRes.rows[0].location
     });
   } catch (err) {
     console.error(err);
@@ -265,6 +285,37 @@ router.put('/bill/:billId/pay', auth, async (req, res) => {
   } catch (err) {
      console.error(err);
      res.status(500).json({ message: 'Error updating payment status' });
+  }
+});
+
+// Swap table (Transfer active order)
+router.post('/:tableId/swap', auth, async (req, res) => {
+  const { tableId } = req.params;
+  const { targetTableId } = req.body;
+  
+  const client = await db.getClient();
+  try {
+    await client.query('BEGIN');
+    
+    // Check if source has active order
+    const sourceOrder = await client.query('SELECT id FROM orders WHERE table_id = $1 AND status = $2', [tableId, 'active']);
+    if (sourceOrder.rows.length === 0) return res.status(400).json({ message: 'No active order to swap' });
+    
+    // Check if target has active order
+    const targetOrder = await client.query('SELECT id FROM orders WHERE table_id = $1 AND status = $2', [targetTableId, 'active']);
+    if (targetOrder.rows.length > 0) return res.status(400).json({ message: 'Target table is busy' });
+
+    // Transfer order
+    await client.query('UPDATE orders SET table_id = $1 WHERE id = $2', [targetTableId, sourceOrder.rows[0].id]);
+    
+    await client.query('COMMIT');
+    res.json({ message: 'Table successfully swapped' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ message: 'Swap failed' });
+  } finally {
+    client.release();
   }
 });
 

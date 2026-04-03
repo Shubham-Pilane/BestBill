@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
+const { syncSchema } = require('./db/migrate');
 
 const app = express();
 
@@ -28,10 +29,13 @@ app.get('/api/health', (req, res) => {
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT} (bound to 0.0.0.0)`);
-}).on('error', (err) => {
-  console.error('Server Listen Error:', err.message);
+// Run migrations before listening (handles local and cloud start correctly)
+syncSchema().then(() => {
+    app.listen(PORT, '0.0.0.0', () => {
+        console.log(`Server running on port ${PORT} (bound to 0.0.0.0)`);
+    }).on('error', (err) => {
+        console.error('Server Listen Error:', err.message);
+    });
 });
 
 // Anti-exit guard

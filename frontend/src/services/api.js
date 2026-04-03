@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://bestbill-backend-174132084209.us-central1.run.app/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://bestbill-backend-174132084209.us-central1.run.app/api',
 });
 
 // Add token to each request if it exists

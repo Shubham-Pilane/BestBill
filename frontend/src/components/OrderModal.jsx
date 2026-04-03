@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import { toast } from 'react-hot-toast';
-import { X, Plus, Minus, Receipt, Send, MessageSquare, MessageCircle, Utensils, Trash2, ChevronRight, IndianRupee, Clock, CheckCircle, Phone, ArrowLeft, RefreshCcw, Wallet, Printer } from 'lucide-react';
+import { X, Plus, Minus, Receipt, Send, MessageSquare, MessageCircle, Utensils, Trash2, ChevronRight, IndianRupee, Clock, CheckCircle, Phone, ArrowLeft, RefreshCcw, Wallet, Printer, Search } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../context/AuthContext';
+import SwapModal from './SwapModal';
 
 const OrderModal = ({ table, onClose }) => {
   const { user } = useAuth();
@@ -16,18 +17,24 @@ const OrderModal = ({ table, onClose }) => {
   const [billData, setBillData] = useState(null);
   const [customerPhone, setCustomerPhone] = useState('');
   const [discount, setDiscount] = useState(0);
+  const [isSwapModalOpen, setSwapModalOpen] = useState(false);
+  const [allTables, setAllTables] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [catRes, itemsRes, orderRes] = await Promise.all([
+        const [catRes, itemsRes, orderRes, tablesRes] = await Promise.all([
           api.get('/menu/categories'),
           api.get('/menu/items'),
-          table.active_order_id ? api.get(`/tables/${table.id}/order`) : Promise.resolve({ data: { items: [] } })
+          table.active_order_id ? api.get(`/tables/${table.id}/order`) : Promise.resolve({ data: { items: [] } }),
+          api.get('/tables')
         ]);
-        setCategories(Array.isArray(catRes.data) ? catRes.data : []);
-        setItems(Array.isArray(itemsRes.data) ? itemsRes.data : []);
+        setCategories(catRes.data || []);
+        setItems(itemsRes.data || []);
         setOrderItems(orderRes.data.items || []);
+        setAllTables(tablesRes.data || []);
         setLoading(false);
       } catch (err) {
         toast.error('Initialization failed');
@@ -87,26 +94,106 @@ const OrderModal = ({ table, onClose }) => {
 
   const printBill = () => {
     if (!billData) return;
-    const sub = parseFloat(billData.subtotal || 0);
-    const tax = parseFloat(billData.gst || 0);
-    const pre = sub + tax;
-    const disc = pre * (billData.discount_percentage / 100);
-    const p = window.open('', '_blank');
-    p.document.write(`
-      <html><body onload="window.print();window.close()"><div style="font-family:monospace;width:300px;padding:20px;color:black">
-      <div style="text-align:center;border-bottom:1px solid #000;padding-bottom:10px">
-      <h2 style="margin:0">${user?.hotel_name?.toUpperCase()}</h2><p style="margin:5px 0">Bill #${billData.id} | ${new Date().toLocaleDateString()}</p>
-      </div><div style="padding:10px 0;border-bottom:1px solid #000">
-      ${(billData.items || []).map(i => `<div style="display:flex;justify-content:space-between"><span>${i.name} x${i.quantity}</span><span>${(i.price*i.quantity).toFixed(2)}</span></div>`).join('')}
-      </div><div style="padding:10px 0;line-height:1.6">
-      <div style="display:flex;justify-content:space-between"><span>Subtotal:</span><span>₹${sub.toFixed(2)}</span></div>
-      <div style="display:flex;justify-content:space-between"><span>GST (${billData.gst_percentage}%):</span><span>₹${tax.toFixed(2)}</span></div>
-      <div style="display:flex;justify-content:space-between;font-weight:bold;border-top:1px dashed #ccc"><span>Order Total:</span><span>₹${pre.toFixed(2)}</span></div>
-      ${billData.discount_percentage > 0 ? `<div style="display:flex;justify-content:space-between"><span>Discount (${billData.discount_percentage}%):</span><span>-₹${disc.toFixed(2)}</span></div>` : ''}
-      <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:1.2em;border-top:1px solid #000;margin-top:5px;padding-top:5px"><span>GRAND TOTAL:</span><span>₹${parseFloat(billData.final_amount).toFixed(2)}</span></div>
-      </div><div style="text-align:center;margin-top:20px;font-size:0.8em">POWERED BY BESTBILL<br>THANK YOU FOR VISITING!</div>
-      </div></body></html>
-    `);
+    
+    const existingFrame = document.getElementById('bill-print-frame');
+    if (existingFrame) existingFrame.remove();
+
+    const iframe = document.createElement('iframe');
+    iframe.id = 'bill-print-frame';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow.document;
+    const hName = billData.hotel_name || user?.hotel_name || 'BESTBILL';
+    const hPhone = billData.hotel_phone || '';
+    const hAddr = billData.hotel_location || '';
+    
+    const itemsRows = (billData.items || []).map(i => `
+      <tr>
+        <td>${i.name}</td>
+        <td style="text-align: right;">${i.quantity}</td>
+        <td style="text-align: right;">${(i.price * i.quantity).toFixed(2)}</td>
+      </tr>
+    `).join('');
+
+    const pageHtml = `
+      <html>
+        <head>
+          <style>
+            @page { margin: 0; size: 80mm auto; }
+            body { 
+              margin: 0; 
+              padding: 5mm; 
+              font-family: 'Courier New', Courier, monospace; 
+              font-size: 11pt; 
+              color: black; 
+              width: 80mm; 
+            }
+            .center { text-align: center; }
+            .right { text-align: right; }
+            .bold { font-weight: bold; }
+            .dashed { border-top: 1px dashed black; margin: 5px 0; }
+            .header-large { font-size: 16pt; margin: 0; }
+            .items-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+            .items-table th { text-align: left; border-bottom: 1px dashed black; padding: 4px 0; font-size: 10pt; }
+            .items-table td { padding: 4px 0; vertical-align: top; }
+            .flex-row { display: flex; justify-content: space-between; }
+            .footer { margin-top: 20px; font-size: 9pt; }
+          </style>
+        </head>
+        <body onload="setTimeout(() => { window.print(); window.parent.document.getElementById('bill-print-frame').remove(); }, 500)">
+          <div class="center">
+            <h1 class="header-large bold">${hName.toUpperCase()}</h1>
+            ${hAddr ? `<div>${hAddr}</div>` : ''}
+            ${hPhone ? `<div>Phone: ${hPhone}</div>` : ''}
+          </div>
+          
+          <div class="dashed"></div>
+          <div class="center bold" style="font-size: 10pt; margin: 5px 0;">INVOICE</div>
+          <div style="font-size: 10pt;">
+            <div class="flex-row"><span>Table No:</span> <span>${table.table_numberByFloor || table.table_number}</span></div>
+            <div class="flex-row"><span>Bill No:</span> <span>#${billData.id}</span></div>
+            <div class="flex-row"><span>Date:</span> <span>${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
+          </div>
+          <div class="dashed"></div>
+
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th width="60%">Item</th>
+                <th width="15%" class="right">Qty</th>
+                <th width="25%" class="right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsRows}
+            </tbody>
+          </table>
+
+          <div class="dashed"></div>
+          <div style="line-height: 1.5; font-size: 11pt;">
+            <div class="flex-row"><span>Subtotal:</span> <span>₹${parseFloat(billData.subtotal || 0).toFixed(2)}</span></div>
+            <div class="flex-row"><span>GST (${billData.gst_percentage}%):</span> <span>₹${parseFloat(billData.gst || 0).toFixed(2)}</span></div>
+            ${billData.discount_percentage > 0 ? `<div class="flex-row"><span>Discount (${billData.discount_percentage}%):</span> <span>-₹${( (parseFloat(billData.subtotal) + parseFloat(billData.gst)) * (billData.discount_percentage / 100) ).toFixed(2)}</span></div>` : ''}
+            <div class="dashed"></div>
+            <div class="flex-row bold" style="font-size: 13pt; margin-top: 4px;">
+              <span>GRAND TOTAL:</span>
+              <span>₹${parseFloat(billData.final_amount).toFixed(2)}</span>
+            </div>
+          </div>
+          <div class="dashed"></div>
+
+          <div class="center footer">
+            <div class="bold">Thank You for Dining with us!</div>
+            <div>Visit Again!</div>
+            <div style="font-size: 7pt; margin-top: 10px; opacity: 0.5;">Powered by BestBill</div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    doc.write(pageHtml);
+    doc.close();
   };
 
   const rollbackBill = async () => {
@@ -121,13 +208,18 @@ const OrderModal = ({ table, onClose }) => {
     }
   };
 
-  const confirmPayment = async (method = 'upi') => {
+   const confirmPayment = async (method = 'upi') => {
     try {
        await api.put(`/tables/bill/${billData.id}/pay`, { method });
        setBillData(prev => ({ ...prev, is_paid: true }));
-       toast.success('Payment protocol verified!');
+       toast.success('Transaction Completed');
+       
+       // Automatically return to dashboard after short delay
+       setTimeout(() => {
+          onClose(); // Triggers the reveal of the table dashboard
+       }, 1500);
     } catch (err) {
-       toast.error('Confirmation failed');
+       toast.error('Payment verification failed');
     }
   };
 
@@ -143,8 +235,30 @@ const OrderModal = ({ table, onClose }) => {
       });
       toast.success(`Invoice dispatched via ${method.toUpperCase()}!`);
     } catch (err) {
-      console.error(err);
       toast.error(err.response?.data?.message || 'Transmission failed');
+    }
+  };
+
+  const handleSwapTable = async (targetTableId) => {
+    try {
+      await api.post(`/tables/${table.id}/swap`, { targetTableId });
+      toast.success('Table migration successful');
+      onClose();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Swap protocol failed');
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    if (query.length > 0) {
+      const matched = items.filter(i => 
+        i.name.toLowerCase().includes(query.toLowerCase())
+      ).slice(0, 5);
+      setSuggestions(matched);
+    } else {
+      setSuggestions([]);
     }
   };
 
@@ -153,76 +267,111 @@ const OrderModal = ({ table, onClose }) => {
       toast.error('Please enter a phone number first');
       return;
     }
-    const sub = parseFloat(billData.subtotal);
-    const tax = parseFloat(billData.gst);
-    const pre = sub + tax;
-    const disc = pre * (billData.discount_percentage / 100);
+    const subVal = parseFloat(billData.subtotal);
+    const taxVal = parseFloat(billData.gst);
+    const preVal = subVal + taxVal;
     
-    let msg = `*--- ${user?.hotel_name?.toUpperCase()} RECEIPT ---*\n\n`;
-    (billData.items || []).forEach(i => msg += `• ${i.name} x ${i.quantity} = ₹${i.price * i.quantity}\n`);
+    let msg = `*--- ${user?.hotel_name?.toUpperCase() || 'BESTBILL'} RECEIPT ---*\n\n`;
+    (billData.items || []).forEach(i => msg += `• ${i.name} x ${i.quantity} = ₹${(i.price * i.quantity).toFixed(2)}\n`);
     msg += `\n*------------------------*\n`;
-    msg += `*Subtotal:* ₹${sub.toFixed(2)}\n`;
-    msg += `*GST (${billData.gst_percentage}%):* ₹${tax.toFixed(2)}\n`;
-    msg += `*Order Total:* ₹${pre.toFixed(2)}\n`;
-    if (billData.discount_percentage > 0) msg += `*Discount (${billData.discount_percentage}%):* -₹${disc.toFixed(2)}\n`;
+    msg += `*Subtotal:* ₹${subVal.toFixed(2)}\n`;
+    msg += `*GST (${billData.gst_percentage}%):* ₹${taxVal.toFixed(2)}\n`;
+    if (billData.discount_percentage > 0) msg += `*Discount (${billData.discount_percentage}%):* -₹${(preVal * billData.discount_percentage / 100).toFixed(2)}\n`;
     msg += `*GRAND TOTAL: ₹${parseFloat(billData.final_amount).toFixed(2)}*\n`;
-    msg += `*------------------------*\n\nThank you! Visit again.`;
+    msg += `\nThank you! Visit again.`;
     
     const cleanPhone = customerPhone.replace(/\D/g, '');
     const finalPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
     window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
-  // UPI Deep Link Generation
   const upiId = user?.upi_id || '';
   const hname = user?.hotel_name || 'BestBill';
-  const amount = billData?.final_amount || 0;
-  const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(hname)}&am=${amount}&cu=INR`;
+  const amountVal = billData?.final_amount || 0;
+  const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(hname)}&am=${amountVal}&cu=INR`;
 
   if (loading) return null;
 
-  // Breakdown for Modal display logic
-  const sub = billData ? parseFloat(billData.subtotal || 0) : 0;
-  const tax = billData ? parseFloat(billData.gst || 0) : 0;
-  const pre = sub + tax;
-  const disc = billData ? pre * (billData.discount_percentage / 100) : 0;
-
   return (
-    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.95)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '40px' }}>
+    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.95)', backdropFilter: 'blur(32px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '40px' }}>
       <div style={{ width: '100%', maxWidth: '1440px', height: '90vh', backgroundColor: '#0f172a', borderRadius: '40px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.05)' }}>
         {/* Header */}
         <div style={{ padding: '32px 48px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <div style={{ width: '64px', height: '64px', backgroundColor: table.active_order_id ? '#f43f5e' : '#10b981', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: '28px', boxShadow: '0 10px 20px rgba(0,0,0,0.2)' }}>
+            <div style={{ width: '64px', height: '64px', backgroundColor: table.active_order_id ? '#f43f5e' : '#10b981', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: '28px' }}>
               {table.table_number}
             </div>
             <div>
               <h2 style={{ fontSize: '24px', fontWeight: 900, color: 'white', margin: 0 }}>Position Summary</h2>
-              <span style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Dynamic Order Protocol</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                 <span style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>BestBill POS</span>
+                 {table.active_order_id && !showBill && (
+                    <button onClick={() => setSwapModalOpen(true)} style={{ backgroundColor: 'rgba(14, 165, 233, 0.1)', border: '1px solid #0ea5e9', color: '#0ea5e9', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 900, cursor: 'pointer' }}>SWAP TABLE</button>
+                 )}
+              </div>
             </div>
           </div>
           <button onClick={onClose} style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#1e293b', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={24} /></button>
         </div>
 
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-          {/* Menu Restored with Plus Sign */}
+          {/* Menu */}
           <div style={{ flex: 1, borderRight: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div style={{ padding: '16px 48px', display: 'flex', gap: '10px', overflowX: 'auto', backgroundColor: '#020617' }}>
-              <button onClick={() => setSelectedCategory('all')} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', fontWeight: 900, cursor: 'pointer', backgroundColor: selectedCategory === 'all' ? '#0ea5e9' : '#1e293b', color: 'white', fontSize: '12px' }}>ALL ITEMS</button>
-              {categories.map(cat => (
-                <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', fontWeight: 900, cursor: 'pointer', backgroundColor: selectedCategory === cat.id ? '#0ea5e9' : '#1e293b', color: 'white', fontSize: '12px', textTransform: 'uppercase' }}>{cat.name}</button>
-              ))}
+            <div style={{ padding: '16px 48px', display: 'flex', gap: '20px', alignItems: 'center', backgroundColor: '#020617', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', flex: 1 }}>
+                <button onClick={() => setSelectedCategory('all')} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', fontWeight: 900, cursor: 'pointer', backgroundColor: selectedCategory === 'all' ? '#0ea5e9' : '#1e293b', color: 'white', fontSize: '12px', whiteSpace: 'nowrap' }}>ALL ITEMS</button>
+                {categories.map(cat => (
+                  <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', fontWeight: 900, cursor: 'pointer', backgroundColor: selectedCategory === cat.id ? '#0ea5e9' : '#1e293b', color: 'white', fontSize: '12px', whiteSpace: 'nowrap' }}>{cat.name.toUpperCase()}</button>
+                ))}
+              </div>
+
+              <div style={{ position: 'relative', width: '300px' }}>
+                <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }}>
+                  <Search size={18} />
+                </div>
+                <input 
+                   type="text" 
+                   placeholder="Search Menu..."
+                   value={searchQuery}
+                   onChange={handleSearchChange}
+                   style={{ width: '100%', padding: '14px 44px 14px 48px', borderRadius: '16px', backgroundColor: '#0f172a', border: '1px solid #1e293b', color: 'white', fontWeight: 700, outline: 'none', fontSize: '14px' }}
+                />
+                {searchQuery && (
+                  <button 
+                    onClick={() => { setSearchQuery(''); setSuggestions([]); }}
+                    style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+                {suggestions.length > 0 && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#0f172a', borderRadius: '16px', marginTop: '8px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', zIndex: 100, border: '1px solid #1e293b', overflow: 'hidden' }}>
+                    {suggestions.map(s => (
+                      <div key={s.id} onClick={() => { addToOrder(s); setSearchQuery(''); setSuggestions([]); }} style={{ padding: '14px 20px', cursor: 'pointer', borderBottom: '1px solid #1e293b', color: 'white', fontWeight: 800, display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: '0.2s' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <Plus size={14} color="#0ea5e9" />
+                          <span>{s.name}</span>
+                        </div>
+                        <span style={{ color: '#10b981' }}>₹{s.price}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             
-            <div style={{ flex: 1, padding: '32px 48px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px', alignContent: 'start' }}>
-              {items.filter(i => selectedCategory === 'all' || i.category_id === selectedCategory).map(item => (
-                <div key={item.id} onClick={() => addToOrder(item)} style={{ backgroundColor: '#020617', border: '2px solid #1e293b', padding: '24px', borderRadius: '24px', cursor: 'pointer', position: 'relative', transition: 'all 0.2s', overflow: 'hidden' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 950, color: 'white', marginBottom: '12px', fontSize: '15px' }}>
+            <div style={{ flex: 1, padding: '32px 48px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px', alignContent: 'start' }}>
+              {items.filter(i => 
+                (selectedCategory === 'all' || i.category_id === selectedCategory) &&
+                (i.name.toLowerCase().includes(searchQuery.toLowerCase()))
+              ).map(item => (
+                <div key={item.id} onClick={() => addToOrder(item)} style={{ backgroundColor: '#020617', border: '2px solid #1e293b', padding: '20px', borderRadius: '24px', cursor: 'pointer', position: 'relative', transition: '0.2s' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 950, color: 'white', marginBottom: '8px', fontSize: '15px' }}>
                     <span>{item.name}</span>
                     <span style={{ color: '#10b981' }}>₹{item.price}</span>
                   </div>
-                  <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 16px 0' }}>{item.description || 'Standard culinary selection'}</p>
-                  <div style={{ position: 'absolute', bottom: '12px', right: '12px', width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 5px 15px rgba(14, 165, 233, 0.4)' }}>
+                  <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 40px 0', lineClamp: 2, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.description || 'Standard culinary selection'}</p>
+                  <div style={{ position: 'absolute', bottom: '16px', right: '16px', width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
                     <Plus size={16} strokeWidth={4} />
                   </div>
                 </div>
@@ -230,121 +379,121 @@ const OrderModal = ({ table, onClose }) => {
             </div>
           </div>
 
+          {/* Cart */}
           <div style={{ width: '420px', backgroundColor: '#020617', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '32px', display: 'flex', alignItems: 'center', gap: '16px', borderBottom: '1px solid #1e293b' }}>
-               <Receipt color="#0ea5e9" size={24} />
+            <div style={{ padding: '32px', borderBottom: '1px solid #1e293b', display: 'flex', alignItems: 'center', gap: '12px' }}>
+               <Receipt size={20} color="#0ea5e9" />
                <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'white', margin: 0 }}>Active Selection</h3>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {orderItems.length === 0 ? (
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.1, color: 'white' }}>
-                   <Utensils size={64} />
-                   <span style={{ fontWeight: 900, marginTop: '20px' }}>CARTS EMPTY</span>
-                </div>
-              ) : (
-                orderItems.map(item => (
-                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', backgroundColor: '#0f172a', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                    <div><div style={{ color: 'white', fontWeight: 900 }}>{item.name}</div><div style={{ color: '#10b981', fontSize: '13px', fontWeight: 800 }}>₹{item.price * item.quantity}</div></div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <button onClick={() => updateQuantity(item.id, -1)} style={{ cursor: 'pointer', border: 'none', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1e293b', color: 'white' }}><Minus size={14} /></button>
-                      <span style={{ color: 'white', fontWeight: 900, fontSize: '14px' }}>{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, 1)} style={{ cursor: 'pointer', border: 'none', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1e293b', color: 'white' }}><Plus size={14} /></button>
-                    </div>
+              {orderItems.map(item => (
+                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', backgroundColor: '#0f172a', borderRadius: '20px' }}>
+                  <div><div style={{ color: 'white', fontWeight: 900 }}>{item.name}</div><div style={{ color: '#10b981', fontSize: '13px' }}>₹{item.price * item.quantity}</div></div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <button onClick={() => updateQuantity(item.id, -1)} style={{ cursor: 'pointer', border: 'none', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1e293b', color: 'white' }}><Minus size={14} /></button>
+                    <span style={{ color: 'white', fontWeight: 900 }}>{item.quantity}</span>
+                    <button onClick={() => updateQuantity(item.id, 1)} style={{ cursor: 'pointer', border: 'none', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1e293b', color: 'white' }}><Plus size={14} /></button>
                   </div>
-                ))
-              )}
+                </div>
+              ))}
             </div>
             <div style={{ padding: '32px', backgroundColor: '#0f172a', borderTop: '1px solid #1e293b' }}>
-              <div style={{ marginBottom: '20px' }}>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', fontSize: '11px', fontWeight: 900, marginBottom: '8px', textTransform: 'uppercase' }}>
+              <div style={{ marginBottom: '24px' }}>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', fontSize: '11px', fontWeight: 900, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                    <span>Loyalty Discount (%)</span>
-                   <input type="number" value={discount} onChange={e => setDiscount(Math.max(0, Math.min(100, e.target.value)))} style={{ width: '50px', background: 'none', border: 'none', borderBottom: '2px solid #0ea5e9', color: 'white', textAlign: 'center', fontWeight: 900, outline: 'none' }} />
+                   <input 
+                      type="number" 
+                      value={discount} 
+                      onChange={e => setDiscount(Math.max(0, Math.min(100, e.target.value)))} 
+                      style={{ width: '50px', background: 'none', border: 'none', borderBottom: '2px solid #0ea5e9', color: 'white', textAlign: 'center', fontWeight: 900, outline: 'none' }} 
+                   />
                  </div>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', color: 'white', fontWeight: 1000, fontSize: '28px' }}>
-                   <span>Final Due</span>
-                   <span style={{ color: '#10b981' }}>₹{((orderItems.reduce((acc, i) => acc + (i.price * i.quantity), 0) * 1.05) * (1 - discount/100)).toFixed(2)}</span>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white' }}>
+                   <span style={{ fontSize: '32px', fontWeight: 1000 }}>Final Due</span>
+                   <span style={{ color: '#10b981', fontSize: '32px', fontWeight: 1000 }}>₹{((orderItems.reduce((acc, i) => acc + (i.price * i.quantity), 0) * 1.05) * (1 - discount/100)).toFixed(2)}</span>
                  </div>
               </div>
-              <button disabled={orderItems.length === 0} onClick={generateBill} style={{ width: '100%', padding: '20px', borderRadius: '20px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', fontWeight: 1000, fontSize: '16px', cursor: 'pointer', boxShadow: '0 10px 40px -10px rgba(14, 165, 233, 0.5)', transition: 'all 0.2s', opacity: orderItems.length === 0 ? 0.3 : 1 }}>SETTLE TRANSACTION</button>
+              <button disabled={orderItems.length === 0} onClick={generateBill} style={{ width: '100%', padding: '20px', borderRadius: '20px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', fontWeight: 1000, fontSize: '18px', cursor: 'pointer', scale: orderItems.length === 0 ? '1' : '1.02', transition: '0.2s', opacity: orderItems.length === 0 ? 0.3 : 1 }}>SETTLE TRANSACTION</button>
             </div>
           </div>
         </div>
       </div>
 
       {showBill && billData && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', backdropFilter: 'blur(8px)' }}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', backdropFilter: 'blur(16px)' }}>
           <div style={{ width: '100%', maxWidth: '850px', backgroundColor: 'white', borderRadius: '40px', overflow: 'hidden', display: 'flex', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.5)' }}>
-            <div style={{ flex: 1, padding: '48px', borderRight: '1px solid #f1f5f9', backgroundColor: billData.is_paid ? '#f0fdf4' : 'white', transition: 'all 0.5s' }}>
-               <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                  <div style={{ width: '64px', height: '64px', margin: '0 auto 16px', borderRadius: '50%', backgroundColor: billData.is_paid ? '#10b981' : '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', transform: billData.is_paid ? 'scale(1.2)' : 'scale(1)', transition: '0.5s' }}>
-                    <CheckCircle color={billData.is_paid ? "white" : "#10b981"} size={32} />
-                  </div>
-                  <h3 style={{ margin: 0, fontWeight: 950, fontSize: '24px' }}>{billData.is_paid ? 'Payment Confirmed' : 'Invoice Details'}</h3>
-                  <p style={{ color: '#64748b', fontWeight: 700, margin: '8px 0 0' }}>Order ID: #{billData.id}</p>
-               </div>
-               
-               <div style={{ backgroundColor: '#f8fafc', padding: '32px', borderRadius: '32px', border: '1px solid #e2e8f0', marginBottom: '32px' }}>
-                  <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '12px', marginBottom: '16px' }}>
-                    {(billData.items || []).map((i, idx) => (
-                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 800, marginBottom: '8px', color: '#1e293b' }}>
-                        <span>{i.name} x{i.quantity}</span>
-                        <span>₹{(i.price * i.quantity).toFixed(2)}</span>
+             <div style={{ flex: 1, padding: '48px', borderRight: '1px solid #f1f5f9', backgroundColor: billData.is_paid ? '#10b981' : 'white', transition: 'all 0.6s', overflowY: 'auto', position: 'relative' }}>
+                {billData.is_paid && (
+                   <div style={{ position: 'absolute', top: '10%', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+                      <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '50%', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+                         <CheckCircle size={100} color="#10b981" />
                       </div>
-                    ))}
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#64748b' }}><span>NET SUBTOTAL</span><span style={{ fontWeight: 900 }}>₹{sub.toFixed(2)}</span></div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#64748b' }}><span>GST (${billData.gst_percentage}%)</span><span style={{ fontWeight: 900 }}>₹{tax.toFixed(2)}</span></div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 900, color: '#1e293b', borderTop: '1px dashed #cbd5e1', paddingTop: '8px' }}><span>ORDER TOTAL</span><span>₹{pre.toFixed(2)}</span></div>
-                    {billData.discount_percentage > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#0ea5e9', fontSize: '14px', fontWeight: 900, backgroundColor: 'rgba(14, 165, 233, 0.05)', padding: '8px 12px', borderRadius: '12px' }}>
-                        <span>DISCOUNT (${billData.discount_percentage}%)</span>
-                        <span>-₹{disc.toFixed(2)}</span>
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '32px', fontWeight: 1000, color: '#10b981', marginTop: '12px' }}>
-                      <span>TOTAL</span>
-                      <span>₹{parseFloat(billData.final_amount).toFixed(2)}</span>
-                    </div>
-                  </div>
-               </div>
-               {!billData.is_paid ? (
-                 <button onClick={rollbackBill} style={{ width: '100%', padding: '16px', borderRadius: '16px', border: 'none', background: '#f1f5f9', color: '#64748b', cursor: 'pointer', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-                   <RefreshCcw size={18} /> Modify / Rollback Invoice
-                 </button>
-               ) : (
-                 <div style={{ textAlign: 'center', padding: '16px', backgroundColor: '#dcfce7', borderRadius: '20px', color: '#166534', fontWeight: 950 }}>TRANSACTION COMPLETED</div>
-               )}
-            </div>
+                   </div>
+                )}
+                <div style={{ textAlign: 'center', marginBottom: '24px', opacity: billData.is_paid ? 0.3 : 1 }}>
+                   <h1 style={{ margin: 0, fontWeight: 950, fontSize: '28px', color: billData.is_paid ? 'white' : '#1e293b' }}>{(billData.hotel_name || user?.hotel_name || 'BESTBILL').toUpperCase()}</h1>
+                   <div style={{ color: billData.is_paid ? 'white' : '#64748b', fontWeight: 800, fontSize: '14px', marginTop: '4px' }}>{billData.hotel_location}</div>
+                </div>
+                
+                <div style={{ borderTop: '2px dashed #e2e8f0', borderBottom: '2px dashed #e2e8f0', padding: '16px 0', marginBottom: '24px' }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 900, color: '#475569' }}>
+                      <span>TABLE NO: {table.table_numberByFloor || table.table_number}</span>
+                      <span>BILL NO: #{billData.id}</span>
+                   </div>
+                   <div style={{ fontSize: '13px', color: '#94a3b8' }}>DATE: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</div>
+                </div>
 
-            <div style={{ width: '380px', padding: '48px', backgroundColor: billData.is_paid ? '#f0fdf4' : '#fafafa', display: 'flex', flexDirection: 'column', gap: '32px' }}>
-               <div style={{ textAlign: 'center', backgroundColor: 'white', padding: '24px', borderRadius: '32px', border: '3px solid', borderColor: billData.is_paid ? '#10b981' : '#f1f5f9', position: 'relative', transition: '0.4s' }}>
-                  <span style={{ fontSize: '12px', fontWeight: 950, color: '#1e293b', display: 'block', marginBottom: '16px' }}>SCAN TO PAY VIA UPI</span>
-                  <div style={{ padding: '16px', backgroundColor: 'white', display: 'inline-block', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', position: 'relative' }}>
-                    <QRCodeCanvas value={upiLink} size={180} level="H" style={{ opacity: billData.is_paid ? 0.05 : 1 }} />
-                    {billData.is_paid && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}><CheckCircle size={100} /></div>}
-                  </div>
-                  {!billData.is_paid && (
-                    <button onClick={() => confirmPayment()} style={{ width: '100%', marginTop: '20px', padding: '18px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', borderRadius: '16px', fontWeight: 1000, cursor: 'pointer', boxShadow: '0 10px 20px rgba(14, 165, 233, 0.3)' }}>RECIEVED PAYMENT</button>
-                  )}
-               </div>
-               
-               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ position: 'relative' }}>
-                    <Phone style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={16} />
-                    <input placeholder="Mobile Number" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} style={{ width: '100%', padding: '14px 14px 14px 40px', borderRadius: '14px', border: '2px solid #f1f5f9', fontWeight: 800, fontSize: '15px' }} />
-                  </div>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <button onClick={printBill} style={{ flex: 1, padding: '14px', borderRadius: '14px', border: 'none', backgroundColor: '#0f172a', color: 'white', fontWeight: 900, cursor: 'pointer' }}><Printer size={18} /></button>
-                    <button onClick={() => sendNotification('sms')} style={{ flex: 1, padding: '14px', borderRadius: '14px', border: 'none', backgroundColor: '#0ea5e9', color: 'white', fontWeight: 900, cursor: 'pointer' }}>SMS</button>
-                    <button onClick={shareViaWhatsApp} style={{ flex: 1, padding: '14px', borderRadius: '14px', border: 'none', backgroundColor: '#10b981', color: 'white', fontWeight: 900, cursor: 'pointer' }}><MessageCircle size={18} /></button>
-                  </div>
-                  <button onClick={onClose} style={{ width: '100%', padding: '18px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '16px', cursor: 'pointer', fontWeight: 1000, boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>FINISH PROCESS</button>
-               </div>
-            </div>
+                <div style={{ marginBottom: '24px' }}>
+                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 100px', borderBottom: '1px dashed #cbd5e1', paddingBottom: '8px', marginBottom: '12px', fontSize: '12px', fontWeight: 900, color: '#475569' }}>
+                      <span>Item</span><span style={{ textAlign: 'right' }}>Qty</span><span style={{ textAlign: 'right' }}>Total</span>
+                   </div>
+                   {billData.items.map((i, idx) => (
+                      <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 60px 100px', fontSize: '15px', fontWeight: 800, marginBottom: '8px', color: '#1e293b' }}>
+                        <span>{i.name}</span><span style={{ textAlign: 'right' }}>{i.quantity}</span><span style={{ textAlign: 'right' }}>₹{(i.price * i.quantity).toFixed(2)}</span>
+                      </div>
+                   ))}
+                </div>
+
+                <div style={{ borderTop: '1px dashed #cbd5e1', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px', color: '#475569' }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 800 }}><span>SUBTOTAL</span><span>₹{parseFloat(billData.subtotal).toFixed(2)}</span></div>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 800 }}><span>GST</span><span>₹{parseFloat(billData.gst).toFixed(2)}</span></div>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '42px', fontWeight: 1000, color: '#10b981', borderTop: '4px double #e2e8f0', marginTop: '12px', paddingTop: '12px' }}><span>TOTAL</span><span>₹{parseFloat(billData.final_amount).toFixed(2)}</span></div>
+                </div>
+
+                <div style={{ marginTop: '48px' }}>
+                   {!billData.is_paid ? (
+                     <button onClick={rollbackBill} style={{ width: '100%', padding: '20px', borderRadius: '24px', border: '2px solid #e2e8f0', background: 'white', color: '#64748b', fontWeight: 900, cursor: 'pointer' }}>MODIFY INVOICE</button>
+                   ) : (
+                     <div style={{ textAlign: 'center', padding: '24px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '24px', color: 'white', fontWeight: 950, fontSize: '20px' }}>SUCCESSFULLY SETTLED</div>
+                   )}
+                </div>
+             </div>
+
+             <div style={{ width: '380px', padding: '48px', backgroundColor: '#fafafa', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                <div style={{ textAlign: 'center', backgroundColor: 'white', padding: '24px', borderRadius: '32px' }}>
+                   <QRCodeCanvas value={upiLink} size={180} />
+                   {!billData.is_paid && <button onClick={() => confirmPayment()} style={{ width: '100%', marginTop: '20px', padding: '18px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', borderRadius: '16px', fontWeight: 1000 }}>MARK PAID</button>}
+                </div>
+                 <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid #e2e8f0' }}>
+                    <Phone size={18} color="#94a3b8" />
+                    <input 
+                       placeholder="Enter Mobile No" 
+                       value={customerPhone} 
+                       onChange={(e) => setCustomerPhone(e.target.value)}
+                       style={{ border: 'none', width: '100%', outline: 'none', fontWeight: 800, fontSize: '15px', background: 'white', color: '#1e293b' }}
+                    />
+                 </div>
+
+                 <div style={{ display: 'flex', gap: '12px' }}>
+                    <button onClick={printBill} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#0f172a', color: 'white', border: 'none', cursor: 'pointer' }}><Printer size={18} /></button>
+                    <button onClick={shareViaWhatsApp} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer' }}><MessageCircle size={18} /></button>
+                 </div>
+                 <button onClick={onClose} style={{ width: '100%', padding: '20px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '20px', fontWeight: 900, cursor: 'pointer' }}>CLOSE</button>
+             </div>
           </div>
         </div>
       )}
+      <SwapModal isOpen={isSwapModalOpen} onClose={() => setSwapModalOpen(false)} tables={allTables} onSwap={handleSwapTable} currentTable={table} />
     </div>
   );
 };

@@ -9,7 +9,7 @@ const Profile = () => {
     const isAdmin = user?.role === 'admin';
     const isOwner = user?.role === 'owner';
     const themeColor = isAdmin ? '#10b981' : '#0ea5e9';
-    const serverUrl = 'https://bestbill-backend-174132084209.us-central1.run.app';
+    const serverUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'https://bestbill-backend-174132084209.us-central1.run.app';
 
     const [formData, setFormData] = useState({
         name: user?.name || '',

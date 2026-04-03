@@ -6,7 +6,7 @@ services:
     container_name: bestbill_db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: '123'
       POSTGRES_DB: bestbill
     ports:
       - "5432:5432"
