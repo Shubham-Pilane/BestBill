@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: 'https://bestbill-backend-174132084209.us-central1.run.app/api',
 });
 
 // Add token to each request if it exists
