@@ -63,6 +63,9 @@ router.post('/onboard', adminAuth, upload.single('logo'), async (req, res) => {
     );
     const hotelId = hotelRes.rows[0].id;
 
+    // Link the owner user to this newly instantiated hotel
+    await client.query('UPDATE users SET hotel_id = $1 WHERE id = $2', [hotelId, userId]);
+
     await client.query(
       'INSERT INTO subscription_history (hotel_id, amount, months_added, valid_until) VALUES ($1, $2, $3, (SELECT subscription_valid_until FROM hotels WHERE id = $1))',
       [hotelId, subscriptionAmount || 0, subscriptionValidity || 1]

@@ -23,10 +23,14 @@ router.post('/register', async (req, res) => {
 
     const userId = newUser.rows[0].id;
 
-    await db.query(
-      'INSERT INTO hotels (owner_id, name) VALUES ($1, $2)',
+    const hotelRes = await db.query(
+      'INSERT INTO hotels (owner_id, name) VALUES ($1, $2) RETURNING id',
       [userId, hotelName || `${name}'s Hotel`]
     );
+    const newHotelId = hotelRes.rows[0].id;
+
+    // Link the user directly to the new hotel
+    await db.query('UPDATE users SET hotel_id = $1 WHERE id = $2', [newHotelId, userId]);
 
     res.status(201).json({ message: 'User registered successfully' });
   } catch (err) {
@@ -41,9 +45,14 @@ router.post('/login', async (req, res) => {
 
   try {
     const userResult = await db.query(
-      `SELECT u.*, h.name as hotel_name, h.upi_id, h.subscription_valid_until 
+      `SELECT u.*, 
+       COALESCE(h.name, h2.name) as hotel_name, 
+       COALESCE(h.upi_id, h2.upi_id) as upi_id, 
+       COALESCE(h.subscription_valid_until, h2.subscription_valid_until) as subscription_valid_until,
+       COALESCE(u.hotel_id, h2.id) as resolved_hotel_id
        FROM users u 
        LEFT JOIN hotels h ON u.hotel_id = h.id 
+       LEFT JOIN hotels h2 ON h2.owner_id = u.id
        WHERE u.email = $1`,
       [email]
     );
@@ -60,8 +69,10 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    const finalHotelId = user.resolved_hotel_id;
+
     const token = jwt.sign(
-      { id: user.id, hotel_id: user.hotel_id, role: user.role },
+      { id: user.id, hotel_id: finalHotelId, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -73,7 +84,7 @@ router.post('/login', async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role, 
-        hotel_id: user.hotel_id,
+        hotel_id: finalHotelId,
         hotel_name: user.hotel_name,
         upi_id: user.upi_id,
         subscription_valid_until: user.subscription_valid_until
