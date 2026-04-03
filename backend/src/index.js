@@ -27,9 +27,9 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'BestBill API is running' });
 });
 
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT} (bound to 0.0.0.0)`);
 }).on('error', (err) => {
   console.error('Server Listen Error:', err.message);
 });

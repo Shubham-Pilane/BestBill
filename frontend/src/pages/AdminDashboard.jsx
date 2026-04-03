@@ -13,7 +13,7 @@ const AdminDashboard = () => {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, id: null });
   const [subUpdateModal, setSubUpdateModal] = useState({ isOpen: false, amount: '', validityMonths: '' });
   const themeColor = '#10b981';
-  const serverUrl = 'http://localhost:5000';
+  const serverUrl = 'https://bestbill-backend-174132084209.us-central1.run.app';
   
   const [formData, setFormData] = useState({
     hotelName: '',
