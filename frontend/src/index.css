@@ -144,6 +144,52 @@ body {
       padding: 24px 16px !important;
   }
   
+  /* OrderModal Responsive Fix */
+  .order-modal-overlay {
+      padding: 0 !important;
+  }
+  .order-modal-container {
+      border-radius: 0 !important;
+      height: 100vh !important;
+      max-height: 100vh !important;
+  }
+  .order-modal-header {
+      padding: 16px 20px !important;
+  }
+  .order-modal-content {
+      flex-direction: column !important;
+      overflow-y: auto !important;
+  }
+  .order-modal-menu {
+      border-right: none !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      min-height: 400px; /* Give menu some space */
+  }
+  .order-modal-cart {
+      width: 100% !important;
+      flex: none !important;
+  }
+  .category-bar {
+      padding: 8px 0 !important;
+  }
+  .search-bar-container {
+      width: 100% !important;
+  }
+  
+  .bill-modal-overlay {
+      padding: 0 !important;
+  }
+  .bill-container {
+      flex-direction: column !important;
+      border-radius: 0 !important;
+      height: 100vh !important;
+  }
+  .bill-container > div {
+      width: 100% !important;
+      max-width: 100% !important;
+      padding: 24px !important;
+  }
+
   /* Login Responsive Fix */
   div[style*="max-width: 440px"] {
       max-width: 90% !important;

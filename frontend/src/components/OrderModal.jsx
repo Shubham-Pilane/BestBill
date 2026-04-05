@@ -310,10 +310,10 @@ const OrderModal = ({ table, onClose }) => {
   if (loading) return null;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.95)', backdropFilter: 'blur(32px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '40px' }}>
-      <div style={{ width: '100%', maxWidth: '1440px', height: '90vh', backgroundColor: '#0f172a', borderRadius: '40px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.05)' }}>
+    <div className="order-modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.95)', backdropFilter: 'blur(32px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '40px' }}>
+      <div className="order-modal-container" style={{ width: '100%', maxWidth: '1440px', height: '90vh', backgroundColor: '#0f172a', borderRadius: '40px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.05)' }}>
         {/* Header */}
-        <div style={{ padding: '32px 48px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="order-modal-header" style={{ padding: '32px 48px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
             <div style={{ width: '64px', height: '64px', backgroundColor: table.active_order_id ? '#f43f5e' : '#10b981', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: '28px' }}>
               {table.table_number}
@@ -331,18 +331,18 @@ const OrderModal = ({ table, onClose }) => {
           <button onClick={onClose} style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#1e293b', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={24} /></button>
         </div>
 
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <div className="order-modal-content" style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {/* Menu */}
-          <div style={{ flex: 1, borderRight: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div className="order-modal-menu" style={{ flex: 1, borderRight: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ padding: '16px 48px', display: 'flex', gap: '20px', alignItems: 'center', backgroundColor: '#020617', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', flex: 1 }}>
+              <div className="category-bar" style={{ display: 'flex', gap: '10px', overflowX: 'auto', flex: 1 }}>
                 <button onClick={() => setSelectedCategory('all')} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', fontWeight: 900, cursor: 'pointer', backgroundColor: selectedCategory === 'all' ? '#0ea5e9' : '#1e293b', color: 'white', fontSize: '12px', whiteSpace: 'nowrap' }}>ALL ITEMS</button>
                 {categories.map(cat => (
                   <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', fontWeight: 900, cursor: 'pointer', backgroundColor: selectedCategory === cat.id ? '#0ea5e9' : '#1e293b', color: 'white', fontSize: '12px', whiteSpace: 'nowrap' }}>{cat.name.toUpperCase()}</button>
                 ))}
               </div>
 
-              <div style={{ position: 'relative', width: '300px' }}>
+              <div className="search-bar-container" style={{ position: 'relative', width: '300px' }}>
                 <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }}>
                   <Search size={18} />
                 </div>
@@ -397,7 +397,7 @@ const OrderModal = ({ table, onClose }) => {
           </div>
 
           {/* Cart */}
-          <div style={{ width: '420px', backgroundColor: '#020617', display: 'flex', flexDirection: 'column' }}>
+          <div className="order-modal-cart" style={{ width: '420px', backgroundColor: '#020617', display: 'flex', flexDirection: 'column' }}>
             <div style={{ padding: '32px', borderBottom: '1px solid #1e293b', display: 'flex', alignItems: 'center', gap: '12px' }}>
                <Receipt size={20} color="#0ea5e9" />
                <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'white', margin: 0 }}>Active Selection</h3>
@@ -437,8 +437,8 @@ const OrderModal = ({ table, onClose }) => {
       </div>
 
       {showBill && billData && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', backdropFilter: 'blur(16px)' }}>
-          <div style={{ width: '100%', maxWidth: '850px', backgroundColor: 'white', borderRadius: '40px', overflow: 'hidden', display: 'flex', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.5)' }}>
+        <div className="bill-modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', backdropFilter: 'blur(16px)' }}>
+          <div className="bill-container" style={{ width: '100%', maxWidth: '850px', backgroundColor: 'white', borderRadius: '40px', overflow: 'hidden', display: 'flex', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.5)' }}>
              <div style={{ flex: 1, padding: '48px', borderRight: '1px solid #f1f5f9', backgroundColor: billData.is_paid ? '#10b981' : 'white', transition: 'all 0.6s', overflowY: 'auto', position: 'relative' }}>
                 {billData.is_paid && (
                    <div style={{ position: 'absolute', top: '10%', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
