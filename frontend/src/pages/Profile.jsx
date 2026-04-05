@@ -22,7 +22,7 @@ const Profile = () => {
         name: user?.hotel_name || '',
         address: user?.hotel_address || '',
         upi_id: user?.upi_id || '',
-        gst_percentage: user?.gst_percentage || 5,
+        gst_percentage: user?.gst_percentage || 0,
         logo_url: ''
     });
 
@@ -46,7 +46,7 @@ const Profile = () => {
                 name: res.data.name || '',
                 address: res.data.address || '',
                 upi_id: res.data.upi_id || '',
-                gst_percentage: res.data.gst_percentage || 5,
+                gst_percentage: res.data.gst_percentage || 0,
                 logo_url: res.data.logo_url || ''
             });
         } catch (err) {

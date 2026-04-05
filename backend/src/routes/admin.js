@@ -225,4 +225,21 @@ router.put('/hotels/:id/logo', adminAuth, upload.single('logo'), async (req, res
   }
 });
 
+// Toggle Hotel Service (Stop/Start)
+router.put('/hotels/:id/toggle-service', adminAuth, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await db.query(
+      'UPDATE hotels SET is_service_stopped = NOT COALESCE(is_service_stopped, false) WHERE id = $1 RETURNING is_service_stopped',
+      [parseInt(id)]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ message: 'Hotel not found' });
+    const stopped = result.rows[0].is_service_stopped;
+    res.json({ success: true, is_service_stopped: stopped, message: stopped ? 'Service has been stopped' : 'Service has been resumed' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to toggle service status' });
+  }
+});
+
 module.exports = router;

@@ -159,7 +159,7 @@ router.post('/:tableId/bill', auth, async (req, res) => {
   
   try {
     const hotelRes = await db.query('SELECT name, phone, location, gst_percentage FROM hotels WHERE id = $1', [req.user.hotel_id]);
-    const gstRate = parseFloat(hotelRes.rows[0].gst_percentage || 5);
+    const gstRate = parseFloat(hotelRes.rows[0].gst_percentage || 0);
 
     const order = await db.query('SELECT id FROM orders WHERE table_id = $1 AND status = $2', [tableId, 'active']);
     if (order.rows.length === 0) return res.status(404).json({ message: 'No active order' });

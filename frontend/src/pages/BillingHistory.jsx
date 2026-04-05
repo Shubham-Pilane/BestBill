@@ -1,12 +1,170 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import { toast } from 'react-hot-toast';
-import { Receipt, History, IndianRupee, Table, Calendar, Search, Filter, Ban } from 'lucide-react';
+import { Receipt, History, IndianRupee, Table, Calendar, Search, Filter, Ban, X, CheckCircle, Phone, Printer, MessageCircle } from 'lucide-react';
+import { QRCodeCanvas } from 'qrcode.react';
+import { useAuth } from '../context/AuthContext';
 
 const BillingHistory = () => {
+    const { user } = useAuth();
     const [bills, setBills] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedBill, setSelectedBill] = useState(null);
+    const [customerPhone, setCustomerPhone] = useState('');
+
+    const handleBillClick = async (billId) => {
+        try {
+             const res = await api.get(`/bills/${billId}`);
+             setSelectedBill(res.data);
+        } catch (err) {
+             toast.error('Failed to load bill details');
+        }
+    };
+
+    const printBill = () => {
+        if (!selectedBill) return;
+        
+        const existingFrame = document.getElementById('bill-print-frame');
+        if (existingFrame) existingFrame.remove();
+
+        const iframe = document.createElement('iframe');
+        iframe.id = 'bill-print-frame';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow.document;
+        const hName = selectedBill.hotel_name || user?.hotel_name || 'BESTBILL';
+        const hPhone = selectedBill.hotel_phone || '';
+        const hAddr = selectedBill.hotel_location || '';
+        
+        const itemsRows = (selectedBill.items || []).map(i => `
+        <tr>
+            <td>${i.name}</td>
+            <td style="text-align: right;">${i.quantity}</td>
+            <td style="text-align: right;">${(i.price * i.quantity).toFixed(2)}</td>
+        </tr>
+        `).join('');
+
+        const upiLinkStr = `upi://pay?pa=${user?.upi_id || ''}&pn=${encodeURIComponent(hName)}&am=${selectedBill?.final_amount || 0}&cu=INR`;
+
+        const pageHtml = `
+        <html>
+            <head>
+            <style>
+                @page { margin: 0; size: 80mm auto; }
+                * {
+                color: #000 !important;
+                font-family: 'Courier New', Courier, monospace !important;
+                font-weight: 1000 !important;
+                font-size: 13pt;
+                }
+                body { 
+                margin: 0; 
+                padding: 2mm; 
+                width: 76mm; 
+                background: #fff;
+                }
+                .center { text-align: center; }
+                .right { text-align: right; }
+                .dashed { border-top: 2px dashed #000; margin: 8px 0; }
+                .header-large { font-size: 18pt; margin: 0; letter-spacing: 1px; }
+                .items-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+                .items-table th { text-align: left; border-bottom: 2px dashed #000; padding: 4px 0; }
+                .items-table td { padding: 4px 0; vertical-align: top; }
+                .flex-row { display: flex; justify-content: space-between; align-items: center; }
+                .qr-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 15px; }
+                .qr-container img { width: 140px; height: 140px; margin-bottom: 5px; }
+            </style>
+            </head>
+            <body onload="setTimeout(() => { window.print(); window.parent.document.getElementById('bill-print-frame').remove(); }, 1000)">
+            <div class="center">
+                <div class="header-large">${hName.toUpperCase()}</div>
+                ${hAddr ? `<div>${hAddr}</div>` : ''}
+                ${hPhone ? `<div>Phone: ${hPhone}</div>` : ''}
+            </div>
+            
+            <div class="dashed"></div>
+            <div class="center" style="font-size: 14pt; margin: 5px 0;">INVOICE</div>
+            <div>
+                <div class="flex-row"><span>Table No:</span> <span>${selectedBill.table_number}</span></div>
+                <div class="flex-row"><span>Bill No:</span> <span>#${selectedBill.id}</span></div>
+                <div class="flex-row"><span>Date:</span> <span>${new Date(selectedBill.created_at).toLocaleDateString()} ${new Date(selectedBill.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
+            </div>
+            <div class="dashed"></div>
+
+            <table class="items-table">
+                <thead>
+                <tr>
+                    <th width="55%">Item</th>
+                    <th width="15%" class="right">Qty</th>
+                    <th width="30%" class="right">Total</th>
+                </tr>
+                </thead>
+                <tbody>
+                ${itemsRows}
+                </tbody>
+            </table>
+
+            <div class="dashed"></div>
+            <div style="line-height: 1.5;">
+                <div class="flex-row"><span>Subtotal:</span> <span>&nbsp;${parseFloat(selectedBill.subtotal || 0).toFixed(2)}</span></div>
+                <div class="flex-row"><span>GST (${selectedBill.gst_percentage || 0}%):</span> <span>&nbsp;${parseFloat(selectedBill.gst || 0).toFixed(2)}</span></div>
+                ${selectedBill.discount_percentage > 0 ? `<div class="flex-row"><span>Discount (${selectedBill.discount_percentage}%):</span> <span>-${( (parseFloat(selectedBill.subtotal) + parseFloat(selectedBill.gst)) * (selectedBill.discount_percentage / 100) ).toFixed(2)}</span></div>` : ''}
+                <div class="dashed"></div>
+                <div class="flex-row" style="font-size: 16pt; margin-top: 4px;">
+                <span>GRAND TOTAL:</span>
+                <span>&nbsp;${parseFloat(selectedBill.final_amount).toFixed(2)}</span>
+                </div>
+            </div>
+            <div class="dashed"></div>
+
+            <div class="center" style="margin-top: 15px;">
+                <div>Thank You! Visit Again!</div>
+                <div>${hName}</div>
+            </div>
+
+            ${!selectedBill.is_paid && user?.upi_id ? `
+            <div class="qr-container">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLinkStr)}&margin=0" />
+                <div style="font-size: 12pt;">Scan to Pay</div>
+            </div>
+            ` : ''}
+            </body>
+        </html>
+        `;
+
+        doc.write(pageHtml);
+        doc.close();
+    };
+
+    const shareViaWhatsApp = () => {
+        if (!selectedBill) return;
+        if (!customerPhone) {
+        toast.error('Please enter a phone number first');
+        return;
+        }
+        const subVal = parseFloat(selectedBill.subtotal || 0);
+        const taxVal = parseFloat(selectedBill.gst || 0);
+        const preVal = subVal + taxVal;
+        
+        let msg = `*--- ${user?.hotel_name?.toUpperCase() || 'BESTBILL'} RECEIPT ---*\n\n`;
+        msg += `Table No: ${selectedBill.table_number}\n`;
+        msg += `Bill No: #${selectedBill.id}\n`;
+        msg += `Date: ${new Date(selectedBill.created_at).toLocaleDateString()} ${new Date(selectedBill.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}\n`;
+        msg += `\n*Items:*\n`;
+        (selectedBill.items || []).forEach(i => msg += `• ${i.name} x ${i.quantity} = ₹${(i.price * i.quantity).toFixed(2)}\n`);
+        msg += `\n*------------------------*\n`;
+        msg += `*Subtotal:* ₹${subVal.toFixed(2)}\n`;
+        msg += `*GST (${selectedBill.gst_percentage || 0}%):* ₹${taxVal.toFixed(2)}\n`;
+        if (selectedBill.discount_percentage > 0) msg += `*Discount (${selectedBill.discount_percentage}%):* -₹${(preVal * selectedBill.discount_percentage / 100).toFixed(2)}\n`;
+        msg += `*GRAND TOTAL: ₹${parseFloat(selectedBill.final_amount).toFixed(2)}*\n`;
+        msg += `\nThank you! Visit again.\n`;
+        
+        const cleanPhone = customerPhone.replace(/\D/g, '');
+        const finalPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+        window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+    };
 
     const fetchHistory = async () => {
         try {
@@ -109,7 +267,7 @@ const BillingHistory = () => {
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {filteredBills.map(bill => (
-                            <div key={bill.id} style={{ backgroundColor: '#0f172a', borderRadius: '24px', padding: '24px 32px', border: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'all 0.2s' }}>
+                            <div key={bill.id} onClick={() => handleBillClick(bill.id)} style={{ cursor: 'pointer', backgroundColor: '#0f172a', borderRadius: '24px', padding: '24px 32px', border: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'all 0.2s' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
                                     <div style={{ width: '56px', height: '56px', backgroundColor: '#020617', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #1e293b' }}>
                                         <Receipt size={24} style={{ color: '#0ea5e9' }} />
@@ -142,6 +300,77 @@ const BillingHistory = () => {
                     </div>
                 )}
             </div>
+            {selectedBill && (
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', backdropFilter: 'blur(16px)' }}>
+                <div style={{ width: '100%', maxWidth: '850px', backgroundColor: 'white', borderRadius: '40px', overflow: 'hidden', display: 'flex', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.5)' }}>
+                    <div style={{ flex: 1, padding: '48px', borderRight: '1px solid #f1f5f9', backgroundColor: selectedBill.is_paid ? '#10b981' : 'white', transition: 'all 0.6s', overflowY: 'auto', position: 'relative' }}>
+                        {selectedBill.is_paid && (
+                        <div style={{ position: 'absolute', top: '10%', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+                            <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '50%', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+                                <CheckCircle size={100} color="#10b981" />
+                            </div>
+                        </div>
+                        )}
+                        <div style={{ textAlign: 'center', marginBottom: '24px', opacity: selectedBill.is_paid ? 0.3 : 1 }}>
+                        <h1 style={{ margin: 0, fontWeight: 950, fontSize: '28px', color: selectedBill.is_paid ? 'white' : '#1e293b' }}>{(selectedBill.hotel_name || user?.hotel_name || 'BESTBILL').toUpperCase()}</h1>
+                        <div style={{ color: selectedBill.is_paid ? 'white' : '#64748b', fontWeight: 800, fontSize: '14px', marginTop: '4px' }}>{selectedBill.hotel_location}</div>
+                        </div>
+                        
+                        <div style={{ borderTop: '2px dashed #e2e8f0', borderBottom: '2px dashed #e2e8f0', padding: '16px 0', marginBottom: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 900, color: '#475569' }}>
+                            <span>TABLE NO: {selectedBill.table_number}</span>
+                            <span>BILL NO: #{selectedBill.id}</span>
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#94a3b8' }}>DATE: {new Date(selectedBill.created_at).toLocaleDateString()} {new Date(selectedBill.created_at).toLocaleTimeString()}</div>
+                        </div>
+
+                        <div style={{ marginBottom: '24px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 100px', borderBottom: '1px dashed #cbd5e1', paddingBottom: '8px', marginBottom: '12px', fontSize: '12px', fontWeight: 900, color: '#475569' }}>
+                            <span>Item</span><span style={{ textAlign: 'right' }}>Qty</span><span style={{ textAlign: 'right' }}>Total</span>
+                        </div>
+                        {(selectedBill.items || []).map((i, idx) => (
+                            <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 60px 100px', fontSize: '15px', fontWeight: 800, marginBottom: '8px', color: '#1e293b' }}>
+                            <span>{i.name}</span><span style={{ textAlign: 'right' }}>{i.quantity}</span><span style={{ textAlign: 'right' }}>₹{(i.price * i.quantity).toFixed(2)}</span>
+                            </div>
+                        ))}
+                        </div>
+
+                        <div style={{ borderTop: '1px dashed #cbd5e1', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px', color: '#475569' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 800 }}><span>SUBTOTAL</span><span>₹{parseFloat(selectedBill.subtotal || 0).toFixed(2)}</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 800 }}><span>GST</span><span>₹{parseFloat(selectedBill.gst).toFixed(2)}</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '42px', fontWeight: 1000, color: '#10b981', borderTop: '4px double #e2e8f0', marginTop: '12px', paddingTop: '12px' }}><span>TOTAL</span><span>₹{parseFloat(selectedBill.final_amount).toFixed(2)}</span></div>
+                        </div>
+
+                        <div style={{ marginTop: '48px' }}>
+                        {selectedBill.is_paid && (
+                            <div style={{ textAlign: 'center', padding: '24px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '24px', color: 'white', fontWeight: 950, fontSize: '20px' }}>SUCCESSFULLY SETTLED</div>
+                        )}
+                        </div>
+                    </div>
+
+                    <div style={{ width: '380px', padding: '48px', backgroundColor: '#fafafa', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                        <div style={{ textAlign: 'center', backgroundColor: 'white', padding: '24px', borderRadius: '32px' }}>
+                        <QRCodeCanvas value={`upi://pay?pa=${user?.upi_id || ''}&pn=${encodeURIComponent(selectedBill.hotel_name || user?.hotel_name || 'BESTBILL')}&am=${selectedBill.final_amount}&cu=INR`} size={180} />
+                        </div>
+                        <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid #e2e8f0' }}>
+                            <Phone size={18} color="#94a3b8" />
+                            <input 
+                            placeholder="Customer Mobile No" 
+                            value={customerPhone} 
+                            onChange={(e) => setCustomerPhone(e.target.value)}
+                            style={{ border: 'none', width: '100%', outline: 'none', fontWeight: 800, fontSize: '15px', background: 'white', color: '#1e293b' }}
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <button onClick={printBill} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#0f172a', color: 'white', border: 'none', cursor: 'pointer' }}><Printer size={18} /></button>
+                            <button onClick={shareViaWhatsApp} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer' }}><MessageCircle size={18} /></button>
+                        </div>
+                        <button onClick={() => setSelectedBill(null)} style={{ width: '100%', padding: '20px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '20px', fontWeight: 900, cursor: 'pointer' }}>CLOSE</button>
+                    </div>
+                </div>
+                </div>
+            )}
         </div>
     );
 };

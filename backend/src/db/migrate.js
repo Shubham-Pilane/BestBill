@@ -51,7 +51,8 @@ const syncSchema = async () => {
             "ALTER TABLE tables ADD COLUMN IF NOT EXISTS floor VARCHAR(50) DEFAULT 'Floor 1'",
             "ALTER TABLE tables ADD COLUMN IF NOT EXISTS capacity INTEGER DEFAULT 4",
             "ALTER TABLE tables DROP CONSTRAINT IF EXISTS tables_hotel_id_table_number_key",
-            "ALTER TABLE tables ADD CONSTRAINT tables_hotel_id_table_number_floor_key UNIQUE (hotel_id, table_number, floor)"
+            "ALTER TABLE tables ADD CONSTRAINT tables_hotel_id_table_number_floor_key UNIQUE (hotel_id, table_number, floor)",
+            "ALTER TABLE hotels ADD COLUMN IF NOT EXISTS is_service_stopped BOOLEAN DEFAULT false"
         ];
 
         for (const q of migrations) {

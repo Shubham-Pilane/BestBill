@@ -21,7 +21,7 @@ router.put('/', auth, async (req, res) => {
   try {
     const updated = await db.query(
       'UPDATE hotels SET name = $1, address = $2, upi_id = $3, gst_percentage = $4 WHERE id = $5 RETURNING *',
-      [name, address, upi_id, gst_percentage || 5.0, req.user.hotel_id]
+      [name, address, upi_id, gst_percentage || 0, req.user.hotel_id]
     );
     res.json(updated.rows[0]);
   } catch (err) {

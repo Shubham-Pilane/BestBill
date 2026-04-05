@@ -95,6 +95,7 @@ const OrderModal = ({ table, onClose }) => {
   const printBill = () => {
     if (!billData) return;
     
+    // Refresh IFRAME
     const existingFrame = document.getElementById('bill-print-frame');
     if (existingFrame) existingFrame.remove();
 
@@ -116,41 +117,47 @@ const OrderModal = ({ table, onClose }) => {
       </tr>
     `).join('');
 
+    const upiLinkStr = `upi://pay?pa=${user?.upi_id || ''}&pn=${encodeURIComponent(hName)}&am=${billData?.final_amount || 0}&cu=INR`;
+
     const pageHtml = `
       <html>
         <head>
           <style>
             @page { margin: 0; size: 80mm auto; }
+            * {
+              color: #000 !important;
+              font-family: 'Courier New', Courier, monospace !important;
+              font-weight: 1000 !important;
+              font-size: 13pt;
+            }
             body { 
               margin: 0; 
-              padding: 5mm; 
-              font-family: 'Courier New', Courier, monospace; 
-              font-size: 11pt; 
-              color: black; 
-              width: 80mm; 
+              padding: 2mm; 
+              width: 76mm; 
+              background: #fff;
             }
             .center { text-align: center; }
             .right { text-align: right; }
-            .bold { font-weight: bold; }
-            .dashed { border-top: 1px dashed black; margin: 5px 0; }
-            .header-large { font-size: 16pt; margin: 0; }
+            .dashed { border-top: 2px dashed #000; margin: 8px 0; }
+            .header-large { font-size: 18pt; margin: 0; letter-spacing: 1px; }
             .items-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-            .items-table th { text-align: left; border-bottom: 1px dashed black; padding: 4px 0; font-size: 10pt; }
+            .items-table th { text-align: left; border-bottom: 2px dashed #000; padding: 4px 0; }
             .items-table td { padding: 4px 0; vertical-align: top; }
-            .flex-row { display: flex; justify-content: space-between; }
-            .footer { margin-top: 20px; font-size: 9pt; }
+            .flex-row { display: flex; justify-content: space-between; align-items: center; }
+            .qr-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 15px; }
+            .qr-container img { width: 140px; height: 140px; margin-bottom: 5px; }
           </style>
         </head>
-        <body onload="setTimeout(() => { window.print(); window.parent.document.getElementById('bill-print-frame').remove(); }, 500)">
+        <body onload="setTimeout(() => { window.print(); window.parent.document.getElementById('bill-print-frame').remove(); }, 1000)">
           <div class="center">
-            <h1 class="header-large bold">${hName.toUpperCase()}</h1>
+            <div class="header-large">${hName.toUpperCase()}</div>
             ${hAddr ? `<div>${hAddr}</div>` : ''}
             ${hPhone ? `<div>Phone: ${hPhone}</div>` : ''}
           </div>
           
           <div class="dashed"></div>
-          <div class="center bold" style="font-size: 10pt; margin: 5px 0;">INVOICE</div>
-          <div style="font-size: 10pt;">
+          <div class="center" style="font-size: 14pt; margin: 5px 0;">INVOICE</div>
+          <div>
             <div class="flex-row"><span>Table No:</span> <span>${table.table_numberByFloor || table.table_number}</span></div>
             <div class="flex-row"><span>Bill No:</span> <span>#${billData.id}</span></div>
             <div class="flex-row"><span>Date:</span> <span>${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
@@ -160,9 +167,9 @@ const OrderModal = ({ table, onClose }) => {
           <table class="items-table">
             <thead>
               <tr>
-                <th width="60%">Item</th>
+                <th width="55%">Item</th>
                 <th width="15%" class="right">Qty</th>
-                <th width="25%" class="right">Total</th>
+                <th width="30%" class="right">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -171,23 +178,29 @@ const OrderModal = ({ table, onClose }) => {
           </table>
 
           <div class="dashed"></div>
-          <div style="line-height: 1.5; font-size: 11pt;">
-            <div class="flex-row"><span>Subtotal:</span> <span>₹${parseFloat(billData.subtotal || 0).toFixed(2)}</span></div>
-            <div class="flex-row"><span>GST (${billData.gst_percentage}%):</span> <span>₹${parseFloat(billData.gst || 0).toFixed(2)}</span></div>
-            ${billData.discount_percentage > 0 ? `<div class="flex-row"><span>Discount (${billData.discount_percentage}%):</span> <span>-₹${( (parseFloat(billData.subtotal) + parseFloat(billData.gst)) * (billData.discount_percentage / 100) ).toFixed(2)}</span></div>` : ''}
+          <div style="line-height: 1.5;">
+            <div class="flex-row"><span>Subtotal:</span> <span>&nbsp;${parseFloat(billData.subtotal || 0).toFixed(2)}</span></div>
+            <div class="flex-row"><span>GST (${billData.gst_percentage}%):</span> <span>&nbsp;${parseFloat(billData.gst || 0).toFixed(2)}</span></div>
+            ${billData.discount_percentage > 0 ? `<div class="flex-row"><span>Discount (${billData.discount_percentage}%):</span> <span>-${( (parseFloat(billData.subtotal) + parseFloat(billData.gst)) * (billData.discount_percentage / 100) ).toFixed(2)}</span></div>` : ''}
             <div class="dashed"></div>
-            <div class="flex-row bold" style="font-size: 13pt; margin-top: 4px;">
+            <div class="flex-row" style="font-size: 16pt; margin-top: 4px;">
               <span>GRAND TOTAL:</span>
-              <span>₹${parseFloat(billData.final_amount).toFixed(2)}</span>
+              <span>&nbsp;${parseFloat(billData.final_amount).toFixed(2)}</span>
             </div>
           </div>
           <div class="dashed"></div>
 
-          <div class="center footer">
-            <div class="bold">Thank You for Dining with us!</div>
-            <div>Visit Again!</div>
-            <div style="font-size: 7pt; margin-top: 10px; opacity: 0.5;">Powered by BestBill</div>
+          <div class="center" style="margin-top: 15px;">
+            <div>Thank You! Visit Again!</div>
+            <div>${hName}</div>
           </div>
+
+          ${!billData.is_paid && user?.upi_id ? `
+          <div class="qr-container">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLinkStr)}&margin=0" />
+            <div style="font-size: 12pt;">Scan to Pay</div>
+          </div>
+          ` : ''}
         </body>
       </html>
     `;
@@ -272,13 +285,17 @@ const OrderModal = ({ table, onClose }) => {
     const preVal = subVal + taxVal;
     
     let msg = `*--- ${user?.hotel_name?.toUpperCase() || 'BESTBILL'} RECEIPT ---*\n\n`;
+    msg += `Table No: ${table.table_numberByFloor || table.table_number}\n`;
+    msg += `Bill No: #${billData.id}\n`;
+    msg += `Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}\n`;
+    msg += `\n*Items:*\n`;
     (billData.items || []).forEach(i => msg += `• ${i.name} x ${i.quantity} = ₹${(i.price * i.quantity).toFixed(2)}\n`);
     msg += `\n*------------------------*\n`;
     msg += `*Subtotal:* ₹${subVal.toFixed(2)}\n`;
     msg += `*GST (${billData.gst_percentage}%):* ₹${taxVal.toFixed(2)}\n`;
     if (billData.discount_percentage > 0) msg += `*Discount (${billData.discount_percentage}%):* -₹${(preVal * billData.discount_percentage / 100).toFixed(2)}\n`;
     msg += `*GRAND TOTAL: ₹${parseFloat(billData.final_amount).toFixed(2)}*\n`;
-    msg += `\nThank you! Visit again.`;
+    msg += `\nThank you! Visit again.\n`;
     
     const cleanPhone = customerPhone.replace(/\D/g, '');
     const finalPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;

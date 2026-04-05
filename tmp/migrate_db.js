@@ -14,7 +14,7 @@ async function migrate() {
       ALTER TABLE hotels 
       ADD COLUMN IF NOT EXISTS address TEXT,
       ADD COLUMN IF NOT EXISTS upi_id VARCHAR(255),
-      ADD COLUMN IF NOT EXISTS gst_percentage DECIMAL(5,2) DEFAULT 5.00
+      ADD COLUMN IF NOT EXISTS gst_percentage DECIMAL(5,2) DEFAULT 0
     `);
 
     console.log('--- STRUCTURAL INTEGRITY VERIFIED ---');

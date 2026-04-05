@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import { toast } from 'react-hot-toast';
-import { Store, Plus, Trash2, Mail, User, ShieldCheck, Hotel, Search, ListFilter, IndianRupee, Table, X, ChevronRight, Activity, Receipt, ListOrdered, BarChart3, Phone, MapPin, Image as ImageIcon, Upload } from 'lucide-react';
+import { Store, Plus, Trash2, Mail, User, ShieldCheck, Hotel, Search, ListFilter, IndianRupee, Table, X, ChevronRight, Activity, Receipt, ListOrdered, BarChart3, Phone, MapPin, Image as ImageIcon, Upload, Power } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 
 const AdminDashboard = () => {
@@ -87,6 +87,21 @@ const AdminDashboard = () => {
     }
   };
 
+  const toggleService = async (hotelId, e) => {
+    if (e) e.stopPropagation();
+    try {
+      const res = await api.put(`/admin/hotels/${hotelId}/toggle-service`);
+      toast.success(res.data.message);
+      fetchHotels();
+      // If inspector is open for this hotel, refresh it
+      if (selectedHotelData && selectedHotelData.hotel.id === hotelId) {
+        openHotelInspector(hotelId);
+      }
+    } catch (err) {
+      toast.error('Failed to toggle service');
+    }
+  };
+
   const updateSubscription = async (e) => {
     e.preventDefault();
     if (!subUpdateModal.amount || !subUpdateModal.validityMonths) return toast.error('Please enter valid data');
@@ -135,11 +150,23 @@ const AdminDashboard = () => {
                 <div style={{ width: '64px', height: '64px', backgroundColor: `${themeColor}20`, borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                     {h.logo_url ? <img src={h.logo_url.startsWith('http') ? h.logo_url : `${serverUrl}${h.logo_url}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Hotel style={{ color: themeColor }} size={32} />}
                 </div>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); setConfirmModal({ isOpen: true, id: h.id }); }}
-                  style={{ color: '#f43f5e', background: 'none', border: 'none', cursor: 'pointer', padding: '8px', borderRadius: '12px', backgroundColor: 'rgba(244, 63, 94, 0.05)' }}>
-                  <Trash2 size={18} />
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button
+                    onClick={(e) => toggleService(h.id, e)}
+                    title={h.is_service_stopped ? 'Resume Service' : 'Stop Service'}
+                    style={{ 
+                      color: h.is_service_stopped ? '#f43f5e' : '#10b981', 
+                      background: 'none', border: 'none', cursor: 'pointer', padding: '8px', borderRadius: '12px', 
+                      backgroundColor: h.is_service_stopped ? 'rgba(244, 63, 94, 0.1)' : 'rgba(16, 185, 129, 0.1)' 
+                    }}>
+                    <Power size={18} />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setConfirmModal({ isOpen: true, id: h.id }); }}
+                    style={{ color: '#f43f5e', background: 'none', border: 'none', cursor: 'pointer', padding: '8px', borderRadius: '12px', backgroundColor: 'rgba(244, 63, 94, 0.05)' }}>
+                    <Trash2 size={18} />
+                  </button>
+                </div>
              </div>
 
              <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'white', margin: '0 0 8px 0' }}>{h.name}</h3>
@@ -157,8 +184,18 @@ const AdminDashboard = () => {
              </div>
 
              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.03)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: themeColor, fontSize: '14px', fontWeight: 900 }}>
-                   <Table size={16} /> {h.total_tables} Active Tables
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: themeColor, fontSize: '14px', fontWeight: 900 }}>
+                      <Table size={16} /> {h.total_tables} Tables
+                   </div>
+                   <span style={{ 
+                     fontSize: '10px', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.05em',
+                     padding: '4px 10px', borderRadius: '8px',
+                     color: h.is_service_stopped ? '#f43f5e' : '#10b981',
+                     backgroundColor: h.is_service_stopped ? 'rgba(244,63,94,0.1)' : 'rgba(16,185,129,0.1)'
+                   }}>
+                     {h.is_service_stopped ? 'SERVICE OFF' : 'ACTIVE'}
+                   </span>
                 </div>
                 <ChevronRight size={20} style={{ color: '#1e293b' }} />
              </div>
@@ -227,8 +264,25 @@ const AdminDashboard = () => {
                            <span style={{ padding: '6px 12px', backgroundColor: 'rgba(16, 185, 129, 0.2)', color: '#10b981', borderRadius: '8px', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase' }}>
                               Valid Until: {selectedHotelData.hotel.subscription_valid_until ? new Date(selectedHotelData.hotel.subscription_valid_until).toLocaleDateString() : 'N/A'}
                            </span>
+                           {selectedHotelData.hotel.subscription_valid_until && (() => { const d = Math.ceil((new Date(selectedHotelData.hotel.subscription_valid_until) - new Date()) / (1000*60*60*24)); return (
+                              <span style={{ padding: '6px 12px', backgroundColor: d > 5 ? 'rgba(14,165,233,0.1)' : 'rgba(244,63,94,0.15)', color: d > 5 ? '#0ea5e9' : '#f43f5e', borderRadius: '8px', fontSize: '12px', fontWeight: 900 }}>
+                                 {d > 0 ? `${d} Days Left` : 'EXPIRED'}
+                              </span>
+                           ); })()}
                            <button onClick={() => setSubUpdateModal({ isOpen: true, amount: selectedHotelData.hotel.subscription_amount || '', validityMonths: '1' })} style={{ padding: '6px 12px', backgroundColor: '#1e293b', color: 'white', borderRadius: '8px', fontSize: '12px', fontWeight: 800, border: 'none', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
                               Renew / Change Plan
+                           </button>
+                           <button
+                              onClick={() => toggleService(selectedHotelData.hotel.id)}
+                              style={{ 
+                                padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 900, border: 'none', cursor: 'pointer',
+                                backgroundColor: selectedHotelData.hotel.is_service_stopped ? 'rgba(244,63,94,0.15)' : 'rgba(16,185,129,0.15)',
+                                color: selectedHotelData.hotel.is_service_stopped ? '#f43f5e' : '#10b981',
+                                display: 'flex', alignItems: 'center', gap: '6px'
+                              }}
+                           >
+                              <Power size={14} />
+                              {selectedHotelData.hotel.is_service_stopped ? 'SERVICE STOPPED' : 'SERVICE ACTIVE'}
                            </button>
                         </div>
                      </div>

@@ -138,7 +138,15 @@ const Dashboard = () => {
     return acc;
   }, {});
 
-  const floors = Object.keys(groupedTables).sort();
+  const floorOrder = (name) => {
+    if (name.startsWith('Floor ')) return parseInt(name.replace('Floor ', '')) || 99;
+    if (name === 'Rooftop') return 100;
+    if (name === 'Garden') return 101;
+    if (name === 'Family Section') return 102;
+    return 200;
+  };
+
+  const floors = Object.keys(groupedTables).sort((a, b) => floorOrder(a) - floorOrder(b));
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
@@ -381,6 +389,7 @@ const Dashboard = () => {
                         ))}
                         <option value="Rooftop">Rooftop</option>
                         <option value="Garden">Garden</option>
+                        <option value="Family Section">Family Section</option>
                      </select>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -432,6 +441,7 @@ const Dashboard = () => {
                           ))}
                           <option value="Rooftop">Rooftop</option>
                           <option value="Garden">Garden</option>
+                          <option value="Family Section">Family Section</option>
                       </select>
                  </div>
                  <div style={{ display: 'flex', gap: '12px' }}>
