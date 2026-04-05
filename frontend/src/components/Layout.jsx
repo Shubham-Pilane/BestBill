@@ -1,12 +1,14 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, UtensilsCrossed, LogOut, User, Store, ShieldCheck, Building2, Settings, UserCircle, History, Wallet } from 'lucide-react';
+import { LayoutDashboard, UtensilsCrossed, LogOut, User, Store, ShieldCheck, Building2, Settings, UserCircle, History, Wallet, Menu, X } from 'lucide-react';
+import { useState } from 'react';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const isAdmin = user?.role === 'admin';
   const themeColor = isAdmin ? '#10b981' : '#0ea5e9';
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const getDaysLeft = () => {
     if (!user?.subscription_valid_until) return 0;
@@ -45,18 +47,52 @@ const Layout = ({ children }) => {
       fontFamily: "'Inter', sans-serif",
       width: '100%'
     }}>
-      {/* Sidebar */}
-      <aside style={{
-        width: '280px',
-        backgroundColor: '#0f172a',
-        borderRight: '1px solid rgba(255, 255, 255, 0.05)',
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '32px 20px',
+      <header className="nav-header" style={{
         position: 'fixed',
-        height: '100vh',
-        zIndex: 50
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '64px',
+        backgroundColor: '#0f172a',
+        display: 'none', 
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 24px',
+        zIndex: 100, // Highest z-index for visibility
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
       }}>
+        <button 
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: '12px' }}
+        >
+          {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+             <div style={{ width: '32px', height: '32px', backgroundColor: themeColor, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <UtensilsCrossed style={{ color: 'white' }} size={18} />
+             </div>
+             <span style={{ fontSize: '18px', fontWeight: 900 }}>BestBill</span>
+        </div>
+        <div style={{ width: '40px' }}></div> {/* Spacer for balance */}
+      </header>
+
+      {/* Sidebar - Added desktop-sidebar class and fixed width logic */}
+      <aside 
+        className={`desktop-sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}
+        style={{
+          width: '280px',
+          backgroundColor: '#0f172a',
+          borderRight: '1px solid rgba(255, 255, 255, 0.05)',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '32px 20px',
+          position: 'fixed',
+          height: '100vh',
+          zIndex: 70, // Above mobile header
+          transition: 'transform 0.3s ease'
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '48px', padding: '0 12px' }}>
           <div style={{
             width: '44px',
@@ -80,6 +116,7 @@ const Layout = ({ children }) => {
             <Link
               key={item.path}
               to={item.path}
+              onClick={() => setMobileMenuOpen(false)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -146,9 +183,24 @@ const Layout = ({ children }) => {
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <div style={{ flex: 1, marginLeft: '280px', padding: '48px', position: 'relative' }}>
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '48px' }}>
+      {/* Sidebar Overlay (Mobile Only) */}
+      {mobileMenuOpen && (
+        <div 
+           onClick={() => setMobileMenuOpen(false)}
+           style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              zIndex: 65,
+              backdropFilter: 'blur(4px)'
+           }}
+        />
+      )}
+
+      {/* Main Content Area - Added main-content class */}
+      <div className="main-content" style={{ flex: 1, marginLeft: '280px', padding: mobileMenuOpen ? '48px' : '48px', position: 'relative', marginTop: '32px' }}>
+         <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
+            <header className="header-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '48px' }}>
           <div>
             <h1 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
               {isAdmin ? <Building2 style={{ color: '#f43f5e' }} size={32} /> : <Store style={{ color: '#0ea5e9' }} size={32} />}
@@ -171,11 +223,12 @@ const Layout = ({ children }) => {
             </div>
           </div>
         </header>
-        
-        {/* Child Content Container */}
-        <section style={{ position: 'relative', width: '100%' }}>
-          {children}
-        </section>
+          
+          {/* Child Content Container */}
+          <section className="main-section" style={{ position: 'relative', width: '100%' }}>
+            {children}
+          </section>
+        </div>
       </div>
     </div>
   );
