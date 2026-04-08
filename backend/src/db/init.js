@@ -4,14 +4,22 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
-const config = {
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST || 'localhost',
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME,
-};
+let config = {};
 
+if (process.env.DATABASE_URL) {
+  config = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  };
+} else {
+  config = {
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST || 'localhost',
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT || 5432,
+    database: process.env.DB_NAME,
+  };
+}
 const seedAdmin = async (pool) => {
   try {
     const adminEmail = 'admin@bestbill.com';

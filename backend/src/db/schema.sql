@@ -38,7 +38,7 @@ CREATE TABLE public.bills (
 );
 
 
-ALTER TABLE public.bills OWNER TO postgres;
+
 
 --
 -- Name: bills_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -53,7 +53,7 @@ CREATE SEQUENCE public.bills_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.bills_id_seq OWNER TO postgres;
+
 
 --
 -- Name: bills_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -74,7 +74,7 @@ CREATE TABLE public.categories (
 );
 
 
-ALTER TABLE public.categories OWNER TO postgres;
+
 
 --
 -- Name: categories_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -89,7 +89,7 @@ CREATE SEQUENCE public.categories_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.categories_id_seq OWNER TO postgres;
+
 
 --
 -- Name: categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -118,7 +118,7 @@ CREATE TABLE public.hotels (
 );
 
 
-ALTER TABLE public.hotels OWNER TO postgres;
+
 
 --
 -- Name: hotels_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -133,7 +133,7 @@ CREATE SEQUENCE public.hotels_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.hotels_id_seq OWNER TO postgres;
+
 
 --
 -- Name: hotels_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -157,7 +157,7 @@ CREATE TABLE public.menu_items (
 );
 
 
-ALTER TABLE public.menu_items OWNER TO postgres;
+
 
 --
 -- Name: menu_items_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -172,7 +172,7 @@ CREATE SEQUENCE public.menu_items_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.menu_items_id_seq OWNER TO postgres;
+
 
 --
 -- Name: menu_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -194,7 +194,7 @@ CREATE TABLE public.order_items (
 );
 
 
-ALTER TABLE public.order_items OWNER TO postgres;
+
 
 --
 -- Name: order_items_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -209,7 +209,7 @@ CREATE SEQUENCE public.order_items_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.order_items_id_seq OWNER TO postgres;
+
 
 --
 -- Name: order_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -230,7 +230,7 @@ CREATE TABLE public.orders (
 );
 
 
-ALTER TABLE public.orders OWNER TO postgres;
+
 
 --
 -- Name: orders_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -245,7 +245,7 @@ CREATE SEQUENCE public.orders_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.orders_id_seq OWNER TO postgres;
+
 
 --
 -- Name: orders_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -269,7 +269,7 @@ CREATE TABLE public.subscription_history (
 );
 
 
-ALTER TABLE public.subscription_history OWNER TO postgres;
+
 
 --
 -- Name: subscription_history_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -284,7 +284,7 @@ CREATE SEQUENCE public.subscription_history_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.subscription_history_id_seq OWNER TO postgres;
+
 
 --
 -- Name: subscription_history_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -305,7 +305,7 @@ CREATE TABLE public.tables (
 );
 
 
-ALTER TABLE public.tables OWNER TO postgres;
+
 
 --
 -- Name: tables_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -320,7 +320,7 @@ CREATE SEQUENCE public.tables_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.tables_id_seq OWNER TO postgres;
+
 
 --
 -- Name: tables_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -344,7 +344,7 @@ CREATE TABLE public.users (
 );
 
 
-ALTER TABLE public.users OWNER TO postgres;
+
 
 --
 -- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -359,7 +359,7 @@ CREATE SEQUENCE public.users_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.users_id_seq OWNER TO postgres;
+
 
 --
 -- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres

@@ -1,21 +1,29 @@
 const { Pool } = require('pg');
 
-// Build connection config - supports both local TCP and Cloud SQL Unix sockets
-const dbConfig = {
-  user: process.env.DB_USER,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-};
+let dbConfig = {};
 
-// Cloud SQL uses Unix socket paths like /cloudsql/project:region:instance
-if (process.env.DB_HOST && process.env.DB_HOST.startsWith('/cloudsql/')) {
-  dbConfig.host = process.env.DB_HOST;
-  // No port needed for Unix socket connections
-  console.log(`[DB] Connecting via Cloud SQL socket: ${process.env.DB_HOST}`);
+if (process.env.DATABASE_URL) {
+  dbConfig = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false } // Required for Neon
+  };
+  console.log(`[DB] Connecting via DATABASE_URL (Neon/Cloud)`);
 } else {
-  dbConfig.host = process.env.DB_HOST || 'localhost';
-  dbConfig.port = process.env.DB_PORT || 5432;
-  console.log(`[DB] Connecting via TCP: ${dbConfig.host}:${dbConfig.port}`);
+  // Build fallback connection config - supports both local TCP and Cloud SQL Unix sockets
+  dbConfig = {
+    user: process.env.DB_USER,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+  };
+
+  if (process.env.DB_HOST && process.env.DB_HOST.startsWith('/cloudsql/')) {
+    dbConfig.host = process.env.DB_HOST;
+    console.log(`[DB] Connecting via Cloud SQL socket: ${process.env.DB_HOST}`);
+  } else {
+    dbConfig.host = process.env.DB_HOST || 'localhost';
+    dbConfig.port = process.env.DB_PORT || 5432;
+    console.log(`[DB] Connecting via TCP: ${dbConfig.host}:${dbConfig.port}`);
+  }
 }
 
 const pool = new Pool(dbConfig);
