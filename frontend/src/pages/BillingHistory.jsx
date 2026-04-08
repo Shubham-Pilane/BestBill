@@ -350,12 +350,12 @@ const BillingHistory = () => {
                         </div>
 
                         <div style={{ marginBottom: '24px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 100px', borderBottom: '1px dashed #cbd5e1', paddingBottom: '8px', marginBottom: '12px', fontSize: '12px', fontWeight: 900, color: '#475569' }}>
-                            <span>Item</span><span style={{ textAlign: 'right' }}>Qty</span><span style={{ textAlign: 'right' }}>Total</span>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 60px 100px', borderBottom: '1px dashed #cbd5e1', paddingBottom: '8px', marginBottom: '12px', fontSize: '12px', fontWeight: 900, color: '#475569' }}>
+                            <span>Item</span><span style={{ textAlign: 'right' }}>Price</span><span style={{ textAlign: 'right' }}>Qty</span><span style={{ textAlign: 'right' }}>Total</span>
                         </div>
                         {(selectedBill.items || []).map((i, idx) => (
-                            <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 60px 100px', fontSize: '15px', fontWeight: 800, marginBottom: '8px', color: '#1e293b' }}>
-                            <span>{i.name}</span><span style={{ textAlign: 'right' }}>{i.quantity}</span><span style={{ textAlign: 'right' }}>₹{(i.price * i.quantity).toFixed(2)}</span>
+                            <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 60px 100px', fontSize: '15px', fontWeight: 800, marginBottom: '8px', color: '#1e293b' }}>
+                            <span>{i.name}</span><span style={{ textAlign: 'right' }}>₹{Math.round(i.price)}</span><span style={{ textAlign: 'right' }}>{i.quantity}</span><span style={{ textAlign: 'right' }}>₹{(i.price * i.quantity).toFixed(2)}</span>
                             </div>
                         ))}
                         </div>
