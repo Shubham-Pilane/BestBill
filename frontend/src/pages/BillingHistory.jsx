@@ -41,8 +41,8 @@ const BillingHistory = () => {
         const itemsRows = (selectedBill.items || []).map(i => `
         <tr>
             <td style="padding-right: 2px;">${i.name}</td>
-            <td style="text-align: right; padding-right: 2px;">${Math.round(i.price)}</td>
-            <td style="text-align: right; padding-right: 4px;">${i.quantity}</td>
+            <td style="text-align: center;">${Math.round(i.price)}</td>
+            <td style="text-align: center;">${i.quantity}</td>
             <td style="text-align: right;">${Math.round(i.price * i.quantity)}</td>
         </tr>
         `).join('');
@@ -55,86 +55,106 @@ const BillingHistory = () => {
         <html>
             <head>
             <style>
-                @page { margin: 0; }
+                @media print {
+                @page {
+                    margin: 0;
+                    size: 58mm auto;
+                }
+                body {
+                    width: 58mm;
+                    margin: 0;
+                    padding: 0;
+                }
+                }
                 * {
                 color: #000 !important;
                 font-family: 'Courier New', Courier, monospace !important;
                 font-weight: bold !important;
-                font-size: 8pt;
+                font-size: 8.5pt;
                 box-sizing: border-box;
                 }
                 body { 
                 margin: 0; 
                 padding: 0; 
-                width: 46mm; 
                 background: #fff;
+                }
+                .bill-wrapper {
+                width: 46mm;
+                margin: 0 auto;
+                padding: 0;
+                overflow: hidden;
                 }
                 .center { text-align: center; }
                 .right { text-align: right; }
                 .dashed { border-top: 1px dashed #000; margin: 4px 0; }
-                .header-large { font-size: 12pt; margin: 0; }
+                .header-large { font-size: 11pt; margin: 0; }
                 .items-table { width: 100%; border-collapse: collapse; margin: 4px 0; table-layout: fixed; }
-                .items-table th { text-align: left; border-bottom: 1px dashed #000; padding: 2px 1px; }
-                .items-table td { padding: 2px 1px; vertical-align: top; word-break: break-word; }
-                .flex-row { display: flex; justify-content: space-between; align-items: center; margin: 1px 0; }
-                .qr-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 10px; }
-                .qr-container img { width: 90px; height: 90px; margin-bottom: 2px; }
+                .items-table th { border-bottom: 1px dashed #000; padding: 2px 0; }
+                .items-table td { padding: 2px 0; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
+                .flex-row { display: flex; justify-content: space-between; align-items: flex-start; margin: 1px 0; gap: 2px; }
+                .flex-row span:first-child { flex: 1; text-align: left; word-break: break-word; }
+                .flex-row span:last-child { text-align: right; }
+                .qr-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 10px; margin-bottom: 5px; }
+                .qr-container img { width: 70px; height: 70px; margin-bottom: 2px; }
             </style>
             </head>
             <body onload="setTimeout(() => { window.print(); window.parent.document.getElementById('bill-print-frame').remove(); }, 1000)">
-            <div class="center">
-                <div class="header-large">${hName.toUpperCase()}</div>
-                ${hAddr ? `<div>${hAddr}</div>` : ''}
-                ${hPhone ? `<div>Phone: ${hPhone}</div>` : ''}
-            </div>
-            
-            <div class="dashed"></div>
-            <div class="center" style="font-size: 11pt; margin: 2px 0;">INVOICE</div>
-            <div style="margin: 2px 0;">
-                <div class="flex-row"><span>Table:</span> <span>${selectedBill.table_number}</span></div>
-                <div class="flex-row"><span>Bill:</span> <span>#${selectedBill.id}</span></div>
-                <div class="flex-row"><span>Date:</span> <span>${new Date(selectedBill.created_at).toLocaleDateString()} ${new Date(selectedBill.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
-            </div>
-            <div class="dashed"></div>
-
-            <table class="items-table" style="font-size: 8.5pt;">
-                <thead>
-                <tr>
-                    <th width="38%">Item</th>
-                    <th width="22%" class="right">Price</th>
-                    <th width="15%" class="right" style="padding-right: 4px;">Qty</th>
-                    <th width="25%" class="right">Total</th>
-                </tr>
-                </thead>
-                <tbody>
-                ${itemsRows}
-                </tbody>
-            </table>
-
-            <div class="dashed"></div>
-            <div style="line-height: 1.2;">
-                <div class="flex-row"><span>Subtotal:</span> <span>${Math.round(selectedBill.subtotal || 0)}</span></div>
-                <div class="flex-row"><span>GST (${selectedBill.gst_percentage || 0}%):</span> <span>${Math.round(selectedBill.gst || 0)}</span></div>
-                ${selectedBill.discount_percentage > 0 ? `<div class="flex-row"><span>Disc (${selectedBill.discount_percentage}%):</span> <span>-${Math.round( (parseFloat(selectedBill.subtotal) + parseFloat(selectedBill.gst)) * (selectedBill.discount_percentage / 100) )}</span></div>` : ''}
-                <div class="dashed"></div>
-                <div class="flex-row" style="font-size: 11pt; margin-top: 2px;">
-                <span>TOTAL:</span>
-                <span>${Math.round(selectedBill.final_amount)}</span>
+            <div class="bill-wrapper">
+                <div class="center">
+                    <div class="header-large">${hName.toUpperCase()}</div>
+                    ${hAddr ? `<div>${hAddr}</div>` : ''}
+                    ${hPhone ? `<div>Phone: ${hPhone}</div>` : ''}
                 </div>
-            </div>
-            <div class="dashed"></div>
+                
+                <div class="dashed"></div>
+                <div class="center" style="font-size: 10pt; margin: 2px 0;">INVOICE</div>
+                <div style="margin: 2px 0;">
+                    <div class="flex-row"><span>Table:</span> <span>${selectedBill.table_number}</span></div>
+                    <div class="flex-row"><span>Bill:</span> <span>#${selectedBill.id}</span></div>
+                    <div class="flex-row"><span>Date:</span> <span>${new Date(selectedBill.created_at).toLocaleDateString()} ${new Date(selectedBill.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
+                </div>
+                <div class="dashed"></div>
 
-            <div class="center" style="margin-top: 5px;">
-                <div>Thank You! Visit Again!</div>
-                <div>${hName}</div>
-            </div>
+                <table class="items-table" style="font-size: 8.5pt;">
+                    <thead>
+                    <tr>
+                        <th width="40%" style="text-align: left;">Item</th>
+                        <th width="20%" style="text-align: center;">Price</th>
+                        <th width="15%" style="text-align: center;">Qty</th>
+                        <th width="25%" style="text-align: right;">Total</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    ${itemsRows}
+                    </tbody>
+                </table>
 
-            ${!selectedBill.is_paid && user?.upi_id ? `
-            <div class="qr-container">
-                <img src="${qrDataUrl}" />
-                <div style="font-size: 9pt;">Scan to Pay</div>
+                <div class="dashed"></div>
+                <div style="line-height: 1.2;">
+                    <div class="flex-row"><span>Subtotal:</span> <span>${Math.round(selectedBill.subtotal || 0)}</span></div>
+                    <div class="flex-row"><span>GST (${selectedBill.gst_percentage || 0}%):</span> <span>${Math.round(selectedBill.gst || 0)}</span></div>
+                    ${selectedBill.discount_percentage > 0 ? `<div class="flex-row"><span>Disc (${selectedBill.discount_percentage}%):</span> <span>-${Math.round( (parseFloat(selectedBill.subtotal) + parseFloat(selectedBill.gst)) * (selectedBill.discount_percentage / 100) )}</span></div>` : ''}
+                    <div class="dashed"></div>
+                    <div class="flex-row" style="font-size: 11pt; margin-top: 2px;">
+                    <span>TOTAL:</span>
+                    <span>${Math.round(selectedBill.final_amount)}</span>
+                    </div>
+                </div>
+                <div class="dashed"></div>
+
+                <div class="center" style="margin-top: 5px;">
+                    <div>Thank You for Dining with Us!</div>
+                    <div>Visit Again!</div>
+                </div>
+
+                ${!selectedBill.is_paid && user?.upi_id ? `
+                <div class="qr-container">
+                    <img src="${qrDataUrl}" />
+                    <div style="font-size: 8pt;">Scan to Pay</div>
+                </div>
+                ` : ''}
+                <div style="height: 15mm;"></div>
             </div>
-            ` : ''}
             </body>
         </html>
         `;
