@@ -55,18 +55,18 @@ const BillingHistory = () => {
         <html>
             <head>
             <style>
-                @page { margin: 0; size: 58mm auto; }
+                @page { margin: 0; }
                 * {
                 color: #000 !important;
                 font-family: 'Courier New', Courier, monospace !important;
                 font-weight: bold !important;
-                font-size: 8.5pt;
+                font-size: 8pt;
                 box-sizing: border-box;
                 }
                 body { 
-                margin: 0 auto; 
+                margin: 0; 
                 padding: 0; 
-                width: 48mm; 
+                width: 46mm; 
                 background: #fff;
                 }
                 .center { text-align: center; }
