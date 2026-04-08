@@ -292,7 +292,7 @@ const BillingHistory = () => {
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {filteredBills.map(bill => (
-                            <div key={bill.id} onClick={() => handleBillClick(bill.id)} style={{ cursor: 'pointer', backgroundColor: '#0f172a', borderRadius: '24px', padding: '24px 32px', border: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'all 0.2s' }}>
+                            <div key={bill.id} onClick={() => handleBillClick(bill.id)} className="billing-card" style={{ cursor: 'pointer', backgroundColor: '#0f172a', borderRadius: '24px', padding: '24px 32px', border: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'all 0.2s' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
                                     <div style={{ width: '56px', height: '56px', backgroundColor: '#020617', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #1e293b' }}>
                                         <Receipt size={24} style={{ color: '#0ea5e9' }} />
@@ -306,7 +306,7 @@ const BillingHistory = () => {
                                     </div>
                                 </div>
 
-                                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div className="billing-card-right" style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     <span style={{ display: 'block', fontSize: '20px', fontWeight: 1000, color: '#10b981' }}>₹{parseFloat(bill.final_amount).toFixed(2)}</span>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
                                         {bill.is_paid ? (

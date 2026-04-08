@@ -116,8 +116,12 @@ body {
   }
   .dashboard-header {
     flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 16px !important;
+    align-items: flex-start !important;
+    gap: 20px !important;
+  }
+  .dashboard-header > div {
+    max-width: 100% !important;
+    width: 100% !important;
   }
   .modal-container {
     width: 95% !important;
@@ -199,6 +203,42 @@ body {
   div[style*="max-height: 85vh"] {
       max-height: 95vh !important;
       padding: 24px !important;
+  }
+
+  /* Specific Layout Overrides */
+  .hotel-title {
+      font-size: 24px !important;
+  }
+  
+  .header-meta {
+      width: 100% !important;
+      justify-content: space-between !important;
+      gap: 12px !important;
+  }
+
+  .plan-badge, .date-display {
+      text-align: left !important;
+      padding: 8px !important;
+  }
+
+  .date-display span {
+      font-size: 13px !important;
+  }
+
+  /* Billing History Card responsive */
+  .billing-card {
+      padding: 16px !important;
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 16px !important;
+  }
+
+  .billing-card-right {
+      text-align: left !important;
+      width: 100% !important;
+      align-items: flex-start !important;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 16px !important;
   }
 
   button {

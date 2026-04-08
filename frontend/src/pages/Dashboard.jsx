@@ -157,7 +157,7 @@ const Dashboard = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '48px', width: '100%', maxWidth: '1440px' }}>
-      <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '24px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '400px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 900, letterSpacing: '-0.02em', color: 'white', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <LayoutGrid style={{ color: '#0ea5e9' }} size={24} />

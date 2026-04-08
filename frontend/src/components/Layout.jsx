@@ -198,11 +198,11 @@ const Layout = ({ children }) => {
       )}
 
       {/* Main Content Area - Added main-content class */}
-      <div className="main-content" style={{ flex: 1, marginLeft: '280px', padding: mobileMenuOpen ? '48px' : '48px', position: 'relative', marginTop: '32px' }}>
+      <div className="main-content" style={{ flex: 1, marginLeft: '280px', padding: '48px', position: 'relative', marginTop: '0' }}>
          <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
-            <header className="header-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '48px' }}>
+            <header className="header-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '48px', flexWrap: 'wrap', gap: '24px' }}>
           <div>
-            <h1 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <h1 className="hotel-title" style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
               {isAdmin ? <Building2 style={{ color: '#f43f5e' }} size={32} /> : <Store style={{ color: '#0ea5e9' }} size={32} />}
               {isAdmin ? 'BestBill Ecosystem Control' : user?.hotel_name}
             </h1>
@@ -210,14 +210,14 @@ const Layout = ({ children }) => {
               {isAdmin ? `Administrator: ${user?.name}` : `Proprietor: ${user?.name} | Active Session`}
             </p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+          <div className="header-meta" style={{ display: 'flex', alignItems: 'center', gap: '32px', flexWrap: 'wrap' }}>
             {!isAdmin && (
-              <div style={{ padding: '12px 20px', backgroundColor: daysLeft > 5 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)', borderRadius: '16px', border: `1px solid ${daysLeft > 5 ? 'rgba(16, 185, 129, 0.3)' : '#f43f5e'}`, textAlign: 'right' }}>
+              <div className="plan-badge" style={{ padding: '12px 20px', backgroundColor: daysLeft > 5 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)', borderRadius: '16px', border: `1px solid ${daysLeft > 5 ? 'rgba(16, 185, 129, 0.3)' : '#f43f5e'}`, textAlign: 'right' }}>
                  <span style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: daysLeft > 5 ? '#10b981' : '#f43f5e', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Plan Validity</span>
                  <span style={{ fontSize: '16px', fontWeight: 900, color: 'white' }}>{daysLeft > 0 ? `${daysLeft} Days Remaining` : 'Plan Expired'}</span>
               </div>
             )}
-            <div style={{ textAlign: 'right' }}>
+            <div className="date-display" style={{ textAlign: 'right' }}>
               <span style={{ fontSize: '14px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: '4px' }}>CURRENT DATE</span>
               <span style={{ fontSize: '16px', fontWeight: 700 }}>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
             </div>
