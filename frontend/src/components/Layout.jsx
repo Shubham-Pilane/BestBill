@@ -35,6 +35,7 @@ const Layout = ({ children }) => {
           { name: 'Table Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
           { name: 'Manage Menu', path: '/menu', icon: <UtensilsCrossed size={20} /> },
           { name: 'Billing History', path: '/history', icon: <History size={20} /> },
+          { name: 'Lodging (Rooms)', path: '/lodging', icon: <Bed size={20} /> },
           { name: 'Profile Settings', path: '/profile', icon: <UserCircle size={20} /> },
         ];
 

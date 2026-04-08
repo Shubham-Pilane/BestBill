@@ -52,7 +52,8 @@ const syncSchema = async () => {
             "ALTER TABLE tables ADD COLUMN IF NOT EXISTS capacity INTEGER DEFAULT 4",
             "ALTER TABLE tables DROP CONSTRAINT IF EXISTS tables_hotel_id_table_number_key",
             "ALTER TABLE tables ADD CONSTRAINT tables_hotel_id_table_number_floor_key UNIQUE (hotel_id, table_number, floor)",
-            "ALTER TABLE hotels ADD COLUMN IF NOT EXISTS is_service_stopped BOOLEAN DEFAULT false"
+            "ALTER TABLE hotels ADD COLUMN IF NOT EXISTS is_service_stopped BOOLEAN DEFAULT false",
+            "CREATE TABLE IF NOT EXISTS rooms (id SERIAL PRIMARY KEY, hotel_id integer REFERENCES hotels(id) ON DELETE CASCADE, room_number character varying(50) NOT NULL, room_name character varying(255), floor character varying(50) DEFAULT 'Floor 1', status character varying(50) DEFAULT 'available', created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP, UNIQUE (hotel_id, room_number))"
         ];
 
         for (const q of migrations) {

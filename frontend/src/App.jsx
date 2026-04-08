@@ -8,6 +8,7 @@ import MenuManagement from './pages/MenuManagement';
 import BillingHistory from './pages/BillingHistory';
 import Profile from './pages/Profile';
 import Subscriptions from './pages/Subscriptions';
+import Lodging from './pages/Lodging';
 import Layout from './components/Layout';
 import './index.css';
 
@@ -63,6 +64,15 @@ function App() {
               <OwnerRoute>
                 <Layout>
                   <BillingHistory />
+                </Layout>
+              </OwnerRoute>
+            </ProtectedRoute>
+          } />
+          <Route path="/lodging" element={
+            <ProtectedRoute>
+              <OwnerRoute>
+                <Layout>
+                  <Lodging />
                 </Layout>
               </OwnerRoute>
             </ProtectedRoute>

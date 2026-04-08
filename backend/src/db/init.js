@@ -59,7 +59,8 @@ const initDB = async () => {
       "ALTER TABLE hotels ADD COLUMN IF NOT EXISTS phone VARCHAR(20)",
       "ALTER TABLE hotels ADD COLUMN IF NOT EXISTS location TEXT",
       "ALTER TABLE hotels ADD COLUMN IF NOT EXISTS logo_url TEXT",
-      "ALTER TABLE hotels ADD COLUMN IF NOT EXISTS upi_id VARCHAR(255)"
+      "ALTER TABLE hotels ADD COLUMN IF NOT EXISTS upi_id VARCHAR(255)",
+      "CREATE TABLE IF NOT EXISTS rooms (id SERIAL PRIMARY KEY, hotel_id integer REFERENCES public.hotels(id) ON DELETE CASCADE, room_number character varying(50) NOT NULL, room_name character varying(255), floor character varying(50) DEFAULT 'Floor 1', status character varying(50) DEFAULT 'available', created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP, UNIQUE (hotel_id, room_number))"
     ];
 
     for (const q of queries) {

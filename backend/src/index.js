@@ -23,6 +23,7 @@ app.use('/api/tables', require('./routes/tables'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/profile', require('./routes/profile'));
 app.use('/api/bills', require('./routes/bills'));
+app.use('/api/rooms', require('./routes/rooms'));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'BestBill API is running' });
