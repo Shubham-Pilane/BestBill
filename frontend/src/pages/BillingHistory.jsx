@@ -47,6 +47,8 @@ const BillingHistory = () => {
         `).join('');
 
         const upiLinkStr = `upi://pay?pa=${user?.upi_id || ''}&pn=${encodeURIComponent(hName)}&am=${selectedBill?.final_amount || 0}&cu=INR`;
+        const qrCanvas = document.getElementById('history-qr-canvas');
+        const qrDataUrl = qrCanvas ? qrCanvas.toDataURL('image/png') : `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLinkStr)}&margin=0`;
 
         const pageHtml = `
         <html>
@@ -57,24 +59,24 @@ const BillingHistory = () => {
                 color: #000 !important;
                 font-family: 'Courier New', Courier, monospace !important;
                 font-weight: 1000 !important;
-                font-size: 13pt;
+                font-size: 10.5pt;
                 }
                 body { 
                 margin: 0; 
-                padding: 2mm; 
-                width: 76mm; 
+                padding: 2mm 5mm 2mm 2mm; 
+                width: 70mm; 
                 background: #fff;
                 }
                 .center { text-align: center; }
                 .right { text-align: right; }
                 .dashed { border-top: 2px dashed #000; margin: 8px 0; }
-                .header-large { font-size: 18pt; margin: 0; letter-spacing: 1px; }
+                .header-large { font-size: 15pt; margin: 0; letter-spacing: 1px; }
                 .items-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
                 .items-table th { text-align: left; border-bottom: 2px dashed #000; padding: 4px 0; }
                 .items-table td { padding: 4px 0; vertical-align: top; }
                 .flex-row { display: flex; justify-content: space-between; align-items: center; }
                 .qr-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 15px; }
-                .qr-container img { width: 140px; height: 140px; margin-bottom: 5px; }
+                .qr-container img { width: 130px; height: 130px; margin-bottom: 5px; }
             </style>
             </head>
             <body onload="setTimeout(() => { window.print(); window.parent.document.getElementById('bill-print-frame').remove(); }, 1000)">
@@ -112,7 +114,7 @@ const BillingHistory = () => {
                 <div class="flex-row"><span>GST (${selectedBill.gst_percentage || 0}%):</span> <span>&nbsp;${parseFloat(selectedBill.gst || 0).toFixed(2)}</span></div>
                 ${selectedBill.discount_percentage > 0 ? `<div class="flex-row"><span>Discount (${selectedBill.discount_percentage}%):</span> <span>-${( (parseFloat(selectedBill.subtotal) + parseFloat(selectedBill.gst)) * (selectedBill.discount_percentage / 100) ).toFixed(2)}</span></div>` : ''}
                 <div class="dashed"></div>
-                <div class="flex-row" style="font-size: 16pt; margin-top: 4px;">
+                <div class="flex-row" style="font-size: 14pt; margin-top: 4px;">
                 <span>GRAND TOTAL:</span>
                 <span>&nbsp;${parseFloat(selectedBill.final_amount).toFixed(2)}</span>
                 </div>
@@ -126,7 +128,7 @@ const BillingHistory = () => {
 
             ${!selectedBill.is_paid && user?.upi_id ? `
             <div class="qr-container">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLinkStr)}&margin=0" />
+                <img src="${qrDataUrl}" />
                 <div style="font-size: 12pt;">Scan to Pay</div>
             </div>
             ` : ''}
@@ -350,7 +352,7 @@ const BillingHistory = () => {
 
                     <div style={{ width: '380px', padding: '48px', backgroundColor: '#fafafa', display: 'flex', flexDirection: 'column', gap: '32px' }}>
                         <div style={{ textAlign: 'center', backgroundColor: 'white', padding: '24px', borderRadius: '32px' }}>
-                        <QRCodeCanvas value={`upi://pay?pa=${user?.upi_id || ''}&pn=${encodeURIComponent(selectedBill.hotel_name || user?.hotel_name || 'BESTBILL')}&am=${selectedBill.final_amount}&cu=INR`} size={180} />
+                        <QRCodeCanvas id="history-qr-canvas" value={`upi://pay?pa=${user?.upi_id || ''}&pn=${encodeURIComponent(selectedBill.hotel_name || user?.hotel_name || 'BESTBILL')}&am=${selectedBill.final_amount}&cu=INR`} size={180} />
                         </div>
                         <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid #e2e8f0' }}>
                             <Phone size={18} color="#94a3b8" />

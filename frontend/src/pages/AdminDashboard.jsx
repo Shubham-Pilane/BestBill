@@ -11,7 +11,7 @@ const AdminDashboard = () => {
   const [selectedHotelData, setSelectedHotelData] = useState(null);
   const [activeTab, setActiveTab] = useState('menu');
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, id: null });
-  const [subUpdateModal, setSubUpdateModal] = useState({ isOpen: false, amount: '', validityMonths: '' });
+  const [subUpdateModal, setSubUpdateModal] = useState({ isOpen: false, amount: '', validityDate: '' });
   const themeColor = '#10b981';
   const serverUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'https://bestbill-backend-174132084209.us-central1.run.app';
   
@@ -104,15 +104,15 @@ const AdminDashboard = () => {
 
   const updateSubscription = async (e) => {
     e.preventDefault();
-    if (!subUpdateModal.amount || !subUpdateModal.validityMonths) return toast.error('Please enter valid data');
+    if (!subUpdateModal.amount || !subUpdateModal.validityDate) return toast.error('Please enter valid data');
 
     try {
       await api.put(`/admin/hotels/${selectedHotelData.hotel.id}/subscription`, {
         amount: subUpdateModal.amount,
-        validityMonths: subUpdateModal.validityMonths
+        validityDate: subUpdateModal.validityDate
       });
       toast.success('Subscription plan updated successfully!');
-      setSubUpdateModal({ isOpen: false, amount: '', validityMonths: '' });
+      setSubUpdateModal({ isOpen: false, amount: '', validityDate: '' });
       openHotelInspector(selectedHotelData.hotel.id);
     } catch (err) {
       toast.error('Failed to update subscription plan');
@@ -269,7 +269,7 @@ const AdminDashboard = () => {
                                  {d > 0 ? `${d} Days Left` : 'EXPIRED'}
                               </span>
                            ); })()}
-                           <button onClick={() => setSubUpdateModal({ isOpen: true, amount: selectedHotelData.hotel.subscription_amount || '', validityMonths: '1' })} style={{ padding: '6px 12px', backgroundColor: '#1e293b', color: 'white', borderRadius: '8px', fontSize: '12px', fontWeight: 800, border: 'none', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+                           <button onClick={() => setSubUpdateModal({ isOpen: true, amount: selectedHotelData.hotel.subscription_amount || '', validityDate: selectedHotelData.hotel.subscription_valid_until ? new Date(selectedHotelData.hotel.subscription_valid_until).toISOString().split('T')[0] : '' })} style={{ padding: '6px 12px', backgroundColor: '#1e293b', color: 'white', borderRadius: '8px', fontSize: '12px', fontWeight: 800, border: 'none', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
                               Renew / Change Plan
                            </button>
                            <button
@@ -470,7 +470,7 @@ const AdminDashboard = () => {
            <div style={{ width: '100%', maxWidth: '480px', backgroundColor: '#0f172a', borderRadius: '40px', padding: '48px', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 50px 100px rgba(0,0,0,0.8)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                  <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'white', margin: 0 }}>Renew Subscription</h3>
-                 <button onClick={() => setSubUpdateModal({ isOpen: false, amount: '', validityMonths: '' })} style={{ color: '#475569', background: 'none', border: 'none', cursor: 'pointer' }}><X size={28} /></button>
+                 <button onClick={() => setSubUpdateModal({ isOpen: false, amount: '', validityDate: '' })} style={{ color: '#475569', background: 'none', border: 'none', cursor: 'pointer' }}><X size={28} /></button>
               </div>
 
               <form onSubmit={updateSubscription} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -480,8 +480,8 @@ const AdminDashboard = () => {
                  </div>
                  
                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Extension Validity (Months)</label>
-                    <input type="number" required value={subUpdateModal.validityMonths} onChange={e => setSubUpdateModal({...subUpdateModal, validityMonths: e.target.value})} style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '2px solid #1e293b', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 800 }} placeholder="e.g. 1" />
+                    <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Extension Validity (Until Date)</label>
+                    <input type="date" required value={subUpdateModal.validityDate} onChange={e => setSubUpdateModal({...subUpdateModal, validityDate: e.target.value})} style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '2px solid #1e293b', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 800 }} />
                  </div>
 
                  <button type="submit" style={{ width: '100%', backgroundColor: themeColor, color: 'white', padding: '16px', borderRadius: '16px', fontSize: '15px', fontWeight: 900, border: 'none', cursor: 'pointer', marginTop: '12px' }}>

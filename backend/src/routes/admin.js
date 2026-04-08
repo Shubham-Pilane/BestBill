@@ -58,7 +58,7 @@ router.post('/onboard', adminAuth, upload.single('logo'), async (req, res) => {
     const userId = userRes.rows[0].id;
 
     const hotelRes = await client.query(
-      'INSERT INTO hotels (owner_id, name, phone, location, logo_url, subscription_amount, subscription_valid_until) VALUES ($1, $2, $3, $4, $5, $6, NOW() + $7::interval) RETURNING id',
+      'INSERT INTO hotels (owner_id, name, phone, location, logo_url, subscription_amount, subscription_valid_until, gst_percentage) VALUES ($1, $2, $3, $4, $5, $6, NOW() + $7::interval, 0) RETURNING id',
       [userId, hotelName, phone, location, logoUrl, subscriptionAmount || 0, `${subscriptionValidity || 1} months`]
     );
     const hotelId = hotelRes.rows[0].id;
@@ -98,17 +98,17 @@ router.delete('/hotels/:id', adminAuth, async (req, res) => {
 // Update Subscription Plan
 router.put('/hotels/:id/subscription', adminAuth, async (req, res) => {
   const { id } = req.params;
-  const { amount, validityMonths } = req.body;
+  const { amount, validityDate } = req.body;
   const client = await db.getClient();
   try {
     await client.query('BEGIN');
     await client.query(
-      `UPDATE hotels SET subscription_amount = $1, subscription_valid_until = NOW() + $2::interval WHERE id = $3`,
-      [amount, `${validityMonths} months`, parseInt(id)]
+      `UPDATE hotels SET subscription_amount = $1, subscription_valid_until = $2::timestamp WHERE id = $3`,
+      [amount, `${validityDate} 23:59:59`, parseInt(id)]
     );
     await client.query(
       'INSERT INTO subscription_history (hotel_id, amount, months_added, valid_until) VALUES ($1, $2, $3, (SELECT subscription_valid_until FROM hotels WHERE id = $1))',
-      [parseInt(id), amount, validityMonths]
+      [parseInt(id), amount, 0]
     );
     await client.query('COMMIT');
     res.json({ success: true, message: 'Subscription securely extended' });
