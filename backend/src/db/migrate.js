@@ -81,6 +81,11 @@ const syncSchema = async () => {
             "ALTER TABLE orders ADD COLUMN IF NOT EXISTS owner_message TEXT",
             "ALTER TABLE orders ADD COLUMN IF NOT EXISTS guest_note TEXT",
             "ALTER TABLE orders ADD COLUMN IF NOT EXISTS is_delivered BOOLEAN DEFAULT false",
+            "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS guest_name VARCHAR(255)",
+            "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS guest_phone VARCHAR(20)",
+            "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS booking_days INTEGER",
+            "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS total_cost DECIMAL(10,2)",
+            "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS check_in_date TIMESTAMP",
             "ALTER TABLE rooms DROP CONSTRAINT IF EXISTS rooms_hotel_id_room_number_key",
             "ALTER TABLE rooms ADD CONSTRAINT rooms_hotel_id_room_number_key UNIQUE (hotel_id, room_number)"
         ];
