@@ -137,7 +137,6 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
 
   const updateStayDetails = async () => {
     try {
-      // If we used the extension fields, calculate new totals
       const finalDays = extensionDays > 0 ? (Number(room.booking_days) + Number(extensionDays)) : bookingData.booking_days;
       const finalCost = extensionCost > 0 ? (Number(room.total_cost) + Number(extensionCost)) : bookingData.total_cost;
 
@@ -174,116 +173,114 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
 
   const printBill = () => {
     if (!billData) return;
-    const canvas = document.querySelector("#upi-qr-canvas");
-    if (!canvas) return toast.error("QR Code not ready");
-    const qrDataUrl = canvas.toDataURL("image/png");
+    const hName = user?.hotel_name || 'BESTBILL';
+    const hAddr = billData.hotel_location || user?.hotel_location || '';
+    const hPhone = billData.hotel_phone || user?.hotel_phone || '';
+    const upiId = user?.upi_id || '';
+    
+    const upiLinkStr = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(hName)}&am=${billData.final_amount}&cu=INR`;
+    const qrCanvas = document.getElementById('upi-qr-canvas');
+    const qrDataUrl = qrCanvas ? qrCanvas.toDataURL('image/png') : `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLinkStr)}&margin=0`;
 
-    const existingFrame = document.getElementById('bill-print-frame');
-    if (existingFrame) existingFrame.remove();
-
-    const iframe = document.createElement('iframe');
-    iframe.id = 'bill-print-frame';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-
-    const doc = iframe.contentWindow.document;
-    doc.open();
-    doc.write(`
+    const pageHtml = `
+      <!DOCTYPE html>
       <html>
         <head>
           <style>
-            @media print { 
-              @page { margin: 0 !important; size: auto; } 
-              body { margin: 0 !important; padding: 0 !important; width: 100%; } 
-              .no-break { break-inside: avoid; page-break-inside: avoid; }
+            @media print {
+              @page { margin: 0; size: 58mm auto; }
+              body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
             }
-            body { margin: 0 !important; padding: 0 !important; width: 280px; font-family: 'monospace'; font-size: 11px; }
-            .bill-wrapper { width: 100%; max-width: 56mm; margin: 0 !important; padding: 0 !important; overflow: hidden; }
+            * { box-sizing: border-box; }
+            body { margin: 0; padding: 0; width: 100%; font-family: 'monospace'; background-color: white; line-height: 1.3; }
+            .bill-wrapper { width: 100%; padding: 2mm 2mm 0 2mm; margin: 0; }
             .center { text-align: center; }
-            .bold { font-weight: bold; }
-            .header { font-size: 14px; margin-bottom: 2px; }
-            .divider { border-top: 1px dashed #000; margin: 4px 0; }
-            table { width: 100%; border-collapse: collapse; margin: 4px 0; table-layout: fixed; }
-            th { text-align: left; font-size: 8px; border-bottom: 1px dashed #000; padding-bottom: 2px; }
-            td { padding: 3px 0; vertical-align: top; font-size: 8px; white-space: nowrap; overflow: hidden; }
             .right { text-align: right; }
-            .qr-container { padding: 10px 0; text-align: center; }
-            .qr-container img { width: 100px; height: 100px; }
+            .bold { font-weight: bold; }
+            .header-info { font-size: 38px; margin-bottom: 2px; }
+            .address { font-size: 18px; margin-bottom: 1px; }
+            .divider { border-top: 4px dashed black; margin: 10px 0; }
+            table { width: 100%; border-collapse: collapse; margin: 8px 0; table-layout: fixed; }
+            th { font-size: 22px; border-bottom: 2px dashed black; padding-bottom: 8px; text-transform: uppercase; }
+            td { font-size: 22px; padding: 8px 0; vertical-align: top; overflow: hidden; }
+            .row { display: flex; justify-content: space-between; font-size: 22px; margin: 5px 0; }
+            .total-row { display: flex; justify-content: space-between; font-size: 24px; margin: 6px 0; }
+            .qr-area { text-align: center; margin-top: 20px; }
+            .qr-area img { width: 150px; height: 150px; }
           </style>
         </head>
-        <body class="no-break">
+        <body>
           <div class="bill-wrapper">
-          <div class="center bold header">${(user?.hotel_name || 'BESTBILL').toUpperCase()}</div>
-          <div class="center" style="font-size: 8px;">${user?.hotel_location || ''}</div>
-          <div class="center" style="font-size: 8px;">Phone: ${user?.hotel_phone || ''}</div>
-          <div class="divider"></div>
-          <div class="center bold" style="font-size: 10px; margin-bottom: 4px;">INVOICE</div>
-          <div style="display: flex; justify-content: space-between; font-size: 8px;">
-             <span>Room: ${room.room_number}</span>
-             <span>Bill: #${billData.id}</span>
+            <div class="center bold header-info">${hName.toUpperCase()}</div>
+            <div class="center address">${hAddr}</div>
+            <div class="center address">Ph: ${hPhone}</div>
+            <div class="divider"></div>
+            <div class="center bold header-info">ROOM INVOICE</div>
+
+            <div class="row"><span>Room:</span><span class="bold">${room.room_number}</span></div>
+            <div class="row"><span>Guest:</span><span class="bold">${room.guest_name || 'Walk-in'}</span></div>
+            <div class="row"><span>Days:</span><span class="bold">${room.booking_days || 1} Days</span></div>
+            <div class="row"><span>Bill No:</span><span class="bold">#${billData.id}</span></div>
+            
+            <table>
+               <thead>
+                  <tr>
+                    <th style="width: 40%; text-align: left;">Item</th>
+                    <th style="width: 25%; text-align: right;">Price</th>
+                    <th style="width: 15%; text-align: right; padding-right: 15px;">Qty</th>
+                    <th style="width: 20%; text-align: right;">Total</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  <tr>
+                    <td style="word-wrap: break-word; white-space: normal;">Room Rent</td>
+                    <td class="right">${Math.round((billData.room_charge || 0) / (room.booking_days || 1))}</td>
+                    <td class="right" style="padding-right: 15px;">${room.booking_days || 1}</td>
+                    <td class="right">${Math.round(billData.room_charge || 0)}</td>
+                  </tr>
+                  ${(billData.items || []).map(i => `
+                    <tr>
+                      <td style="word-wrap: break-word; white-space: normal;">${i.name}</td>
+                      <td class="right">${Math.round(i.price)}</td>
+                      <td class="right" style="padding-right: 15px;">${i.quantity}</td>
+                      <td class="right">${Math.round(i.price * i.quantity)}</td>
+                    </tr>
+                  `).join('')}
+               </tbody>
+            </table>
+
+            <div class="divider"></div>
+            <div class="total-row"><span>Subtotal:</span><span class="bold">${Math.round(billData.subtotal)}</span></div>
+            <div class="total-row"><span>GST (${billData.gst_percentage}%):</span><span class="bold">${Math.round(billData.gst)}</span></div>
+            <div class="divider"></div>
+            <div class="total-row" style="font-size: 42px; margin-top: 15px;"><span>TOTAL:</span><span class="bold">₹${Math.round(billData.final_amount)}</span></div>
+            <div class="divider"></div>
+
+            <div class="center bold" style="font-size: 15px; margin-top: 5px;">Thank You! Visit Again!</div>
+
+            ${!billData.is_paid && upiId ? `
+              <div class="qr-area">
+                <img src="${qrDataUrl}" alt="QR" />
+                <div class="bold" style="font-size: 13px; margin-top: 4px;">SCAN TO PAY</div>
+              </div>
+            ` : ''}
+            <div style="height: 10mm"></div>
           </div>
-          <div style="font-size: 8px;">Guest: ${room.guest_name}</div>
-          <div style="font-size: 8px;">Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-          <div class="divider"></div>
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 42%">Item</th>
-                <th class="right" style="width: 20%">Price</th>
-                <th class="right" style="width: 13%">Qty</th>
-                <th class="right" style="width: 25%">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style="text-overflow: ellipsis;">ROOM CHARGE</td>
-                <td class="right">${(billData.room_charge / room.booking_days).toFixed(0)}</td>
-                <td class="right">${room.booking_days}</td>
-                <td class="right">${billData.room_charge}</td>
-              </tr>
-              ${billData.items.map(i => `
-                <tr>
-                  <td style="text-overflow: ellipsis;">${i.name.toUpperCase()}</td>
-                  <td class="right">${Math.round(i.price)}</td>
-                  <td class="right">${i.quantity}</td>
-                  <td class="right">${(i.price * i.quantity).toFixed(0)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          <div class="divider"></div>
-          <div style="display: flex; justify-content: space-between; font-size: 9px;">
-             <span>Subtotal:</span>
-             <span class="right">₹${parseFloat(billData.subtotal).toFixed(0)}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; font-size: 9px;">
-             <span>GST (${billData.gst_percentage || 0}%):</span>
-             <span class="right">₹${parseFloat(billData.gst).toFixed(0)}</span>
-          </div>
-          <div class="divider"></div>
-          <div style="display: flex; justify-content: space-between; font-size: 11px;" class="bold">
-            <span>TOTAL:</span>
-            <span class="right">₹${parseFloat(billData.final_amount).toFixed(0)}</span>
-          </div>
-          <div class="divider"></div>
-          <div class="center" style="margin: 5px 0; font-size: 8px;">Thank You! Visit Again!</div>
-          <div class="center" style="font-size: 8px; margin-bottom: 5px;">${(user?.hotel_name || 'BESTBILL')}</div>
-          
-          <div class="qr-container">
-             <img src="${qrDataUrl}" />
-             <div style="font-size: 8px; font-weight: bold; margin-top: 2px;">scan to pay</div>
-          </div>
-          <div style="height: 10mm"></div>
-          </div>
+          <script>
+            window.onload = () => { window.print(); setTimeout(() => { window.parent.document.getElementById('room-print-frame')?.remove(); }, 1000); };
+          </script>
         </body>
       </html>
-    `);
-    doc.close();
-    
-    setTimeout(() => {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-    }, 800);
+    `;
+
+    const existingFrame = document.getElementById('room-print-frame');
+    if (existingFrame) existingFrame.remove();
+    const iframe = document.createElement('iframe');
+    iframe.id = 'room-print-frame';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    iframe.contentDocument.write(pageHtml);
+    iframe.contentDocument.close();
   };
 
   const shareViaWhatsApp = () => {
@@ -314,7 +311,6 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
   return (
     <div style={{ position: 'fixed', inset: 0, backgroundColor: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '40px' }}>
       <div style={{ width: '100%', maxWidth: '1440px', height: '90vh', backgroundColor: isSuccess ? '#064e3b' : '#0f172a', borderRadius: '40px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', transition: 'all 0.5s ease' }}>
-        
         
         {/* Header */}
         <div style={{ padding: '32px 48px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a' }}>
@@ -433,7 +429,7 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
                          )}
                       </div>
                       
-                      <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px', minHeight: 0 }} className="custom-scrollbar">
+                      <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px', minHeight: 0 }}>
                          <div style={{ padding: '16px', backgroundColor: '#0f172a', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', border: '1px solid #1e293b' }}>
                             <span style={{ color: '#64748b', fontSize: '12px', fontWeight: 800 }}>ROOM CHARGE ({room.booking_days}D)</span>
                             <span style={{ color: '#f43f5e', fontWeight: 900 }}>₹{room.total_cost}</span>
@@ -523,12 +519,6 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: 800, color: '#64748b' }}>
                             <span>GST ({billData?.gst_percentage}%)</span>
                             <span>₹{parseFloat(billData?.gst || 0).toFixed(2)}</span>
-                        </div>
-                    )}
-                    {parseFloat(billData?.discount_percentage || 0) > 0 && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: 800, color: '#f43f5e' }}>
-                            <span>Discount ({billData.discount_percentage}%)</span>
-                            <span>-₹{( (parseFloat(billData.subtotal) + parseFloat(billData.gst)) * (billData.discount_percentage / 100) ).toFixed(2)}</span>
                         </div>
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '42px', fontWeight: 1000, color: '#10b981', borderTop: '4px double #e2e8f0', marginTop: '12px', paddingTop: '12px' }}>

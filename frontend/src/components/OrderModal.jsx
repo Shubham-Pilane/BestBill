@@ -95,146 +95,108 @@ const OrderModal = ({ table, onClose }) => {
 
   const printBill = () => {
     if (!billData) return;
+    const hName = user?.hotel_name || 'BESTBILL';
+    const upiId = user?.upi_id || '';
     
-    // Refresh IFRAME
-    const existingFrame = document.getElementById('bill-print-frame');
-    if (existingFrame) existingFrame.remove();
-
-    const iframe = document.createElement('iframe');
-    iframe.id = 'bill-print-frame';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-
-    const doc = iframe.contentWindow.document;
-    const hName = billData.hotel_name || user?.hotel_name || 'BESTBILL';
-    const hPhone = billData.hotel_phone || '';
-    const hAddr = billData.hotel_location || '';
-    
-    const itemsRows = (billData.items || []).map(i => `
-      <tr>
-        <td style="padding-right: 2px;">${i.name}</td>
-        <td style="text-align: center;">${Math.round(i.price)}</td>
-        <td style="text-align: center;">${i.quantity}</td>
-        <td style="text-align: right;">${Math.round(i.price * i.quantity)}</td>
-      </tr>
-    `).join('');
-
-    const upiLinkStr = `upi://pay?pa=${user?.upi_id || ''}&pn=${encodeURIComponent(hName)}&am=${billData?.final_amount || 0}&cu=INR`;
+    const upiLinkStr = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(hName)}&am=${billData?.final_amount || 0}&cu=INR`;
     const qrCanvas = document.getElementById('upi-qr-canvas');
     const qrDataUrl = qrCanvas ? qrCanvas.toDataURL('image/png') : `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLinkStr)}&margin=0`;
 
     const pageHtml = `
+      <!DOCTYPE html>
       <html>
         <head>
           <style>
             @media print {
-              @page {
-                margin: 0 !important;
-                size: auto;
-              }
-              body {
-                width: 100%;
-                margin: 0 !important;
-                padding: 0 !important;
-              }
-              .no-break { break-inside: avoid; page-break-inside: avoid; }
+              @page { margin: 0; size: 58mm auto; }
+              body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
             }
-            * {
-              color: #000 !important;
-              font-family: 'Courier New', Courier, monospace !important;
-              font-weight: bold !important;
-              font-size: 8.5pt;
-              box-sizing: border-box;
-            }
-            body { 
-              margin: 0 !important; 
-              padding: 0 !important; 
-              background: #fff;
-            }
-            .bill-wrapper {
-              width: 100%;
-              max-width: 56mm;
-              margin: 0 !important;
-              padding: 0 !important;
-              overflow: hidden;
-            }
+            * { box-sizing: border-box; }
+            body { margin: 0; padding: 0; width: 100%; font-family: 'monospace'; background-color: white; line-height: 1.3; }
+            .bill-container { width: 100%; padding: 2mm 2mm 0 2mm; margin: 0; }
             .center { text-align: center; }
             .right { text-align: right; }
-            .dashed { border-top: 1px dashed #000; margin: 4px 0; }
-            .header-large { font-size: 11pt; margin: 0; }
-            .items-table { width: 100%; border-collapse: collapse; margin: 4px 0; table-layout: fixed; }
-            .items-table th { border-bottom: 1px dashed #000; padding: 2px 0; }
-            .items-table td { padding: 2px 0; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
-            .flex-row { display: flex; justify-content: space-between; align-items: flex-start; margin: 1px 0; gap: 2px; }
-            .flex-row span:first-child { flex: 1; text-align: left; word-break: break-word; }
-            .flex-row span:last-child { text-align: right; }
-            .qr-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 10px; margin-bottom: 5px; }
-            .qr-container img { width: 70px; height: 70px; margin-bottom: 2px; }
+            .bold { font-weight: bold; }
+            .header-info { font-size: 38px; margin-bottom: 2px; }
+            .address { font-size: 18px; margin-bottom: 1px; line-height: 1.1; }
+            .divider { border-top: 4px dashed black; margin: 10px 0; }
+            table { width: 100%; border-collapse: collapse; margin: 8px 0; table-layout: fixed; }
+            th { font-size: 22px; border-bottom: 2px dashed black; padding-bottom: 8px; text-transform: uppercase; }
+            td { font-size: 22px; padding: 8px 0; vertical-align: top; }
+            .meta-row { display: flex; justify-content: space-between; font-size: 22px; margin: 4px 0; }
+            .total-row { display: flex; justify-content: space-between; font-size: 24px; margin: 6px 0; }
+            .qr-area { text-align: center; margin-top: 20px; }
+            .qr-area img { width: 150px; height: 150px; }
           </style>
         </head>
-        <body onload="setTimeout(() => { window.print(); window.parent.document.getElementById('bill-print-frame').remove(); }, 1000)">
-          <div class="bill-wrapper">
-            <div class="center">
-              <div class="header-large">${hName.toUpperCase()}</div>
-              ${hAddr ? `<div>${hAddr}</div>` : ''}
-              ${hPhone ? `<div>Phone: ${hPhone}</div>` : ''}
-            </div>
-            
-            <div class="dashed"></div>
-            <div class="center" style="font-size: 10pt; margin: 2px 0;">INVOICE</div>
-            <div style="margin: 2px 0;">
-              <div class="flex-row"><span>Table:</span> <span>${table.table_numberByFloor || table.table_number}</span></div>
-              <div class="flex-row"><span>Bill:</span> <span>#${billData.id}</span></div>
-              <div class="flex-row"><span>Date:</span> <span>${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
-            </div>
-            <div class="dashed"></div>
+        <body>
+          <div class="bill-container">
+            <div class="center bold header-info">${hName.toUpperCase()}</div>
+            <div class="center address">${billData.hotel_location || user?.hotel_location || ''}</div>
+            <div class="center address">Ph: ${billData.hotel_phone || user?.hotel_phone || ''}</div>
+            <div class="divider"></div>
+            <div class="center bold header-info">INVOICE</div>
 
-            <table class="items-table" style="font-size: 8.5pt;">
-              <thead>
-                <tr>
-                  <th width="42%" style="text-align: left;">Item</th>
-                  <th width="20%" style="text-align: right;">Price</th>
-                  <th width="13%" style="text-align: center;">Qty</th>
-                  <th width="25%" style="text-align: right;">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${itemsRows}
-              </tbody>
+            <div class="meta-row"><span>Table:</span><span class="bold">${table.table_numberByFloor || table.table_number}</span></div>
+            <div class="meta-row"><span>Bill No:</span><span class="bold">#${billData.id}</span></div>
+            <div class="meta-row"><span>Date:</span><span class="bold">${new Date().toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span></div>
+            
+            <table>
+               <thead>
+                  <tr>
+                    <th style="width: 45%; text-align: left;">Item</th>
+                    <th style="width: 25%; text-align: right;">Price</th>
+                    <th style="width: 15%; text-align: right; padding-right: 15px;">Qty</th>
+                    <th style="width: 20%; text-align: right;">Total</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  ${(billData.items || []).map(i => `
+                    <tr>
+                      <td style="word-wrap: break-word; white-space: normal;">${i.name}</td>
+                      <td class="right">${Math.round(i.price)}</td>
+                      <td class="right" style="padding-right: 15px;">${i.quantity}</td>
+                      <td class="right">${Math.round(i.price * i.quantity)}</td>
+                    </tr>
+                  `).join('')}
+               </tbody>
             </table>
 
-          <div class="dashed"></div>
-          <div style="line-height: 1.2;">
-            <div class="flex-row"><span>Subtotal:</span> <span>${Math.round(billData.subtotal || 0)}</span></div>
-            <div class="flex-row"><span>GST (${billData.gst_percentage}%):</span> <span>${Math.round(billData.gst || 0)}</span></div>
-            ${billData.discount_percentage > 0 ? `<div class="flex-row"><span>Disc (${billData.discount_percentage}%):</span> <span>-${Math.round( (parseFloat(billData.subtotal) + parseFloat(billData.gst)) * (billData.discount_percentage / 100) )}</span></div>` : ''}
-            <div class="dashed"></div>
-            <div class="flex-row" style="font-size: 11pt; margin-top: 2px;">
-              <span>TOTAL:</span>
-              <span>${Math.round(billData.final_amount)}</span>
-            </div>
-          </div>
-          <div class="dashed"></div>
+            <div class="divider"></div>
+            <div class="total-row"><span>Subtotal:</span><span class="bold">${Math.round(billData.subtotal)}</span></div>
+            <div class="total-row"><span>GST (${billData.gst_percentage}%):</span><span class="bold">${Math.round(billData.gst)}</span></div>
+            ${billData.discount_percentage > 0 ? `
+              <div class="total-row"><span>Disc (${billData.discount_percentage}%):</span><span class="bold">-${Math.round((parseFloat(billData.subtotal) + parseFloat(billData.gst)) * (billData.discount_percentage / 100))}</span></div>
+            ` : ''}
+            <div class="divider"></div>
+            <div class="total-row" style="font-size: 42px; margin-top: 15px;"><span>TOTAL:</span><span class="bold">₹${Math.round(billData.final_amount)}</span></div>
+            <div class="divider"></div>
 
-          <div class="center" style="margin-top: 5px;">
-            <div>Thank You for Dining with Us!</div>
-            <div>Visit Again!</div>
-          </div>
+            <div class="center bold" style="font-size: 22px; margin-top: 10px;">Thank You! Visit Again!</div>
 
-          ${!billData.is_paid && user?.upi_id ? `
-          <div class="qr-container">
-            <img src="${qrDataUrl}" />
-            <div style="font-size: 8pt;">Scan to Pay</div>
+            ${!billData.is_paid && upiId ? `
+              <div class="qr-area">
+                <img src="${qrDataUrl}" alt="QR" />
+                <div class="bold" style="font-size: 11px; margin-top: 2px;">SCAN TO PAY</div>
+              </div>
+            ` : ''}
+            <div style="height: 10mm"></div>
           </div>
-          ` : ''}
-          <div style="height: 15mm;"></div>
-          </div>
+          <script>
+            window.onload = () => { window.print(); setTimeout(() => { window.parent.document.getElementById('bill-print-frame')?.remove(); }, 1000); };
+          </script>
         </body>
       </html>
     `;
 
-    doc.write(pageHtml);
-    doc.close();
+    const existingFrame = document.getElementById('bill-print-frame');
+    if (existingFrame) existingFrame.remove();
+    const iframe = document.createElement('iframe');
+    iframe.id = 'bill-print-frame';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    iframe.contentDocument.write(pageHtml);
+    iframe.contentDocument.close();
   };
 
   const rollbackBill = async () => {
@@ -256,9 +218,8 @@ const OrderModal = ({ table, onClose }) => {
         setIsSuccess(true);
         toast.success('Transaction Completed');
         
-        // Automatically return to dashboard after short delay
         setTimeout(() => {
-           onClose(); // Triggers the reveal of the table dashboard
+           onClose();
         }, 1800);
      } catch (err) {
         toast.error('Payment verification failed');

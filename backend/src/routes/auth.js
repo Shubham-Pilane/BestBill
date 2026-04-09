@@ -62,6 +62,8 @@ router.post('/login', async (req, res) => {
     const userResult = await db.query(
       `SELECT u.*, 
        COALESCE(h.name, h2.name) as hotel_name, 
+       COALESCE(h.phone, h2.phone) as hotel_phone,
+       COALESCE(h.location, h2.location) as hotel_location,
        COALESCE(h.upi_id, h2.upi_id) as upi_id, 
        COALESCE(h.subscription_valid_until, h2.subscription_valid_until) as subscription_valid_until,
        COALESCE(h.is_service_stopped, h2.is_service_stopped, false) as is_service_stopped,
@@ -129,6 +131,8 @@ router.post('/login', async (req, res) => {
         role: user.role, 
         hotel_id: finalHotelId,
         hotel_name: user.hotel_name,
+        hotel_phone: user.hotel_phone,
+        hotel_location: user.hotel_location,
         upi_id: user.upi_id,
         subscription_valid_until: user.subscription_valid_until
       }
