@@ -21,6 +21,7 @@ const OrderModal = ({ table, onClose }) => {
   const [allTables, setAllTables] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -128,14 +129,15 @@ const OrderModal = ({ table, onClose }) => {
           <style>
             @media print {
               @page {
-                margin: 0;
-                size: 58mm auto;
+                margin: 0 !important;
+                size: auto;
               }
               body {
-                width: 58mm;
-                margin: 0;
-                padding: 0;
+                width: 100%;
+                margin: 0 !important;
+                padding: 0 !important;
               }
+              .no-break { break-inside: avoid; page-break-inside: avoid; }
             }
             * {
               color: #000 !important;
@@ -145,14 +147,15 @@ const OrderModal = ({ table, onClose }) => {
               box-sizing: border-box;
             }
             body { 
-              margin: 0; 
-              padding: 0; 
+              margin: 0 !important; 
+              padding: 0 !important; 
               background: #fff;
             }
             .bill-wrapper {
-              width: 46mm;
-              margin: 0 auto;
-              padding: 0;
+              width: 100%;
+              max-width: 56mm;
+              margin: 0 !important;
+              padding: 0 !important;
               overflow: hidden;
             }
             .center { text-align: center; }
@@ -189,9 +192,9 @@ const OrderModal = ({ table, onClose }) => {
             <table class="items-table" style="font-size: 8.5pt;">
               <thead>
                 <tr>
-                  <th width="40%" style="text-align: left;">Item</th>
-                  <th width="20%" style="text-align: center;">Price</th>
-                  <th width="15%" style="text-align: center;">Qty</th>
+                  <th width="42%" style="text-align: left;">Item</th>
+                  <th width="20%" style="text-align: right;">Price</th>
+                  <th width="13%" style="text-align: center;">Qty</th>
                   <th width="25%" style="text-align: right;">Total</th>
                 </tr>
               </thead>
@@ -246,20 +249,21 @@ const OrderModal = ({ table, onClose }) => {
     }
   };
 
-   const confirmPayment = async (method = 'upi') => {
-    try {
-       await api.put(`/tables/bill/${billData.id}/pay`, { method });
-       setBillData(prev => ({ ...prev, is_paid: true }));
-       toast.success('Transaction Completed');
-       
-       // Automatically return to dashboard after short delay
-       setTimeout(() => {
-          onClose(); // Triggers the reveal of the table dashboard
-       }, 1500);
-    } catch (err) {
-       toast.error('Payment verification failed');
-    }
-  };
+    const confirmPayment = async (method = 'upi') => {
+     try {
+        await api.put(`/tables/bill/${billData.id}/pay`, { method });
+        setBillData(prev => ({ ...prev, is_paid: true }));
+        setIsSuccess(true);
+        toast.success('Transaction Completed');
+        
+        // Automatically return to dashboard after short delay
+        setTimeout(() => {
+           onClose(); // Triggers the reveal of the table dashboard
+        }, 1800);
+     } catch (err) {
+        toast.error('Payment verification failed');
+     }
+   };
 
   const sendNotification = async (method) => {
     if (!customerPhone || customerPhone.length < 10) {
@@ -335,7 +339,7 @@ const OrderModal = ({ table, onClose }) => {
   if (loading) return null;
 
   return (
-    <div className="order-modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.95)', backdropFilter: 'blur(32px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '40px' }}>
+    <div className="order-modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.95)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '40px' }}>
       <div className="order-modal-container" style={{ width: '100%', maxWidth: '1440px', height: '90vh', backgroundColor: '#0f172a', borderRadius: '40px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.05)' }}>
         {/* Header */}
         <div className="order-modal-header" style={{ padding: '32px 48px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -452,7 +456,7 @@ const OrderModal = ({ table, onClose }) => {
                  </div>
                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white' }}>
                    <span style={{ fontSize: '32px', fontWeight: 1000 }}>Final Due</span>
-                   <span style={{ color: '#10b981', fontSize: '32px', fontWeight: 1000 }}>₹{((orderItems.reduce((acc, i) => acc + (i.price * i.quantity), 0) * 1.05) * (1 - discount/100)).toFixed(2)}</span>
+                    <span style={{ color: '#10b981', fontSize: '32px', fontWeight: 1000 }}>₹{((orderItems.reduce((acc, i) => acc + (i.price * i.quantity), 0) * (1 + (user?.gst_percentage || 0)/100)) * (1 - discount/100)).toFixed(2)}</span>
                  </div>
               </div>
               <button disabled={orderItems.length === 0} onClick={generateBill} style={{ width: '100%', padding: '20px', borderRadius: '20px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', fontWeight: 1000, fontSize: '18px', cursor: 'pointer', scale: orderItems.length === 0 ? '1' : '1.02', transition: '0.2s', opacity: orderItems.length === 0 ? 0.3 : 1 }}>SETTLE TRANSACTION</button>
@@ -462,10 +466,19 @@ const OrderModal = ({ table, onClose }) => {
       </div>
 
       {showBill && billData && (
-        <div className="bill-modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', backdropFilter: 'blur(16px)' }}>
+        <div className="bill-modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', backdropFilter: 'blur(10px)' }}>
           <div className="bill-container" style={{ width: '100%', maxWidth: '850px', backgroundColor: 'white', borderRadius: '40px', overflow: 'hidden', display: 'flex', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.5)' }}>
              <div style={{ flex: 1, padding: '48px', borderRight: '1px solid #f1f5f9', backgroundColor: billData.is_paid ? '#10b981' : 'white', transition: 'all 0.6s', overflowY: 'auto', position: 'relative' }}>
-                {billData.is_paid && (
+                {isSuccess && (
+                   <div style={{ position: 'absolute', inset: 0, backgroundColor: '#10b981', zIndex: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.3s ease-out' }}>
+                      <div style={{ width: '120px', height: '120px', borderRadius: '50%', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', marginBottom: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', animation: 'scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+                         <CheckCircle size={80} strokeWidth={3} />
+                      </div>
+                      <h2 style={{ fontSize: '32px', fontWeight: 1000, color: 'white', margin: 0 }}>Transaction Complete</h2>
+                      <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.8)', marginTop: '8px', fontWeight: 800 }}>Redirecting...</p>
+                   </div>
+                )}
+                {billData.is_paid && !isSuccess && (
                    <div style={{ position: 'absolute', top: '10%', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
                       <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '50%', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
                          <CheckCircle size={100} color="#10b981" />

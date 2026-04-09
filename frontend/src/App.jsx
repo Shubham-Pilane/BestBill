@@ -9,6 +9,8 @@ import BillingHistory from './pages/BillingHistory';
 import Profile from './pages/Profile';
 import Subscriptions from './pages/Subscriptions';
 import Lodging from './pages/Lodging';
+import GuestPortal from './pages/GuestPortal';
+import GuestOrders from './pages/GuestOrders';
 import Layout from './components/Layout';
 import './index.css';
 
@@ -77,6 +79,15 @@ function App() {
               </OwnerRoute>
             </ProtectedRoute>
           } />
+          <Route path="/orders" element={
+            <ProtectedRoute>
+              <OwnerRoute>
+                <Layout>
+                  <GuestOrders />
+                </Layout>
+              </OwnerRoute>
+            </ProtectedRoute>
+          } />
           <Route path="/profile" element={
             <ProtectedRoute>
               <Layout>
@@ -93,6 +104,7 @@ function App() {
               </AdminRoute>
             </ProtectedRoute>
           } />
+          <Route path="/guest/order/:hotelId" element={<GuestPortal />} />
         </Routes>
         <Toaster position="top-right" />
       </Router>

@@ -29,14 +29,14 @@ body {
 /* Glassmorphism utility */
 .glass-effect {
   background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .glass-card {
   background: rgba(30, 41, 59, 0.4);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(4px);
   border: 1px solid rgba(255, 255, 255, 0.05);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

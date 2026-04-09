@@ -1,0 +1,567 @@
+import { useState, useEffect } from 'react';
+import api from '../services/api';
+import { toast } from 'react-hot-toast';
+import { X, Plus, Minus, Receipt, Send, MessageSquare, Utensils, Trash2, ChevronRight, IndianRupee, Clock, CheckCircle, Phone, ArrowLeft, RefreshCcw, Wallet, Printer, Search, User, Calendar, Bed, MessageCircle } from 'lucide-react';
+import { QRCodeCanvas } from 'qrcode.react';
+import { useAuth } from '../context/AuthContext';
+
+const RoomOrderModal = ({ room, onClose, onRefresh }) => {
+  const { user } = useAuth();
+  const [categories, setCategories] = useState([]);
+  const [items, setItems] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [orderItems, setOrderItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showBill, setShowBill] = useState(false);
+  const [billData, setBillData] = useState(null);
+  const [customerPhone, setCustomerPhone] = useState(room.guest_phone || '');
+  const [discount, setDiscount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const [isEditingStay, setEditingStay] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [extensionDays, setExtensionDays] = useState(0);
+  const [extensionCost, setExtensionCost] = useState(0);
+  const isOccupied = room.status === 'occupied';
+  const [bookingData, setBookingData] = useState({
+    guest_name: room.guest_name || '',
+    guest_phone: room.guest_phone || '',
+    booking_days: room.booking_days || '1',
+    total_cost: room.total_cost || ''
+  });
+
+  useEffect(() => {
+    if (room) {
+      setBookingData({
+        guest_name: room.guest_name || '',
+        guest_phone: room.guest_phone || '',
+        booking_days: room.booking_days || '1',
+        total_cost: room.total_cost || ''
+      });
+      setCustomerPhone(room.guest_phone || '');
+    }
+  }, [room]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [catRes, itemsRes, orderRes] = await Promise.all([
+          api.get('/menu/categories'),
+          api.get('/menu/items'),
+          isOccupied ? api.get(`/rooms/${room.id}/order`) : Promise.resolve({ data: { items: [] } })
+        ]);
+        setCategories(catRes.data || []);
+        setItems(itemsRes.data || []);
+        setOrderItems(orderRes.data.items || []);
+        setLoading(false);
+      } catch (err) {
+        toast.error('Initialization failed');
+      }
+    };
+    fetchData();
+  }, [room]);
+
+  const addToOrder = async (item) => {
+    if (!isOccupied) return toast.error('Please confirm booking first');
+    try {
+      const res = await api.post(`/rooms/${room.id}/order`, {
+        menuItemId: item.id,
+        quantity: 1
+      });
+      setOrderItems(res.data.items);
+      toast.success(`+ ${item.name}`, { icon: '🍽️' });
+    } catch (err) {
+      toast.error('Add failed');
+    }
+  };
+
+  const updateQuantity = async (itemId, change) => {
+    const item = orderItems.find(i => i.id === itemId);
+    const newQty = item.quantity + change;
+    if (newQty < 1) return removeFromOrder(itemId);
+    
+    try {
+      const res = await api.put(`/rooms/${room.id}/order/items/${itemId}`, { quantity: newQty });
+      setOrderItems(res.data.items);
+    } catch (err) {
+      toast.error('Sync failed');
+    }
+  };
+
+  const removeFromOrder = async (itemId) => {
+    try {
+      const res = await api.delete(`/rooms/${room.id}/order/items/${itemId}`);
+      setOrderItems(res.data.items);
+    } catch (err) {
+      toast.error('Removal failed');
+    }
+  };
+
+  const handleBooking = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await api.post(`/rooms/${room.id}/book`, bookingData);
+      toast.success('Guest Onboarded Successfully');
+      onRefresh(); 
+    } catch (err) {
+      toast.error('Booking failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const generateBill = async () => {
+    try {
+      const res = await api.post(`/rooms/${room.id}/bill`, { discount_percentage: discount });
+      setBillData(res.data);
+      setShowBill(true);
+      toast.success('Bill finalized!', { icon: '🧾' });
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Billing failed');
+    }
+  };
+
+  const rollbackBill = async () => {
+    if (!billData) return;
+    try {
+      await api.delete(`/rooms/${room.id}/bill/${billData.id}`);
+      setShowBill(false);
+      setBillData(null);
+      toast.success('Bill cancelled. You can now modify the order.');
+    } catch (err) {
+      toast.error('Rollback failed');
+    }
+  };
+
+  const updateStayDetails = async () => {
+    try {
+      // If we used the extension fields, calculate new totals
+      const finalDays = extensionDays > 0 ? (Number(room.booking_days) + Number(extensionDays)) : bookingData.booking_days;
+      const finalCost = extensionCost > 0 ? (Number(room.total_cost) + Number(extensionCost)) : bookingData.total_cost;
+
+      await api.put(`/rooms/${room.id}`, {
+        booking_days: finalDays,
+        total_cost: finalCost
+      });
+      setEditingStay(false);
+      setExtensionDays(0);
+      setExtensionCost(0);
+      onRefresh();
+      toast.success('Stay Extension Applied');
+    } catch (err) {
+      toast.error('Update failed');
+    }
+  };
+
+  const confirmPayment = async () => {
+    try {
+      await api.put(`/bills/${billData.id}/pay`);
+      await api.post(`/rooms/${room.id}/checkout`);
+      
+      setIsSuccess(true);
+      toast.success('Transaction Complete');
+      
+      setTimeout(() => {
+        onClose();
+        onRefresh();
+      }, 1800);
+    } catch (err) {
+      toast.error('Checkout automation failed');
+    }
+  };
+
+  const printBill = () => {
+    if (!billData) return;
+    const canvas = document.querySelector("#upi-qr-canvas");
+    if (!canvas) return toast.error("QR Code not ready");
+    const qrDataUrl = canvas.toDataURL("image/png");
+
+    const existingFrame = document.getElementById('bill-print-frame');
+    if (existingFrame) existingFrame.remove();
+
+    const iframe = document.createElement('iframe');
+    iframe.id = 'bill-print-frame';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(`
+      <html>
+        <head>
+          <style>
+            @media print { 
+              @page { margin: 0 !important; size: auto; } 
+              body { margin: 0 !important; padding: 0 !important; width: 100%; } 
+              .no-break { break-inside: avoid; page-break-inside: avoid; }
+            }
+            body { margin: 0 !important; padding: 0 !important; width: 280px; font-family: 'monospace'; font-size: 11px; }
+            .bill-wrapper { width: 100%; max-width: 56mm; margin: 0 !important; padding: 0 !important; overflow: hidden; }
+            .center { text-align: center; }
+            .bold { font-weight: bold; }
+            .header { font-size: 14px; margin-bottom: 2px; }
+            .divider { border-top: 1px dashed #000; margin: 4px 0; }
+            table { width: 100%; border-collapse: collapse; margin: 4px 0; table-layout: fixed; }
+            th { text-align: left; font-size: 8px; border-bottom: 1px dashed #000; padding-bottom: 2px; }
+            td { padding: 3px 0; vertical-align: top; font-size: 8px; white-space: nowrap; overflow: hidden; }
+            .right { text-align: right; }
+            .qr-container { padding: 10px 0; text-align: center; }
+            .qr-container img { width: 100px; height: 100px; }
+          </style>
+        </head>
+        <body class="no-break">
+          <div class="bill-wrapper">
+          <div class="center bold header">${(user?.hotel_name || 'BESTBILL').toUpperCase()}</div>
+          <div class="center" style="font-size: 8px;">${user?.hotel_location || ''}</div>
+          <div class="center" style="font-size: 8px;">Phone: ${user?.hotel_phone || ''}</div>
+          <div class="divider"></div>
+          <div class="center bold" style="font-size: 10px; margin-bottom: 4px;">INVOICE</div>
+          <div style="display: flex; justify-content: space-between; font-size: 8px;">
+             <span>Room: ${room.room_number}</span>
+             <span>Bill: #${billData.id}</span>
+          </div>
+          <div style="font-size: 8px;">Guest: ${room.guest_name}</div>
+          <div style="font-size: 8px;">Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+          <div class="divider"></div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 42%">Item</th>
+                <th class="right" style="width: 20%">Price</th>
+                <th class="right" style="width: 13%">Qty</th>
+                <th class="right" style="width: 25%">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="text-overflow: ellipsis;">ROOM CHARGE</td>
+                <td class="right">${(billData.room_charge / room.booking_days).toFixed(0)}</td>
+                <td class="right">${room.booking_days}</td>
+                <td class="right">${billData.room_charge}</td>
+              </tr>
+              ${billData.items.map(i => `
+                <tr>
+                  <td style="text-overflow: ellipsis;">${i.name.toUpperCase()}</td>
+                  <td class="right">${Math.round(i.price)}</td>
+                  <td class="right">${i.quantity}</td>
+                  <td class="right">${(i.price * i.quantity).toFixed(0)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div class="divider"></div>
+          <div style="display: flex; justify-content: space-between; font-size: 9px;">
+             <span>Subtotal:</span>
+             <span class="right">₹${parseFloat(billData.subtotal).toFixed(0)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 9px;">
+             <span>GST (${billData.gst_percentage || 0}%):</span>
+             <span class="right">₹${parseFloat(billData.gst).toFixed(0)}</span>
+          </div>
+          <div class="divider"></div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px;" class="bold">
+            <span>TOTAL:</span>
+            <span class="right">₹${parseFloat(billData.final_amount).toFixed(0)}</span>
+          </div>
+          <div class="divider"></div>
+          <div class="center" style="margin: 5px 0; font-size: 8px;">Thank You! Visit Again!</div>
+          <div class="center" style="font-size: 8px; margin-bottom: 5px;">${(user?.hotel_name || 'BESTBILL')}</div>
+          
+          <div class="qr-container">
+             <img src="${qrDataUrl}" />
+             <div style="font-size: 8px; font-weight: bold; margin-top: 2px;">scan to pay</div>
+          </div>
+          <div style="height: 10mm"></div>
+          </div>
+        </body>
+      </html>
+    `);
+    doc.close();
+    
+    setTimeout(() => {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+    }, 800);
+  };
+
+  const shareViaWhatsApp = () => {
+    if (!customerPhone) return toast.error('Enter guest phone number');
+    let msg = `*--- ${user?.hotel_name?.toUpperCase() || 'BESTBILL'} ---*\n\n`;
+    msg += `Room: ${room.room_number}\nGuest: ${room.guest_name}\nBill No: #${billData.id}\n`;
+    msg += `\n*Items:*\n• Room Charge: ₹${billData.room_charge}\n`;
+    (billData.items || []).forEach(i => msg += `• ${i.name} x ${i.quantity} = ₹${(i.price * i.quantity).toFixed(2)}\n`);
+    msg += `\n*GRAND TOTAL: ₹${parseFloat(billData.final_amount).toFixed(2)}*\n\nThank you for staying with us!`;
+    const cleanPhone = customerPhone.replace(/\D/g, '');
+    const finalPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+    window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+  };
+
+  const upiId = user?.upi_id || '';
+  const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(user?.hotel_name || 'BestBill')}&am=${billData?.final_amount || 0}&cu=INR`;
+
+  const totalFoodAmount = orderItems.reduce((acc, i) => acc + (i.price * i.quantity), 0);
+  const subtotalVal = totalFoodAmount + parseFloat(room.total_cost || 0);
+
+  const filteredItems = items.filter(item => 
+    (selectedCategory === 'all' || item.category_id === parseInt(selectedCategory)) &&
+    (item.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  if (loading && items.length === 0) return null;
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, backgroundColor: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '40px' }}>
+      <div style={{ width: '100%', maxWidth: '1440px', height: '90vh', backgroundColor: isSuccess ? '#064e3b' : '#0f172a', borderRadius: '40px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', transition: 'all 0.5s ease' }}>
+        
+        
+        {/* Header */}
+        <div style={{ padding: '32px 48px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+             <div style={{ width: '64px', height: '64px', backgroundColor: isOccupied ? '#f43f5e' : '#10b981', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                <Bed size={32} />
+             </div>
+             <div>
+                <h2 style={{ fontSize: '24px', fontWeight: 900, color: 'white', margin: 0 }}>Room {room.room_number} <span style={{ fontSize: '14px', color: '#64748b' }}>({room.floor})</span></h2>
+                <span style={{ fontSize: '11px', fontWeight: 900, color: isOccupied ? '#f43f5e' : '#10b981', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{isOccupied ? 'Occupied - Guest In Residence' : 'Available for Booking'}</span>
+             </div>
+          </div>
+          <button onClick={onClose} style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#1e293b', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={24} /></button>
+        </div>
+
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          {/* Menu */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRight: '1px solid rgba(255, 255, 255, 0.05)' }}>
+             <div style={{ padding: '16px 48px', display: 'flex', gap: '20px', alignItems: 'center', backgroundColor: '#020617', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', flex: 1 }}>
+                   <button onClick={() => setSelectedCategory('all')} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', backgroundColor: selectedCategory === 'all' ? '#0ea5e9' : '#1e293b', color: 'white', fontWeight: 900, fontSize: '12px', cursor: 'pointer' }}>ALL MENU</button>
+                   {categories.map(cat => (
+                      <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', backgroundColor: parseInt(selectedCategory) === cat.id ? '#0ea5e9' : '#1e293b', color: 'white', fontWeight: 900, fontSize: '12px', cursor: 'pointer' }}>{cat.name.toUpperCase()}</button>
+                   ))}
+                </div>
+                <div style={{ position: 'relative', width: '300px' }}>
+                    <Search style={{ position: 'absolute', top: '50%', left: '16px', transform: 'translateY(-50%)', color: '#64748b' }} size={18} />
+                    <input type="text" placeholder="Filter items..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ width: '100%', padding: '14px 48px', borderRadius: '16px', backgroundColor: '#0f172a', border: '1px solid #1e293b', color: 'white', fontWeight: 700, outline: 'none' }} />
+                </div>
+             </div>
+             
+             <div style={{ flex: 1, padding: '32px 48px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px', alignContent: 'start' }}>
+                {filteredItems.map(item => (
+                   <div key={item.id} onClick={() => addToOrder(item)} style={{ backgroundColor: '#020617', border: '2px solid #1e293b', padding: '20px', borderRadius: '24px', cursor: isOccupied ? 'pointer' : 'not-allowed', opacity: isOccupied ? 1 : 0.4, position: 'relative', transition: '0.2s' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: 'white', fontWeight: 950, marginBottom: '8px' }}>
+                         <span>{item.name}</span>
+                         <span style={{ color: '#10b981' }}>₹{item.price}</span>
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '30px' }}>{item.description || 'Order room service'}</div>
+                      <div style={{ position: 'absolute', bottom: '16px', right: '16px', width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                        <Plus size={16} strokeWidth={4} />
+                      </div>
+                   </div>
+                ))}
+             </div>
+          </div>
+
+          {/* Cart / Guest Details */}
+          <div style={{ width: '420px', backgroundColor: '#020617', display: 'flex', flexDirection: 'column' }}>
+             {!isOccupied ? (
+                <div style={{ padding: '40px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                   <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                      <div style={{ width: '80px', height: '80px', backgroundColor: '#10b98110', border: '1px solid #10b981', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                         <User size={40} style={{ color: '#10b981' }} />
+                      </div>
+                      <h3 style={{ fontSize: '20px', fontWeight: 900, color: 'white' }}>Guest Arrival</h3>
+                   </div>
+                   <form onSubmit={handleBooking} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <input type="text" placeholder="Guest Name" required value={bookingData.guest_name} onChange={(e) => setBookingData({...bookingData, guest_name: e.target.value})} style={{ padding: '16px', borderRadius: '16px', backgroundColor: '#0f172a', border: '1px solid #1e293b', color: 'white', fontWeight: 700 }} />
+                      <input type="text" placeholder="Phone Number" required value={bookingData.guest_phone} onChange={(e) => setBookingData({...bookingData, guest_phone: e.target.value})} style={{ padding: '16px', borderRadius: '16px', backgroundColor: '#0f172a', border: '1px solid #1e293b', color: 'white', fontWeight: 700 }} />
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                           <label style={{ fontSize: '10px', color: '#64748b', fontWeight: 900 }}>STAY DAYS</label>
+                           <input type="number" required value={bookingData.booking_days} onFocus={e => e.target.select()} onChange={(e) => setBookingData({...bookingData, booking_days: e.target.value})} style={{ padding: '16px', borderRadius: '16px', backgroundColor: '#0f172a', border: '1px solid #1e293b', color: 'white', fontWeight: 700 }} />
+                         </div>
+                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                           <label style={{ fontSize: '10px', color: '#64748b', fontWeight: 900 }}>TOTAL RENT</label>
+                           <input type="number" required value={bookingData.total_cost} onFocus={e => e.target.select()} onChange={(e) => setBookingData({...bookingData, total_cost: e.target.value})} style={{ padding: '16px', borderRadius: '16px', backgroundColor: '#0f172a', border: '1px solid #1e293b', color: 'white', fontWeight: 700 }} />
+                         </div>
+                      </div>
+                      <button type="submit" disabled={isSubmitting} style={{ padding: '20px', borderRadius: '20px', backgroundColor: isSubmitting ? '#1e293b' : '#10b981', color: 'white', border: 'none', fontWeight: 1000, fontSize: '18px', cursor: isSubmitting ? 'not-allowed' : 'pointer', marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                        {isSubmitting ? <><RefreshCcw size={20} className="animate-spin" /> PROVISIONING...</> : 'CHECK-IN GUEST'}
+                      </button>
+                   </form>
+                </div>
+             ) : (
+                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                      <div style={{ padding: '32px', borderBottom: '1px solid #1e293b', backgroundColor: '#0f172a' }}>
+                         {isEditingStay ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                              <div style={{ padding: '12px', backgroundColor: '#020617', borderRadius: '14px', border: '1px dashed #1e293b' }}>
+                                 <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 800 }}>CURRENT STAY: {room.booking_days} NIGHTS / ₹{room.total_cost}</div>
+                              </div>
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <div style={{ flex: 1 }}>
+                                  <label style={{ fontSize: '10px', color: '#0ea5e9', fontWeight: 900, marginBottom: '4px', display: 'block' }}>EXTEND BY (DAYS)</label>
+                                  <input type="number" value={extensionDays} onFocus={e => e.target.select()} onChange={e => setExtensionDays(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', backgroundColor: '#020617', border: '1px solid #1e293b', color: 'white', fontWeight: 800 }} placeholder="+ Days" />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                  <label style={{ fontSize: '10px', color: '#0ea5e9', fontWeight: 900, marginBottom: '4px', display: 'block' }}>EXTRA CHARGE</label>
+                                  <input type="number" value={extensionCost} onFocus={e => e.target.select()} onChange={e => setExtensionCost(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', backgroundColor: '#020617', border: '1px solid #1e293b', color: 'white', fontWeight: 800 }} placeholder="+ Amount" />
+                                </div>
+                              </div>
+                              <div style={{ padding: '16px', backgroundColor: '#0ea5e910', borderRadius: '14px', border: '1px solid #0ea5e9' }}>
+                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '11px', color: '#0ea5e9', fontWeight: 900 }}>NEW TOTAL: {Number(room.booking_days) + Number(extensionDays)} NIGHTS</span>
+                                    <span style={{ fontSize: '15px', color: '#0ea5e9', fontWeight: 1000 }}>₹{Number(room.total_cost) + Number(extensionCost)}</span>
+                                 </div>
+                              </div>
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <button onClick={() => setEditingStay(false)} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: 'none', backgroundColor: '#1e293b', color: 'white', fontWeight: 800, cursor: 'pointer' }}>Cancel</button>
+                                <button onClick={updateStayDetails} style={{ flex: 2, padding: '12px', borderRadius: '12px', border: 'none', backgroundColor: '#0ea5e9', color: 'white', fontWeight: 800, cursor: 'pointer' }}>Apply Extension</button>
+                              </div>
+                            </div>
+                         ) : (
+                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}><User size={24} /></div>
+                                <div>
+                                   <div style={{ color: 'white', fontWeight: 900 }}>{room.guest_name}</div>
+                                   <div style={{ color: '#64748b', fontSize: '12px' }}>{room.guest_phone}</div>
+                                </div>
+                             </div>
+                             <button onClick={() => setEditingStay(true)} style={{ padding: '8px 12px', borderRadius: '10px', backgroundColor: '#1e293b', color: '#0ea5e9', border: 'none', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}>EDIT STAY</button>
+                           </div>
+                         )}
+                      </div>
+                      
+                      <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px', minHeight: 0 }} className="custom-scrollbar">
+                         <div style={{ padding: '16px', backgroundColor: '#0f172a', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', border: '1px solid #1e293b' }}>
+                            <span style={{ color: '#64748b', fontSize: '12px', fontWeight: 800 }}>ROOM CHARGE ({room.booking_days}D)</span>
+                            <span style={{ color: '#f43f5e', fontWeight: 900 }}>₹{room.total_cost}</span>
+                         </div>
+                         {orderItems.map(item => (
+                            <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: '#0f172a', borderRadius: '16px' }}>
+                               <div><div style={{ color: 'white', fontWeight: 900 }}>{item.name}</div><div style={{ color: '#10b981', fontSize: '13px' }}>₹{item.price * item.quantity}</div></div>
+                               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                  <button onClick={() => updateQuantity(item.id, -1)} style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1e293b', border: 'none', color: 'white', cursor: 'pointer' }}><Minus size={14} /></button>
+                                  <span style={{ color: 'white', fontWeight: 1000 }}>{item.quantity}</span>
+                                  <button onClick={() => updateQuantity(item.id, 1)} style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1e293b', border: 'none', color: 'white', cursor: 'pointer' }}><Plus size={14} /></button>
+                               </div>
+                            </div>
+                         ))}
+                      </div>
+
+                   <div style={{ padding: '32px', backgroundColor: '#0f172a', borderTop: '1px solid #1e293b' }}>
+                      <div style={{ marginBottom: '24px' }}>
+                         <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', fontSize: '11px', fontWeight: 900, marginBottom: '8px' }}>
+                            <span>DISCOUNT (%)</span>
+                            <input type="number" value={discount} onFocus={e => e.target.select()} onChange={e => setDiscount(e.target.value)} style={{ width: '50px', background: 'none', border: 'none', borderBottom: '2px solid #0ea5e9', color: 'white', textAlign: 'center', fontWeight: 900 }} />
+                         </div>
+                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white' }}>
+                            <span style={{ fontSize: '28px', fontWeight: 1000 }}>Total Due</span>
+                            <span style={{ color: '#10b981', fontSize: '28px', fontWeight: 1000 }}>₹{((subtotalVal * (1 + (user?.gst_percentage || 0)/100)) * (1 - discount/100)).toFixed(2)}</span>
+                         </div>
+                      </div>
+                      <button onClick={generateBill} style={{ width: '100%', padding: '20px', borderRadius: '20px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', fontWeight: 1000, fontSize: '18px', cursor: 'pointer' }}>SETTLE ROOM BILL</button>
+                   </div>
+                </div>
+             )}
+          </div>
+        </div>
+      </div>
+
+      {showBill && billData && (
+        <div className="bill-modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.95)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
+           <div style={{ width: '100%', maxWidth: '850px', backgroundColor: 'white', borderRadius: '40px', overflow: 'hidden', display: 'flex', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.5)' }}>
+              <div style={{ flex: 1, padding: '48px', borderRight: '1px solid #f1f5f9', backgroundColor: billData?.is_paid ? '#10b981' : 'white', overflowY: 'auto', position: 'relative', transition: 'all 0.6s' }}>
+                 {isSuccess && (
+                    <div style={{ position: 'absolute', inset: 0, backgroundColor: '#10b981', zIndex: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.3s ease-out' }}>
+                       <div style={{ width: '120px', height: '120px', borderRadius: '50%', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', marginBottom: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', animation: 'scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+                          <CheckCircle size={80} strokeWidth={3} />
+                       </div>
+                       <h2 style={{ fontSize: '32px', fontWeight: 1000, color: 'white', margin: 0 }}>Transaction Complete</h2>
+                       <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.8)', marginTop: '8px', fontWeight: 800 }}>Redirecting...</p>
+                    </div>
+                 )}
+                 {billData?.is_paid && !isSuccess && (
+                    <div style={{ position: 'absolute', top: '10%', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+                       <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '50%', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}><CheckCircle size={100} color="#10b981" /></div>
+                    </div>
+                 )}
+                 <div style={{ textAlign: 'center', marginBottom: '24px', opacity: billData?.is_paid ? 0.3 : 1 }}>
+                    <h1 style={{ margin: 0, fontWeight: 950, fontSize: '28px', color: billData?.is_paid ? 'white' : '#1e293b' }}>{(user?.hotel_name || 'BESTBILL').toUpperCase()}</h1>
+                    <div style={{ color: billData?.is_paid ? 'white' : '#64748b', fontWeight: 800, fontSize: '14px', marginTop: '4px' }}>{user?.hotel_location}</div>
+                 </div>
+
+                 <div style={{ borderTop: '2px dashed #e2e8f0', borderBottom: '2px dashed #e2e8f0', padding: '16px 0', marginBottom: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 900, color: '#475569' }}>
+                       <span>ROOM NO: {room?.room_number}</span>
+                       <span>BILL NO: #{billData?.id}</span>
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 800 }}>GUEST: {room?.guest_name?.toUpperCase()}</div>
+                 </div>
+
+                 <div style={{ marginBottom: '24px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 100px', borderBottom: '1px dashed #cbd5e1', paddingBottom: '8px', marginBottom: '12px', fontSize: '12px', fontWeight: 900, color: '#475569' }}>
+                       <span>Service / Item</span><span style={{ textAlign: 'right' }}>Qty</span><span style={{ textAlign: 'right' }}>Total</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 100px', fontSize: '15px', fontWeight: 800, marginBottom: '8px', color: '#1e293b' }}>
+                       <span>Room Charge ({room?.booking_days} Days)</span><span style={{ textAlign: 'right' }}>1</span><span style={{ textAlign: 'right' }}>₹{billData?.room_charge}</span>
+                    </div>
+                    {(billData?.items || []).map((i, idx) => (
+                       <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 100px', fontSize: '15px', fontWeight: 800, marginBottom: '8px', color: '#1e293b' }}>
+                          <span>{i?.name}</span><span style={{ textAlign: 'right' }}>{i?.quantity}</span><span style={{ textAlign: 'right' }}>₹{(i?.price * i?.quantity).toFixed(2)}</span>
+                       </div>
+                    ))}
+                 </div>
+
+                 <div style={{ borderTop: '1px dashed #cbd5e1', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: 800, color: '#64748b' }}>
+                        <span>Subtotal</span>
+                        <span>₹{parseFloat(billData?.subtotal || 0).toFixed(2)}</span>
+                    </div>
+                    {parseFloat(billData?.gst || 0) > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: 800, color: '#64748b' }}>
+                            <span>GST ({billData?.gst_percentage}%)</span>
+                            <span>₹{parseFloat(billData?.gst || 0).toFixed(2)}</span>
+                        </div>
+                    )}
+                    {parseFloat(billData?.discount_percentage || 0) > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: 800, color: '#f43f5e' }}>
+                            <span>Discount ({billData.discount_percentage}%)</span>
+                            <span>-₹{( (parseFloat(billData.subtotal) + parseFloat(billData.gst)) * (billData.discount_percentage / 100) ).toFixed(2)}</span>
+                        </div>
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '42px', fontWeight: 1000, color: '#10b981', borderTop: '4px double #e2e8f0', marginTop: '12px', paddingTop: '12px' }}>
+                        <span>TOTAL</span>
+                        <span>₹{parseFloat(billData?.final_amount || 0).toFixed(0)}</span>
+                    </div>
+                 </div>
+
+                 {!billData?.is_paid && (
+                   <button onClick={rollbackBill} style={{ width: '100%', marginTop: '32px', padding: '20px', borderRadius: '24px', border: '2px solid #e2e8f0', background: 'white', color: '#64748b', fontWeight: 900, cursor: 'pointer' }}>MODIFY INVOICE</button>
+                 )}
+              </div>
+
+              <div style={{ width: '380px', padding: '48px', backgroundColor: '#fafafa', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                 <div style={{ textAlign: 'center', backgroundColor: 'white', padding: '24px', borderRadius: '32px' }}>
+                    <QRCodeCanvas id="upi-qr-canvas" value={upiLink} size={180} />
+                    {!billData?.is_paid && <button onClick={confirmPayment} style={{ width: '100%', marginTop: '20px', padding: '18px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', borderRadius: '16px', fontWeight: 1000 }}>MARK PAID</button>}
+                 </div>
+                 <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid #e2e8f0' }}>
+                    <Phone size={18} color="#94a3b8" />
+                    <input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} style={{ border: 'none', outline: 'none', fontWeight: 800, fontSize: '15px', width: '100%', background: 'white', color: '#1e293b' }} placeholder="Guest Phone" />
+                 </div>
+                 <div style={{ display: 'flex', gap: '12px' }}>
+                    <button onClick={printBill} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#0f172a', color: 'white', border: 'none', cursor: 'pointer' }}><Printer size={18} /></button>
+                    <button onClick={shareViaWhatsApp} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer' }}><MessageCircle size={18} /></button>
+                 </div>
+                 <button onClick={onClose} style={{ width: '100%', padding: '20px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '20px', fontWeight: 900, cursor: 'pointer' }}>CLOSE</button>
+              </div>
+           </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default RoomOrderModal;

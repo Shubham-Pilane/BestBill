@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import { toast } from 'react-hot-toast';
-import { PlusCircle, Bed, LayoutGrid, Search, X, Hash, Trash2 } from 'lucide-react';
+import { PlusCircle, Bed, LayoutGrid, Search, X, Hash, Trash2, Hotel } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import RoomOrderModal from '../components/RoomOrderModal';
+import { QRCodeCanvas } from 'qrcode.react';
+import { QrCode, Download } from 'lucide-react';
 
 const Lodging = () => {
   const { user } = useAuth();
@@ -16,6 +19,10 @@ const Lodging = () => {
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
   const [editData, setEditData] = useState({ room_number: '', room_name: '', floor: 'Floor 1', status: 'available' });
+
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [isBookingModalOpen, setBookingModalOpen] = useState(false);
+  const [isQRModalOpen, setQRModalOpen] = useState(false);
 
   const fetchRooms = async () => {
     try {
@@ -106,7 +113,62 @@ const Lodging = () => {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '48px', width: '100%', maxWidth: '1440px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '64px', width: '100%', maxWidth: '1440px' }}>
+      {/* Hotel Branding Area */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '32px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+          <div style={{ 
+            width: '64px', 
+            height: '64px', 
+            backgroundColor: 'rgba(14, 165, 233, 0.1)', 
+            borderRadius: '20px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            border: '1px solid rgba(14, 165, 233, 0.2)'
+          }}>
+            <Hotel color="#0ea5e9" size={32} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <h1 style={{ fontSize: '36px', fontWeight: 950, color: 'white', margin: 0, letterSpacing: '-0.02em' }}>{user?.hotel_name || 'BestBill Hotel'}</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b', fontSize: '14px', fontWeight: 700 }}>
+              <span>Proprietor: {user?.name || 'A'}</span>
+              <div style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#1e293b' }}></div>
+              <span style={{ color: '#10b981' }}>Active Session</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
+          <div style={{ 
+            backgroundColor: 'rgba(14, 165, 233, 0.05)', 
+            border: '1px solid rgba(14, 165, 233, 0.1)', 
+            padding: '16px 24px', 
+            borderRadius: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '4px'
+          }}>
+            <span style={{ fontSize: '10px', fontWeight: 900, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Plan Validity</span>
+            <span style={{ fontSize: '20px', fontWeight: 900, color: 'white' }}>
+              {user?.subscription_valid_until ? (
+                (() => {
+                  const days = Math.ceil((new Date(user.subscription_valid_until) - new Date()) / (1000 * 60 * 60 * 24));
+                  return days > 0 ? `${days} Days Remaining` : 'Expired';
+                })()
+              ) : 'No Active Plan'}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
+            <span style={{ fontSize: '10px', fontWeight: 900, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Current Date</span>
+            <span style={{ fontSize: '16px', fontWeight: 800, color: 'white' }}>
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </span>
+          </div>
+        </div>
+      </div>
       <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '24px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '400px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 900, color: 'white', display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -124,15 +186,24 @@ const Lodging = () => {
             />
           </div>
         </div>
-        {isOwner && (
-          <button
-            onClick={() => setAddRoomOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '12px', backgroundColor: '#0ea5e9', color: 'white', padding: '14px 28px', borderRadius: '16px', fontWeight: 800, fontSize: '15px', cursor: 'pointer', border: 'none', boxShadow: '0 8px 16px rgba(14, 165, 233, 0.2)' }}
-          >
-            <PlusCircle size={20} />
-            Setup New Rooms
-          </button>
-        )}
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button
+              onClick={() => setQRModalOpen(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: '12px', backgroundColor: '#0f172a', color: 'white', padding: '14px 24px', borderRadius: '16px', fontWeight: 800, fontSize: '15px', cursor: 'pointer', border: '2px solid #1e293b' }}
+            >
+              <QrCode size={20} />
+              Guest QR
+            </button>
+            {isOwner && (
+              <button
+                onClick={() => setAddRoomOpen(true)}
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', backgroundColor: '#0ea5e9', color: 'white', padding: '14px 28px', borderRadius: '16px', fontWeight: 800, fontSize: '15px', cursor: 'pointer', border: 'none', boxShadow: '0 8px 16px rgba(14, 165, 233, 0.2)' }}
+              >
+                <PlusCircle size={20} />
+                Setup New Rooms
+              </button>
+            )}
+          </div>
       </div>
 
       {floors.length === 0 ? (
@@ -152,24 +223,52 @@ const Lodging = () => {
                </div>
                
                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '24px' }}>
-                  {groupedRooms[floor].filter(r => r.room_number.includes(searchQuery) || (r.room_name && r.room_name.toLowerCase().includes(searchQuery.toLowerCase()))).map((room) => (
-                    <div
-                      key={room.id}
-                      style={{ backgroundColor: '#0f172a', borderRadius: '32px', padding: '32px', border: '2px solid rgba(14, 165, 233, 0.2)', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '16px' }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '11px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase' }}>ROOM {room.room_number}</span>
-                        <div style={{ display: 'flex', gap: '12px' }}>
-                           <button onClick={(e) => initiateEditRoom(e, room)} style={{ color: '#0ea5e9', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 900, fontSize: '11px' }}>RENAME</button>
-                           <button onClick={(e) => deleteRoom(e, room.id)} style={{ color: '#f43f5e', border: 'none', background: 'none', cursor: 'pointer' }}><Trash2 size={14} /></button>
+                  {groupedRooms[floor].filter(r => r.room_number.includes(searchQuery) || (r.room_name && r.room_name.toLowerCase().includes(searchQuery.toLowerCase()))).map((room) => {
+                    const isOccupied = room.status === 'occupied';
+                    return (
+                      <div
+                        key={room.id}
+                        onClick={() => {
+                          setSelectedRoom(room);
+                          setBookingModalOpen(true);
+                        }}
+                        style={{ 
+                          backgroundColor: '#0f172a', 
+                          borderRadius: '32px', 
+                          padding: '32px', 
+                          border: isOccupied ? '2px solid rgba(244, 63, 94, 0.4)' : '2px solid rgba(16, 185, 129, 0.4)', 
+                          position: 'relative', 
+                          overflow: 'hidden', 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          gap: '16px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {isOccupied && (
+                          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', backgroundColor: '#f43f5e' }}></div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase' }}>ROOM {room.room_number}</span>
+                          <div style={{ display: 'flex', gap: '12px' }}>
+                             <button onClick={(e) => initiateEditRoom(e, room)} style={{ color: '#0ea5e9', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 900, fontSize: '11px' }}>RENAME</button>
+                             <button onClick={(e) => deleteRoom(e, room.id)} style={{ color: '#f43f5e', border: 'none', background: 'none', cursor: 'pointer' }}><Trash2 size={14} /></button>
+                          </div>
                         </div>
+                        <div>
+                          <h3 style={{ fontSize: '32px', fontWeight: 900, color: 'white', margin: 0 }}>{room.room_name || room.room_number}</h3>
+                          <span style={{ fontSize: '12px', fontWeight: 800, color: isOccupied ? '#f43f5e' : '#10b981' }}>{room.status.toUpperCase()}</span>
+                        </div>
+                        {isOccupied && (
+                          <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                            <span style={{ fontSize: '12px', color: '#94a3b8', display: 'block' }}>{room.guest_name}</span>
+                            <span style={{ fontSize: '11px', color: '#64748b' }}>Check-in: {new Date(room.check_in_date).toLocaleDateString()}</span>
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <h3 style={{ fontSize: '32px', fontWeight: 900, color: 'white', margin: 0 }}>{room.room_name || room.room_number}</h3>
-                        <span style={{ fontSize: '12px', fontWeight: 800, color: '#10b981' }}>{room.status.toUpperCase()}</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                </div>
             </div>
           ))}
@@ -178,7 +277,7 @@ const Lodging = () => {
 
       {/* Add Room Batch Modal */}
       {isAddRoomOpen && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.8)', backdropFilter: 'blur(16px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '24px' }}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '24px' }}>
            <div style={{ width: '100%', maxWidth: '400px', backgroundColor: '#0f172a', borderRadius: '32px', padding: '40px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                 <h3 style={{ fontSize: '20px', fontWeight: 900, color: 'white', margin: 0 }}>Initialize Lodging</h3>
@@ -222,6 +321,17 @@ const Lodging = () => {
         </div>
       )}
 
+      {selectedRoom && isBookingModalOpen && (
+        <RoomOrderModal 
+          room={rooms.find(r => r.id === selectedRoom.id) || selectedRoom} 
+          onClose={() => {
+            setBookingModalOpen(false);
+            setSelectedRoom(null);
+          }} 
+          onRefresh={fetchRooms}
+        />
+      )}
+
       {/* Edit/Rename Modal */}
       {isEditModalOpen && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.8)', backdropFilter: 'blur(16px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '24px' }}>
@@ -241,6 +351,48 @@ const Lodging = () => {
                     <button type="submit" style={{ flex: 2, backgroundColor: '#0ea5e9', color: 'white', padding: '14px', borderRadius: '16px', border: 'none', fontWeight: 800 }}>Save Changes</button>
                  </div>
               </form>
+           </div>
+        </div>
+      )}
+
+      {/* Guest QR Modal */}
+      {isQRModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.95)', backdropFilter: 'blur(32px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9000, padding: '24px' }}>
+           <div style={{ width: '100%', maxWidth: '440px', backgroundColor: '#0f172a', borderRadius: '48px', padding: '48px', border: '1px solid rgba(255, 255, 255, 0.05)', textAlign: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'white', margin: 0 }}>Hotel Guest QR</h3>
+                <button onClick={() => setQRModalOpen(false)} style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer' }}><X size={32} /></button>
+              </div>
+              
+              <div style={{ backgroundColor: 'white', padding: '32px', borderRadius: '32px', display: 'inline-block', marginBottom: '32px' }}>
+                  <QRCodeCanvas 
+                    id="hotel-qr-code"
+                    value={`${window.location.origin}/guest/order/${user.hotel_id}`}
+                    size={240}
+                    level="H"
+                    includeMargin={false}
+                  />
+              </div>
+
+              <div style={{ marginBottom: '32px' }}>
+                  <h4 style={{ fontSize: '20px', fontWeight: 900, color: 'white', margin: '0 0 8px 0' }}>{user.hotel_name}</h4>
+                  <p style={{ color: '#64748b', fontSize: '14px', fontWeight: 600, margin: 0 }}>Place in every room. Guests can scan this to view menu and order instantly.</p>
+              </div>
+
+              <button 
+                onClick={() => {
+                    const canvas = document.getElementById('hotel-qr-code');
+                    const url = canvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    link.download = `${user.hotel_name.replace(/\s+/g, '_')}_QR.png`;
+                    link.href = url;
+                    link.click();
+                    toast.success('QR Code Downloaded');
+                }}
+                style={{ width: '100%', backgroundColor: '#0ea5e9', color: 'white', padding: '20px', borderRadius: '20px', fontSize: '16px', fontWeight: 900, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}
+              >
+                <Download size={20} /> Download JPG Assets
+              </button>
            </div>
         </div>
       )}

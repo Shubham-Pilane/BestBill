@@ -57,13 +57,13 @@ const BillingHistory = () => {
             <style>
                 @media print {
                 @page {
-                    margin: 0;
-                    size: 58mm auto;
+                    margin: 0 !important;
+                    size: auto;
                 }
                 body {
-                    width: 58mm;
-                    margin: 0;
-                    padding: 0;
+                    width: 100%;
+                    margin: 0 !important;
+                    padding: 0 !important;
                 }
                 }
                 * {
@@ -74,14 +74,15 @@ const BillingHistory = () => {
                 box-sizing: border-box;
                 }
                 body { 
-                margin: 0; 
-                padding: 0; 
+                margin: 0 !important; 
+                padding: 0 !important; 
                 background: #fff;
                 }
                 .bill-wrapper {
-                width: 46mm;
-                margin: 0 auto;
-                padding: 0;
+                width: 100%;
+                max-width: 56mm;
+                margin: 0 !important;
+                padding: 0 !important;
                 overflow: hidden;
                 }
                 .center { text-align: center; }
@@ -118,9 +119,9 @@ const BillingHistory = () => {
                 <table class="items-table" style="font-size: 8.5pt;">
                     <thead>
                     <tr>
-                        <th width="40%" style="text-align: left;">Item</th>
-                        <th width="20%" style="text-align: center;">Price</th>
-                        <th width="15%" style="text-align: center;">Qty</th>
+                        <th width="42%" style="text-align: left;">Item</th>
+                        <th width="20%" style="text-align: right;">Price</th>
+                        <th width="13%" style="text-align: center;">Qty</th>
                         <th width="25%" style="text-align: right;">Total</th>
                     </tr>
                     </thead>

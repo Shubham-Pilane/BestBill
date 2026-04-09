@@ -5,7 +5,10 @@ let dbConfig = {};
 if (process.env.DATABASE_URL) {
   dbConfig = {
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false } // Required for Neon
+    ssl: { rejectUnauthorized: false }, // Required for Neon
+    max: 20, // Increase max connections
+    idleTimeoutMillis: 30000, // Close idle connections after 30s
+    connectionTimeoutMillis: 10000, // Wait up to 10s for Neon to wake up
   };
   console.log(`[DB] Connecting via DATABASE_URL (Neon/Cloud)`);
 } else {

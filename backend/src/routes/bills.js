@@ -58,4 +58,18 @@ router.get('/:id', auth, async (req, res) => {
   }
 });
 
+// Update payment status
+router.put('/:id/pay', auth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await db.query(
+            'UPDATE bills SET is_paid = true WHERE id = $1 RETURNING *',
+            [id]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ message: 'Update failed' });
+    }
+});
+
 module.exports = router;

@@ -3,7 +3,7 @@ import api from '../services/api';
 import OrderModal from '../components/OrderModal';
 import ConfirmModal from '../components/ConfirmModal';
 import { toast } from 'react-hot-toast';
-import { PlusCircle, Table as TableIcon, LayoutGrid, Search, X, Hash, Trash2, RefreshCcw } from 'lucide-react';
+import { PlusCircle, Table as TableIcon, LayoutGrid, Search, X, Hash, Trash2, RefreshCcw, Hotel } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import SwapModal from '../components/SwapModal';
 
@@ -156,7 +156,62 @@ const Dashboard = () => {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '48px', width: '100%', maxWidth: '1440px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '64px', width: '100%', maxWidth: '1440px' }}>
+      {/* Hotel & Subscription Branding Area */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '32px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+          <div style={{ 
+            width: '64px', 
+            height: '64px', 
+            backgroundColor: 'rgba(14, 165, 233, 0.1)', 
+            borderRadius: '20px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            border: '1px solid rgba(14, 165, 233, 0.2)'
+          }}>
+            <Hotel color="#0ea5e9" size={32} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <h1 style={{ fontSize: '36px', fontWeight: 950, color: 'white', margin: 0, letterSpacing: '-0.02em' }}>{user?.hotel_name || 'BestBill Hotel'}</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b', fontSize: '14px', fontWeight: 700 }}>
+              <span>Proprietor: {user?.name || 'A'}</span>
+              <div style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#1e293b' }}></div>
+              <span style={{ color: '#10b981' }}>Active Session</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
+          <div style={{ 
+            backgroundColor: 'rgba(14, 165, 233, 0.05)', 
+            border: '1px solid rgba(14, 165, 233, 0.1)', 
+            padding: '16px 24px', 
+            borderRadius: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '4px'
+          }}>
+            <span style={{ fontSize: '10px', fontWeight: 900, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Plan Validity</span>
+            <span style={{ fontSize: '20px', fontWeight: 900, color: 'white' }}>
+              {user?.subscription_valid_until ? (
+                (() => {
+                  const days = Math.ceil((new Date(user.subscription_valid_until) - new Date()) / (1000 * 60 * 60 * 24));
+                  return days > 0 ? `${days} Days Remaining` : 'Expired';
+                })()
+              ) : 'No Active Plan'}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
+            <span style={{ fontSize: '10px', fontWeight: 900, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Current Date</span>
+            <span style={{ fontSize: '16px', fontWeight: 800, color: 'white' }}>
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </span>
+          </div>
+        </div>
+      </div>
       <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '24px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '400px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 900, letterSpacing: '-0.02em', color: 'white', display: 'flex', alignItems: 'center', gap: '12px' }}>

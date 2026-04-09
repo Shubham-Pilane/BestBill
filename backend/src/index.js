@@ -24,16 +24,41 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/profile', require('./routes/profile'));
 app.use('/api/bills', require('./routes/bills'));
 app.use('/api/rooms', require('./routes/rooms'));
+app.use('/api/guest', require('./routes/guest'));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'BestBill API is running' });
 });
 
 const PORT = process.env.PORT || 8080;
-// Run migrations before listening (handles local and cloud start correctly)
+const db = require('./db/db');
+
+// --- AUTO CLEANUP TASK (30 DAYS) ---
+const runCleanupTask = async () => {
+    try {
+        console.log('[CLEANUP] Starting daily history cleanup...');
+        // Delete orders older than 30 days that are marked delivered or completed
+        const resOrders = await db.query(
+            "DELETE FROM orders WHERE (is_delivered = true OR status = 'completed') AND created_at < NOW() - INTERVAL '30 days'"
+        );
+        // Delete billing history older than 30 days
+        const resBills = await db.query(
+            "DELETE FROM bills WHERE created_at < NOW() - INTERVAL '30 days'"
+        );
+        console.log(`[CLEANUP] Success: Removed ${resOrders.rowCount} old orders and ${resBills.rowCount} old bills.`);
+    } catch (err) {
+        console.error('[CLEANUP] Error during cleanup:', err.message);
+    }
+};
+
+// Run migrations before listening
 syncSchema().then(() => {
     app.listen(PORT, '0.0.0.0', () => {
-        console.log(`Server running on port ${PORT} (bound to 0.0.0.0)`);
+        console.log(`Server running on port ${PORT}`);
+        // Run first cleanup on start
+        runCleanupTask();
+        // Set up daily interval (24 hours)
+        setInterval(runCleanupTask, 1000 * 60 * 60 * 24);
     }).on('error', (err) => {
         console.error('Server Listen Error:', err.message);
     });

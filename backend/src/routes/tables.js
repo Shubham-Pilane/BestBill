@@ -8,9 +8,9 @@ const { sendSMS } = require('../services/smsService');
 router.get('/', auth, async (req, res) => {
   try {
     const tables = await db.query(
-      `SELECT t.*, 
-       (SELECT id FROM orders WHERE table_id = t.id AND status = 'active' LIMIT 1) as active_order_id 
+      `SELECT t.*, o.id as active_order_id 
        FROM tables t 
+       LEFT JOIN orders o ON o.table_id = t.id AND o.status = 'active'
        WHERE t.hotel_id = $1 
        ORDER BY t.floor ASC, CAST(NULLIF(t.table_number, '') AS INTEGER) ASC`,
       [req.user.hotel_id]
