@@ -82,28 +82,33 @@ export const generateEscposBill = (billData, user, tableStr = '') => {
   escpos += BOLD_ON + 'INVOICE\n' + BOLD_OFF;
   escpos += divider;
   
-  escpos += ALIGN_LEFT;
   if (tableStr) {
+      let tStr = '';
       if (tableStr.toLowerCase().includes('room') || tableStr.toLowerCase().includes('parcel')) {
-          escpos += `${tableStr}\n`;
+          tStr = tableStr;
       } else {
-          escpos += `Table: ${tableStr}\n`;
+          tStr = `Table: ${tableStr}`;
       }
+      escpos += padText(tStr, LINE_WIDTH) + '\n';
   }
-  escpos += `Bill No: #${billData.id || ''}\n`;
+  
+  escpos += padText(`Bill No: #${billData.id || ''}`, LINE_WIDTH) + '\n';
   
   // Format Date to unambiguous DD/MM/YYYY explicitly
   const d = new Date(); // Use current print time just like previous logic
   const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + 
                   d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-  escpos += `Date: ${dateStr}\n`;
+  escpos += padText(`Date: ${dateStr}`, LINE_WIDTH) + '\n';
   escpos += divider;
   
   // Item Columns mathematically aligned
-  const ACTUAL_ITEM_LEN = is58mm ? 14 : 19;
-  const PRC_LEN = is58mm ? 6 : 8;
-  const QTY_LEN = is58mm ? 3 : 4;
+  const ACTUAL_ITEM_LEN = is58mm ? 15 : 19;
+  const PRC_LEN = is58mm ? 5 : 8;
+  const QTY_LEN = is58mm ? 2 : 4;
   const TOT_LEN = is58mm ? 6 : 8;
+  
+  // No need for ALIGN_LEFT anymore because every line is manually padded to exactly LINE_WIDTH
+  // and the printer forces that 32/42 char block into the physical center of the printhead!
   
   escpos += padText('ITEM', ACTUAL_ITEM_LEN) + ' ' +
             padText('PRICE', PRC_LEN, 'right') + ' ' + 
@@ -147,10 +152,11 @@ export const generateEscposBill = (billData, user, tableStr = '') => {
   
   // Format TOTAL to exactly align to the far right edges
   const totalText = 'TOTAL: Rs ' + Math.round(billData.final_amount);
+  // Add space padding on the left to perfectly fit LINE_WIDTH inside a BOLD block
   escpos += BOLD_ON + padText(totalText, LINE_WIDTH, 'right') + '\n' + BOLD_OFF;
   escpos += divider;
   
-  escpos += ALIGN_CENTER + '\nThank You! Visit Again!\n';
+  escpos += '\nThank You! Visit Again!\n';
 
   // Build the print payload array so we can mix text and images dynamically
   const printJob = [
@@ -169,7 +175,7 @@ export const generateEscposBill = (billData, user, tableStr = '') => {
                  format: 'image', 
                  flavor: 'base64', 
                  data: b64, 
-                 options: { language: 'ESCPOS', dotDensity: 'double' } 
+                 options: { language: 'ESCPOS', dotDensity: is58mm ? 'single' : 'double' } 
              });
              printJob.push('\n');
          } catch (e) {
