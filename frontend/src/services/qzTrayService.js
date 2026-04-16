@@ -64,9 +64,6 @@ export const generateEscposBill = (billData, user, tableStr = '') => {
   const ALIGN_CENTER = ESC + '\x61\x01';
   const ALIGN_RIGHT = ESC + '\x61\x02';
   const BOLD_ON = ESC + '\x45\x01';
-  const BOLD_OFF = ESC + '\x45\x00';
-  const CUT = GS + '\x56\x00';
-  
   const printerSize = user?.printer_size || '80mm';
   const is58mm = printerSize === '58mm';
   const LINE_WIDTH = is58mm ? 30 : 42;  // Shrink internal width to compensate for offset
@@ -84,12 +81,13 @@ export const generateEscposBill = (billData, user, tableStr = '') => {
   escpos += divider;
   
   if (tableStr) {
-      let tStr = String(tableStr);
-      if (tStr.toLowerCase().includes('room') || tStr.toLowerCase().includes('parcel')) {
-          escpos += mg + padText(tStr, LINE_WIDTH) + '\n';
+      let tStr = '';
+      if (tableStr.toLowerCase().includes('room') || tableStr.toLowerCase().includes('parcel')) {
+          tStr = tableStr;
       } else {
-          escpos += mg + padText(`Table: ${tStr}`, LINE_WIDTH) + '\n';
+          tStr = `Table: ${tableStr}`;
       }
+      escpos += mg + padText(tStr, LINE_WIDTH) + '\n';
   }
   
   escpos += mg + padText(`Bill No: #${billData.id || ''}`, LINE_WIDTH) + '\n';
