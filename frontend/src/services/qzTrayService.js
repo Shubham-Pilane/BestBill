@@ -59,6 +59,7 @@ export const generateEscposBill = (billData, user, tableStr = '') => {
   // RAW ESC/POS commands
   const ESC = '\x1B';
   const GS = '\x1D';
+  const INIT = ESC + '\x40'; // Initialize printer (fixes top margin issue)
   const ALIGN_LEFT = ESC + '\x61\x00';
   const ALIGN_CENTER = ESC + '\x61\x01';
   const ALIGN_RIGHT = ESC + '\x61\x02';
@@ -69,7 +70,7 @@ export const generateEscposBill = (billData, user, tableStr = '') => {
   const LINE_WIDTH = 42; // Width optimized for 80mm printers
   const divider = '-'.repeat(LINE_WIDTH) + '\n';
   
-  let escpos = '';
+  let escpos = INIT;
   
   // Header
   escpos += ALIGN_CENTER + BOLD_ON + hName.toUpperCase() + '\n' + BOLD_OFF;
@@ -80,10 +81,19 @@ export const generateEscposBill = (billData, user, tableStr = '') => {
   escpos += divider;
   
   escpos += ALIGN_LEFT;
-  if (tableStr) escpos += `Table: ${tableStr}\n`;
-  escpos += `Bill No: #${billData.id}\n`;
+  if (tableStr) {
+      if (tableStr.toLowerCase().includes('room') || tableStr.toLowerCase().includes('parcel')) {
+          escpos += `${tableStr}\n`;
+      } else {
+          escpos += `Table: ${tableStr}\n`;
+      }
+  }
+  escpos += `Bill No: #${billData.id || ''}\n`;
   
-  let dateStr = new Date(billData.created_at || Date.now()).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' });
+  // Format Date to unambiguous DD/MM/YYYY explicitly
+  const d = new Date(); // Use current print time just like previous logic
+  const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + 
+                  d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
   escpos += `Date: ${dateStr}\n`;
   escpos += divider;
   
@@ -93,7 +103,11 @@ export const generateEscposBill = (billData, user, tableStr = '') => {
   const QTY_LEN = 4;
   const TOT_LEN = 8;
   
-  escpos += padText('ITEM', ITEM_LEN) + ' ' +
+  // Header alignment matches perfectly with line width (20+1+8+1+4+1+8 = 43? Wait. 20+1(space)+8+1(space)+4+1(space)+8 = 43 characters!
+  // It exceeds LINE_WIDTH (42) by 1 character. So I must reduce ITEM_LEN to 19 to fit perfectly!
+  const ACTUAL_ITEM_LEN = 19;
+  
+  escpos += padText('ITEM', ACTUAL_ITEM_LEN) + ' ' +
             padText('PRICE', PRC_LEN, 'right') + ' ' + 
             padText('QTY', QTY_LEN, 'right') + ' ' + 
             padText('TOTAL', TOT_LEN, 'right') + '\n';
@@ -102,7 +116,7 @@ export const generateEscposBill = (billData, user, tableStr = '') => {
   // Add Room Charge if exists
   if (billData.room_charge > 0) {
     const rDays = billData.booking_days || 1;
-    escpos += padText('Room Rent', ITEM_LEN) + ' ' +
+    escpos += padText('Room Rent', ACTUAL_ITEM_LEN) + ' ' +
               padText(Math.round(billData.room_charge / rDays), PRC_LEN, 'right') + ' ' + 
               padText(rDays, QTY_LEN, 'right') + ' ' + 
               padText(Math.round(billData.room_charge), TOT_LEN, 'right') + '\n';
@@ -111,43 +125,69 @@ export const generateEscposBill = (billData, user, tableStr = '') => {
   // Items
   (billData.items || []).forEach(i => {
     let name = i.name;
-    if (name.length > ITEM_LEN) name = name.substring(0, ITEM_LEN - 2) + '..';
+    if (name.length > ACTUAL_ITEM_LEN) name = name.substring(0, ACTUAL_ITEM_LEN - 2) + '..';
     
-    escpos += padText(name, ITEM_LEN) + ' ' +
+    escpos += padText(name, ACTUAL_ITEM_LEN) + ' ' +
               padText(Math.round(i.price), PRC_LEN, 'right') + ' ' + 
               padText(i.quantity, QTY_LEN, 'right') + ' ' + 
               padText(Math.round(i.price * i.quantity), TOT_LEN, 'right') + '\n';
   });
   
   escpos += divider;
-  escpos += ALIGN_RIGHT;
   
-  escpos += padText('Subtotal: ', 20, 'right') + padText(Math.round(billData.subtotal), 10, 'right') + '\n';
+  // Align GST and Discount to right column nicely
   if (billData.gst > 0) {
-    escpos += padText(`GST (${billData.gst_percentage}%): `, 20, 'right') + padText(Math.round(billData.gst), 10, 'right') + '\n';
+    escpos += padText(`GST (${billData.gst_percentage}%):`, LINE_WIDTH - TOT_LEN, 'right') + padText(Math.round(billData.gst), TOT_LEN, 'right') + '\n';
   }
   
   if (billData.discount_percentage > 0) {
     const discAmt = (parseFloat(billData.subtotal) + parseFloat(billData.gst)) * (billData.discount_percentage / 100);
-    escpos += padText(`Disc (${billData.discount_percentage}%): `, 20, 'right') + padText('-' + Math.round(discAmt), 10, 'right') + '\n';
+    escpos += padText(`Disc (${billData.discount_percentage}%):`, LINE_WIDTH - TOT_LEN, 'right') + padText('-' + Math.round(discAmt), TOT_LEN, 'right') + '\n';
   }
   
   escpos += divider;
-  escpos += BOLD_ON + ALIGN_RIGHT + 'TOTAL: Rs ' + Math.round(billData.final_amount) + '\n' + BOLD_OFF;
+  
+  // Format TOTAL to exactly align to the far right edges
+  const totalText = 'TOTAL: Rs ' + Math.round(billData.final_amount);
+  escpos += BOLD_ON + padText(totalText, LINE_WIDTH, 'right') + '\n' + BOLD_OFF;
   escpos += divider;
   
   escpos += ALIGN_CENTER + '\nThank You! Visit Again!\n';
+
+  // Build the print payload array so we can mix text and images dynamically
+  const printJob = [
+    escpos
+  ];
+
+  // Safely inject QR code if UPI applies and QR canvas is accessible in the DOM
   if (!billData.is_paid && user?.upi_id) {
-     escpos += '\n[Please Scan QR Display To Pay via UPI]\n'; 
+     const qrCanvas = document.getElementById('upi-qr-canvas') || document.getElementById('history-qr-canvas');
+     if (qrCanvas) {
+         try {
+             printJob.push('\n[Scan to Pay via UPI]\n');
+             const b64 = qrCanvas.toDataURL('image/png').split(',')[1];
+             printJob.push({ 
+                 type: 'raw', 
+                 format: 'image', 
+                 flavor: 'base64', 
+                 data: b64, 
+                 options: { language: 'ESCPOS', dotDensity: 'double' } 
+             });
+             printJob.push('\n');
+         } catch (e) {
+             printJob.push('\n[Please Scan QR Display To Pay via UPI]\n');
+         }
+     } else {
+         printJob.push('\n[Please Scan QR Display To Pay via UPI]\n');
+     }
   }
+
+  printJob.push('\n\n\n\n\n' + CUT);
   
-  escpos += '\n\n\n\n\n';
-  escpos += CUT;
-  
-  return escpos;
+  return printJob;
 };
 
-export const printBillViaQZ = async (printerName, escposString) => {
+export const printBillViaQZ = async (printerName, printJobArray) => {
   try {
     const isConn = await connectQZ();
     if (!isConn) return;
@@ -168,13 +208,7 @@ export const printBillViaQZ = async (printerName, escposString) => {
     }
 
     const config = qz.configs.create(printerName);
-    const data = [{
-      type: 'raw',
-      format: 'plain',
-      data: escposString
-    }];
-
-    await qz.print(config, data);
+    await qz.print(config, printJobArray);
     toast.success('Print job dispatched to thermal printer!');
   } catch (err) {
     console.error('Print error:', err);

@@ -38,7 +38,8 @@ const Profile = () => {
         if (isOwner) {
             fetchStaff();
             fetchHotelDetails();
-            loadPrinters();
+            // loadPrinters removed to prevent QZ Tray popup on every profile load
+            setLocalPrinter(getSelectedPrinter() || '');
         }
     }, [isOwner]);
 
@@ -257,6 +258,9 @@ const Profile = () => {
                                     <div style={{ display: 'flex', gap: '8px' }}>
                                         <select value={localPrinter} onChange={handlePrinterSelect} style={{ flex: 1, padding: '14px', borderRadius: '12px', backgroundColor: '#020617', border: '1px solid #1e293b', color: 'white', fontWeight: 700, appearance: 'none' }}>
                                             <option value="">-- Autodetect System Default --</option>
+                                            {localPrinter && !printerList.includes(localPrinter) && (
+                                                <option value={localPrinter}>{localPrinter}</option>
+                                            )}
                                             {printerList.map(p => <option key={p} value={p}>{p}</option>)}
                                         </select>
                                         <button type="button" onClick={loadPrinters} style={{ padding: '0 16px', borderRadius: '12px', backgroundColor: '#1e293b', border: '1px solid #334155', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Scan for printers">
