@@ -64,6 +64,7 @@ const Profile = () => {
                 address: res.data.address || '',
                 upi_id: res.data.upi_id || '',
                 gst_percentage: res.data.gst_percentage || 0,
+                printer_size: res.data.printer_size || '80mm',
                 logo_url: res.data.logo_url || ''
             });
         } catch (err) {
@@ -138,7 +139,8 @@ const Profile = () => {
                 hotel_name: res.data.name, 
                 hotel_address: res.data.address,
                 upi_id: res.data.upi_id, 
-                gst_percentage: res.data.gst_percentage 
+                gst_percentage: res.data.gst_percentage,
+                printer_size: res.data.printer_size 
             });
             toast.success('Hotel configuration persisted!', { id: t });
         } catch (err) {
@@ -253,22 +255,31 @@ const Profile = () => {
                                     <label style={{ color: '#64748b', fontSize: '11px', fontWeight: 900 }}>UPI ID (MERCHANT)</label>
                                     <input value={hotelData.upi_id} onChange={e => setHotelData({...hotelData, upi_id: e.target.value})} placeholder="merchant@bank" style={{ padding: '14px', borderRadius: '12px', backgroundColor: '#020617', border: '1px solid #1e293b', color: 'white', fontWeight: 700 }} />
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label style={{ color: '#64748b', fontSize: '11px', fontWeight: 900 }}>DEFAULT THERMAL PRINTER</label>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <select value={localPrinter} onChange={handlePrinterSelect} style={{ flex: 1, padding: '14px', borderRadius: '12px', backgroundColor: '#020617', border: '1px solid #1e293b', color: 'white', fontWeight: 700, appearance: 'none' }}>
-                                            <option value="">-- Autodetect System Default --</option>
-                                            {localPrinter && !printerList.includes(localPrinter) && (
-                                                <option value={localPrinter}>{localPrinter}</option>
-                                            )}
-                                            {printerList.map(p => <option key={p} value={p}>{p}</option>)}
-                                        </select>
-                                        <button type="button" onClick={loadPrinters} style={{ padding: '0 16px', borderRadius: '12px', backgroundColor: '#1e293b', border: '1px solid #334155', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Scan for printers">
-                                            <Printer size={20} />
-                                        </button>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <label style={{ color: '#64748b', fontSize: '11px', fontWeight: 900 }}>DEFAULT THERMAL PRINTER</label>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <select value={localPrinter} onChange={handlePrinterSelect} style={{ flex: 1, padding: '14px', borderRadius: '12px', backgroundColor: '#020617', border: '1px solid #1e293b', color: 'white', fontWeight: 700, appearance: 'none' }}>
+                                                <option value="">-- Autodetect --</option>
+                                                {localPrinter && !printerList.includes(localPrinter) && (
+                                                    <option value={localPrinter}>{localPrinter}</option>
+                                                )}
+                                                {printerList.map(p => <option key={p} value={p}>{p}</option>)}
+                                            </select>
+                                            <button type="button" onClick={loadPrinters} style={{ padding: '0 16px', borderRadius: '12px', backgroundColor: '#1e293b', border: '1px solid #334155', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Scan for printers">
+                                                <Printer size={20} />
+                                            </button>
+                                        </div>
                                     </div>
-                                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700 }}>Select the physical thermal printer to route hardware print jobs.</span>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <label style={{ color: '#64748b', fontSize: '11px', fontWeight: 900 }}>PAPER ROLL SIZE</label>
+                                        <select value={hotelData.printer_size || '80mm'} onChange={e => setHotelData({...hotelData, printer_size: e.target.value})} style={{ padding: '14px', borderRadius: '12px', backgroundColor: '#020617', border: '1px solid #1e293b', color: 'white', fontWeight: 700, appearance: 'none' }}>
+                                            <option value="80mm">Standard Receipt (80mm)</option>
+                                            <option value="58mm">Compact Receipt (58mm)</option>
+                                        </select>
+                                    </div>
                                 </div>
+                                <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, marginTop: '-4px' }}>Select physical printer and paper dimensions to mathematically align receipt columns correctly.</span>
                                 <button type="submit" style={{ backgroundColor: '#0ea5e9', color: 'white', padding: '16px', borderRadius: '16px', fontWeight: 1000, cursor: 'pointer', border: 'none', marginTop: '8px' }}>Save Profile Settings</button>
                             </form>
                         </div>

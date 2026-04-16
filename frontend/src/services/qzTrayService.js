@@ -67,7 +67,9 @@ export const generateEscposBill = (billData, user, tableStr = '') => {
   const BOLD_OFF = ESC + '\x45\x00';
   const CUT = GS + '\x56\x00'; 
   
-  const LINE_WIDTH = 42; // Width optimized for 80mm printers
+  const printerSize = user?.printer_size || '80mm';
+  const is58mm = printerSize === '58mm';
+  const LINE_WIDTH = is58mm ? 32 : 42; 
   const divider = '-'.repeat(LINE_WIDTH) + '\n';
   
   let escpos = INIT;
@@ -97,15 +99,11 @@ export const generateEscposBill = (billData, user, tableStr = '') => {
   escpos += `Date: ${dateStr}\n`;
   escpos += divider;
   
-  // Item Columns
-  const ITEM_LEN = 20;
-  const PRC_LEN = 8;
-  const QTY_LEN = 4;
-  const TOT_LEN = 8;
-  
-  // Header alignment matches perfectly with line width (20+1+8+1+4+1+8 = 43? Wait. 20+1(space)+8+1(space)+4+1(space)+8 = 43 characters!
-  // It exceeds LINE_WIDTH (42) by 1 character. So I must reduce ITEM_LEN to 19 to fit perfectly!
-  const ACTUAL_ITEM_LEN = 19;
+  // Item Columns mathematically aligned
+  const ACTUAL_ITEM_LEN = is58mm ? 14 : 19;
+  const PRC_LEN = is58mm ? 6 : 8;
+  const QTY_LEN = is58mm ? 3 : 4;
+  const TOT_LEN = is58mm ? 6 : 8;
   
   escpos += padText('ITEM', ACTUAL_ITEM_LEN) + ' ' +
             padText('PRICE', PRC_LEN, 'right') + ' ' + 

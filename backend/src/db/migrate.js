@@ -88,6 +88,7 @@ const syncSchema = async () => {
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'owner'",
             "ALTER TABLE hotels ADD COLUMN IF NOT EXISTS gst_percentage DECIMAL(5,2) DEFAULT 5",
             "ALTER TABLE hotels ADD COLUMN IF NOT EXISTS is_service_stopped BOOLEAN DEFAULT false",
+            "ALTER TABLE hotels ADD COLUMN IF NOT EXISTS printer_size VARCHAR(10) DEFAULT '80mm'",
             "ALTER TABLE tables ADD COLUMN IF NOT EXISTS floor VARCHAR(50) DEFAULT 'Floor 1'",
             "ALTER TABLE orders ADD COLUMN IF NOT EXISTS room_id INTEGER REFERENCES rooms(id) ON DELETE CASCADE",
             "ALTER TABLE orders ADD COLUMN IF NOT EXISTS owner_message TEXT",
