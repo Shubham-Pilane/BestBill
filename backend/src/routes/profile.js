@@ -27,7 +27,7 @@ router.get('/', authenticateToken, async (req, res) => {
   const userId = req.user.id;
   try {
     const result = await db.query(
-      'SELECT u.id, u.name, u.email, u.role, h.id as hotel_id, h.name as hotel_name, h.upi_id, h.subscription_valid_until FROM users u LEFT JOIN hotels h ON u.id = h.owner_id WHERE u.id = $1',
+      'SELECT u.id, u.name, u.email, u.role, h.id as hotel_id, h.name as hotel_name, h.upi_id, h.printer_size, h.subscription_valid_until FROM users u LEFT JOIN hotels h ON u.id = h.owner_id WHERE u.id = $1',
       [userId]
     );
     if (result.rows.length === 0) return res.status(404).json({ message: 'User not found' });
@@ -71,9 +71,8 @@ router.put('/', authenticateToken, async (req, res) => {
       await db.query('UPDATE hotels SET upi_id = $1 WHERE id = $2', [upi_id, hotelId]);
     }
     
-    // Fetch updated user info (excluding password)
     const updated = await db.query(
-      'SELECT u.name, u.email, u.role, h.id as hotel_id, h.name as hotel_name, h.upi_id, h.subscription_valid_until FROM users u LEFT JOIN hotels h ON u.id = h.owner_id WHERE u.id = $1',
+      'SELECT u.name, u.email, u.role, h.id as hotel_id, h.name as hotel_name, h.upi_id, h.printer_size, h.subscription_valid_until FROM users u LEFT JOIN hotels h ON u.id = h.owner_id WHERE u.id = $1',
       [userId]
     );
     

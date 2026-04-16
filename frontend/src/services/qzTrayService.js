@@ -64,10 +64,12 @@ export const generateEscposBill = (billData, user, tableStr = '') => {
   const ALIGN_CENTER = ESC + '\x61\x01';
   const ALIGN_RIGHT = ESC + '\x61\x02';
   const BOLD_ON = ESC + '\x45\x01';
+  const BOLD_OFF = ESC + '\x45\x00';
+  const CUT = GS + '\x56\x00';
   const printerSize = user?.printer_size || '80mm';
   const is58mm = printerSize === '58mm';
-  const LINE_WIDTH = is58mm ? 30 : 42;  // Shrink internal width to compensate for offset
-  const mg = is58mm ? '  ' : ''; // 2 explicit spaces of physical offset
+  const LINE_WIDTH = is58mm ? 30 : 42; 
+  const mg = is58mm ? '          ' : ''; // 10 spaces (8 for centering + 2 for visual 5mm padding)
   const divider = mg + '-'.repeat(LINE_WIDTH) + '\n';
   
   let escpos = INIT + ALIGN_LEFT;
