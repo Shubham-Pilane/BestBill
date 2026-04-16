@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { toast } from 'react-hot-toast';
-import { User, Mail, Lock, ShieldCheck, Save, Eye, EyeOff, LayoutPanelLeft, UserCircle, Wallet, Users, Trash2, UserPlus, Fingerprint, MapPin, Percent, Upload, Image as ImageIcon } from 'lucide-react';
-
+import { User, Mail, Lock, ShieldCheck, Save, Eye, EyeOff, LayoutPanelLeft, UserCircle, Wallet, Users, Trash2, UserPlus, Fingerprint, MapPin, Percent, Upload, Image as ImageIcon, Printer } from 'lucide-react';
+import { getPrinters, getSelectedPrinter, setSelectedPrinter } from '../services/qzTrayService';
 const Profile = () => {
     const { user, updateUser } = useAuth();
     const isAdmin = user?.role === 'admin';
@@ -31,13 +31,29 @@ const Profile = () => {
     const [hiring, setHiring] = useState(false);
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [printerList, setPrinterList] = useState([]);
+    const [localPrinter, setLocalPrinter] = useState('');
 
     useEffect(() => {
         if (isOwner) {
             fetchStaff();
             fetchHotelDetails();
+            loadPrinters();
         }
     }, [isOwner]);
+
+    const loadPrinters = async () => {
+        const list = await getPrinters();
+        setPrinterList(list);
+        setLocalPrinter(getSelectedPrinter() || '');
+    };
+
+    const handlePrinterSelect = (e) => {
+        const val = e.target.value;
+        setLocalPrinter(val);
+        setSelectedPrinter(val);
+        if (val) toast.success(`Active printer set to: ${val}`);
+    };
 
     const fetchHotelDetails = async () => {
         try {
@@ -236,7 +252,20 @@ const Profile = () => {
                                     <label style={{ color: '#64748b', fontSize: '11px', fontWeight: 900 }}>UPI ID (MERCHANT)</label>
                                     <input value={hotelData.upi_id} onChange={e => setHotelData({...hotelData, upi_id: e.target.value})} placeholder="merchant@bank" style={{ padding: '14px', borderRadius: '12px', backgroundColor: '#020617', border: '1px solid #1e293b', color: 'white', fontWeight: 700 }} />
                                 </div>
-                                <button type="submit" style={{ backgroundColor: '#0ea5e9', color: 'white', padding: '16px', borderRadius: '16px', fontWeight: 1000, cursor: 'pointer', border: 'none' }}>Save Profile Settings</button>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <label style={{ color: '#64748b', fontSize: '11px', fontWeight: 900 }}>DEFAULT THERMAL PRINTER</label>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <select value={localPrinter} onChange={handlePrinterSelect} style={{ flex: 1, padding: '14px', borderRadius: '12px', backgroundColor: '#020617', border: '1px solid #1e293b', color: 'white', fontWeight: 700, appearance: 'none' }}>
+                                            <option value="">-- Autodetect System Default --</option>
+                                            {printerList.map(p => <option key={p} value={p}>{p}</option>)}
+                                        </select>
+                                        <button type="button" onClick={loadPrinters} style={{ padding: '0 16px', borderRadius: '12px', backgroundColor: '#1e293b', border: '1px solid #334155', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Scan for printers">
+                                            <Printer size={20} />
+                                        </button>
+                                    </div>
+                                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700 }}>Select the physical thermal printer to route hardware print jobs.</span>
+                                </div>
+                                <button type="submit" style={{ backgroundColor: '#0ea5e9', color: 'white', padding: '16px', borderRadius: '16px', fontWeight: 1000, cursor: 'pointer', border: 'none', marginTop: '8px' }}>Save Profile Settings</button>
                             </form>
                         </div>
                     </div>

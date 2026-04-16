@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { X, Plus, Minus, Receipt, Send, MessageSquare, Utensils, Trash2, ChevronRight, IndianRupee, Clock, CheckCircle, Phone, ArrowLeft, RefreshCcw, Wallet, Printer, Search, User, Calendar, Bed, MessageCircle } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../context/AuthContext';
+import { generateEscposBill, printBillViaQZ, getSelectedPrinter } from '../services/qzTrayService';
 
 const RoomOrderModal = ({ room, onClose, onRefresh }) => {
   const { user } = useAuth();
@@ -171,116 +172,12 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
     }
   };
 
-  const printBill = () => {
+  const printBill = async () => {
     if (!billData) return;
-    const hName = user?.hotel_name || 'BESTBILL';
-    const hAddr = billData.hotel_location || user?.hotel_location || '';
-    const hPhone = billData.hotel_phone || user?.hotel_phone || '';
-    const upiId = user?.upi_id || '';
-    
-    const upiLinkStr = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(hName)}&am=${billData.final_amount}&cu=INR`;
-    const qrCanvas = document.getElementById('upi-qr-canvas');
-    const qrDataUrl = qrCanvas ? qrCanvas.toDataURL('image/png') : `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLinkStr)}&margin=0`;
-
-    const pageHtml = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <style>
-            @media print {
-              @page { margin: 0; size: 58mm auto; }
-              body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
-            }
-            * { box-sizing: border-box; }
-            body { margin: 0; padding: 0; width: 100%; font-family: 'monospace'; background-color: white; line-height: 1.3; }
-            .bill-wrapper { width: 100%; padding: 2mm 2mm 0 2mm; margin: 0; }
-            .center { text-align: center; }
-            .right { text-align: right; }
-            .bold { font-weight: bold; }
-            .header-info { font-size: 38px; margin-bottom: 2px; }
-            .address { font-size: 18px; margin-bottom: 1px; }
-            .divider { border-top: 4px dashed black; margin: 10px 0; }
-            table { width: 100%; border-collapse: collapse; margin: 8px 0; table-layout: fixed; }
-            th { font-size: 22px; border-bottom: 2px dashed black; padding-bottom: 8px; text-transform: uppercase; }
-            td { font-size: 22px; padding: 8px 0; vertical-align: top; overflow: hidden; }
-            .row { display: flex; justify-content: space-between; font-size: 22px; margin: 5px 0; }
-            .total-row { display: flex; justify-content: space-between; font-size: 24px; margin: 6px 0; }
-            .qr-area { text-align: center; margin-top: 20px; }
-            .qr-area img { width: 150px; height: 150px; }
-          </style>
-        </head>
-        <body>
-          <div class="bill-wrapper">
-            <div class="center bold header-info">${hName.toUpperCase()}</div>
-            <div class="center address">${hAddr}</div>
-            <div class="center address">Ph: ${hPhone}</div>
-            <div class="divider"></div>
-            <div class="center bold header-info">ROOM INVOICE</div>
-
-            <div class="row"><span>Room:</span><span class="bold">${room.room_number}</span></div>
-            <div class="row"><span>Guest:</span><span class="bold">${room.guest_name || 'Walk-in'}</span></div>
-            <div class="row"><span>Days:</span><span class="bold">${room.booking_days || 1} Days</span></div>
-            <div class="row"><span>Bill No:</span><span class="bold">#${billData.id}</span></div>
-            
-            <table>
-               <thead>
-                  <tr>
-                    <th style="width: 40%; text-align: left;">Item</th>
-                    <th style="width: 25%; text-align: right;">Price</th>
-                    <th style="width: 15%; text-align: right; padding-right: 15px;">Qty</th>
-                    <th style="width: 20%; text-align: right;">Total</th>
-                  </tr>
-               </thead>
-               <tbody>
-                  <tr>
-                    <td style="word-wrap: break-word; white-space: normal;">Room Rent</td>
-                    <td class="right">${Math.round((billData.room_charge || 0) / (room.booking_days || 1))}</td>
-                    <td class="right" style="padding-right: 15px;">${room.booking_days || 1}</td>
-                    <td class="right">${Math.round(billData.room_charge || 0)}</td>
-                  </tr>
-                  ${(billData.items || []).map(i => `
-                    <tr>
-                      <td style="word-wrap: break-word; white-space: normal;">${i.name}</td>
-                      <td class="right">${Math.round(i.price)}</td>
-                      <td class="right" style="padding-right: 15px;">${i.quantity}</td>
-                      <td class="right">${Math.round(i.price * i.quantity)}</td>
-                    </tr>
-                  `).join('')}
-               </tbody>
-            </table>
-
-            <div class="divider"></div>
-            <div class="total-row"><span>Subtotal:</span><span class="bold">${Math.round(billData.subtotal)}</span></div>
-            <div class="total-row"><span>GST (${billData.gst_percentage}%):</span><span class="bold">${Math.round(billData.gst)}</span></div>
-            <div class="divider"></div>
-            <div class="total-row" style="font-size: 42px; margin-top: 15px;"><span>TOTAL:</span><span class="bold">₹${Math.round(billData.final_amount)}</span></div>
-            <div class="divider"></div>
-
-            <div class="center bold" style="font-size: 15px; margin-top: 5px;">Thank You! Visit Again!</div>
-
-            ${!billData.is_paid && upiId ? `
-              <div class="qr-area">
-                <img src="${qrDataUrl}" alt="QR" />
-                <div class="bold" style="font-size: 13px; margin-top: 4px;">SCAN TO PAY</div>
-              </div>
-            ` : ''}
-            <div style="height: 10mm"></div>
-          </div>
-          <script>
-            window.onload = () => { window.print(); setTimeout(() => { window.parent.document.getElementById('room-print-frame')?.remove(); }, 1000); };
-          </script>
-        </body>
-      </html>
-    `;
-
-    const existingFrame = document.getElementById('room-print-frame');
-    if (existingFrame) existingFrame.remove();
-    const iframe = document.createElement('iframe');
-    iframe.id = 'room-print-frame';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-    iframe.contentDocument.write(pageHtml);
-    iframe.contentDocument.close();
+    const tableStr = `Room ${room.room_number}`;
+    const escposString = generateEscposBill(billData, user, tableStr);
+    const printer = getSelectedPrinter();
+    await printBillViaQZ(printer, escposString);
   };
 
   const shareViaWhatsApp = () => {

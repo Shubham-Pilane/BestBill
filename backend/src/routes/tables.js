@@ -12,13 +12,15 @@ router.get('/', auth, async (req, res) => {
        FROM tables t 
        LEFT JOIN orders o ON o.table_id = t.id AND o.status = 'active'
        WHERE t.hotel_id = $1 
-       ORDER BY t.floor ASC, CAST(NULLIF(t.table_number, '') AS INTEGER) ASC`,
+       ORDER BY t.floor ASC, LENGTH(t.table_number) ASC, t.table_number ASC`,
       [req.user.hotel_id]
     );
     res.json(tables.rows);
   } catch (err) {
+    console.error('------- TABLES GET ERROR -------');
     console.error(err);
-    res.status(500).json({ message: 'Server error fetching tables' });
+    console.error('--------------------------------');
+    res.status(500).json({ message: 'Server error fetching tables', detail: err.message });
   }
 });
 
