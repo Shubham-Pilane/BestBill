@@ -246,12 +246,12 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
 
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {/* Menu */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRight: '1px solid rgba(255, 255, 255, 0.05)' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRight: '1px solid rgba(255, 255, 255, 0.05)', overflow: 'hidden', minWidth: 0 }}>
              <div style={{ padding: '16px 48px', display: 'flex', gap: '20px', alignItems: 'center', backgroundColor: '#020617', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', flex: 1 }}>
-                   <button onClick={() => setSelectedCategory('all')} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', backgroundColor: selectedCategory === 'all' ? '#0ea5e9' : '#1e293b', color: 'white', fontWeight: 900, fontSize: '12px', cursor: 'pointer' }}>ALL MENU</button>
+                <div className="category-bar-container" style={{ display: 'flex', gap: '10px', overflowX: 'auto', flex: 1, paddingBottom: '4px' }}>
+                   <button onClick={() => setSelectedCategory('all')} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', backgroundColor: selectedCategory === 'all' ? '#0ea5e9' : '#1e293b', color: 'white', fontWeight: 900, fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>ALL MENU</button>
                    {categories.map(cat => (
-                      <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', backgroundColor: parseInt(selectedCategory) === cat.id ? '#0ea5e9' : '#1e293b', color: 'white', fontWeight: 900, fontSize: '12px', cursor: 'pointer' }}>{cat.name.toUpperCase()}</button>
+                      <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', backgroundColor: parseInt(selectedCategory) === cat.id ? '#0ea5e9' : '#1e293b', color: 'white', fontWeight: 900, fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{cat.name.toUpperCase()}</button>
                    ))}
                 </div>
                 <div style={{ position: 'relative', width: '300px' }}>

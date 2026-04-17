@@ -252,7 +252,7 @@ const OrderModal = ({ table, onClose }) => {
 
         <div className="order-modal-content" style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {/* Menu */}
-          <div className="order-modal-menu" style={{ flex: 1, borderRight: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div className="order-modal-menu" style={{ flex: 1, borderRight: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
             <div style={{ padding: '16px 48px', display: 'flex', gap: '20px', alignItems: 'center', backgroundColor: '#020617', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               <div className="category-bar" style={{ display: 'flex', gap: '10px', overflowX: 'auto', flex: 1 }}>
                 <button onClick={() => setSelectedCategory('all')} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', fontWeight: 900, cursor: 'pointer', backgroundColor: selectedCategory === 'all' ? '#0ea5e9' : '#1e293b', color: 'white', fontSize: '12px', whiteSpace: 'nowrap' }}>ALL ITEMS</button>
