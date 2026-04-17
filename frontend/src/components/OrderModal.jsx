@@ -22,6 +22,8 @@ const OrderModal = ({ table, onClose }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [editingPriceId, setEditingPriceId] = useState(null);
+  const [editPriceValue, setEditPriceValue] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,6 +78,31 @@ const OrderModal = ({ table, onClose }) => {
       setOrderItems(res.data.items);
     } catch (err) {
       toast.error('Removal failed');
+    }
+  };
+
+  const savePriceChange = async (orderItemId, menuItemId) => {
+    try {
+      // Find the full menu item to preserve other fields
+      const originalItem = items.find(i => i.id === menuItemId);
+      if (originalItem && editPriceValue) {
+        await api.put(`/menu/items/${menuItemId}`, {
+           ...originalItem,
+           price: parseFloat(editPriceValue)
+        });
+        
+        // Update local items state
+        setItems(items.map(i => i.id === menuItemId ? { ...i, price: parseFloat(editPriceValue) } : i));
+        
+        // Update local orderItems state
+        setOrderItems(orderItems.map(i => i.id === orderItemId ? { ...i, price: parseFloat(editPriceValue) } : i));
+        
+        toast.success('Price updated in master menu');
+      }
+      setEditingPriceId(null);
+    } catch (err) {
+      toast.error('Failed to update price');
+      setEditingPriceId(null);
     }
   };
 
@@ -297,7 +324,32 @@ const OrderModal = ({ table, onClose }) => {
             <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {orderItems.map(item => (
                 <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', backgroundColor: '#0f172a', borderRadius: '20px' }}>
-                  <div><div style={{ color: 'white', fontWeight: 900 }}>{item.name}</div><div style={{ color: '#10b981', fontSize: '13px' }}>₹{item.price * item.quantity}</div></div>
+                  <div>
+                    <div style={{ color: 'white', fontWeight: 900 }}>{item.name}</div>
+                    {editingPriceId === item.id ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                         <span style={{ color: '#10b981', fontSize: '13px' }}>₹</span>
+                         <input 
+                           type="number" 
+                           autoFocus
+                           value={editPriceValue} 
+                           onChange={e => setEditPriceValue(e.target.value)}
+                           onBlur={() => savePriceChange(item.id, item.menu_item_id)}
+                           onKeyDown={e => e.key === 'Enter' && savePriceChange(item.id, item.menu_item_id)}
+                           style={{ width: '85px', backgroundColor: '#020617', border: '1px solid #10b981', color: '#10b981', borderRadius: '6px', padding: '4px 6px', fontSize: '13px', outline: 'none', fontWeight: 800 }}
+                         />
+                         <span style={{ color: '#64748b', fontSize: '11px' }}>/ unit</span>
+                      </div>
+                    ) : (
+                      <div 
+                        onClick={() => { setEditingPriceId(item.id); setEditPriceValue(Math.round(item.price)); }}
+                        style={{ color: '#10b981', fontSize: '13px', cursor: 'pointer', display: 'inline-block', borderBottom: '1px dashed rgba(16,185,129,0.4)', paddingBottom: '2px', marginTop: '4px' }}
+                        title="Edit Unit Price (Updates Master Menu)"
+                      >
+                         ₹{Math.round(item.price * item.quantity)} {item.quantity > 1 && <span style={{ color: '#64748b', fontSize: '11px', marginLeft: '6px' }}>(₹{Math.round(item.price)} each)</span>}
+                      </div>
+                    )}
+                  </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <button onClick={() => updateQuantity(item.id, -1)} style={{ cursor: 'pointer', border: 'none', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1e293b', color: 'white' }}><Minus size={14} /></button>
                     <span style={{ color: 'white', fontWeight: 900 }}>{item.quantity}</span>
@@ -306,8 +358,8 @@ const OrderModal = ({ table, onClose }) => {
                 </div>
               ))}
             </div>
-            <div style={{ padding: '32px', backgroundColor: '#0f172a', borderTop: '1px solid #1e293b' }}>
-              <div style={{ marginBottom: '24px' }}>
+            <div style={{ padding: '20px 24px', backgroundColor: '#0f172a', borderTop: '1px solid #1e293b' }}>
+              <div style={{ marginBottom: '16px' }}>
                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', fontSize: '11px', fontWeight: 900, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                    <span>Loyalty Discount (%)</span>
                    <input 
@@ -318,11 +370,11 @@ const OrderModal = ({ table, onClose }) => {
                    />
                  </div>
                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white' }}>
-                   <span style={{ fontSize: '32px', fontWeight: 1000 }}>Final Due</span>
-                    <span style={{ color: '#10b981', fontSize: '32px', fontWeight: 1000 }}>₹{((orderItems.reduce((acc, i) => acc + (i.price * i.quantity), 0) * (1 + (user?.gst_percentage || 0)/100)) * (1 - discount/100)).toFixed(2)}</span>
+                   <span style={{ fontSize: '22px', fontWeight: 1000 }}>Final Due</span>
+                    <span style={{ color: '#10b981', fontSize: '22px', fontWeight: 1000 }}>₹{((orderItems.reduce((acc, i) => acc + (i.price * i.quantity), 0) * (1 + (user?.gst_percentage || 0)/100)) * (1 - discount/100)).toFixed(2)}</span>
                  </div>
               </div>
-              <button disabled={orderItems.length === 0} onClick={generateBill} style={{ width: '100%', padding: '20px', borderRadius: '20px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', fontWeight: 1000, fontSize: '18px', cursor: 'pointer', scale: orderItems.length === 0 ? '1' : '1.02', transition: '0.2s', opacity: orderItems.length === 0 ? 0.3 : 1 }}>SETTLE TRANSACTION</button>
+              <button disabled={orderItems.length === 0} onClick={generateBill} style={{ width: '100%', padding: '16px', borderRadius: '16px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', fontWeight: 1000, fontSize: '15px', cursor: 'pointer', scale: orderItems.length === 0 ? '1' : '1.02', transition: '0.2s', opacity: orderItems.length === 0 ? 0.3 : 1 }}>SETTLE TRANSACTION</button>
             </div>
           </div>
         </div>

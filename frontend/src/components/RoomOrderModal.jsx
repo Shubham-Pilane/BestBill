@@ -24,6 +24,8 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [extensionDays, setExtensionDays] = useState(0);
   const [extensionCost, setExtensionCost] = useState(0);
+  const [editingPriceId, setEditingPriceId] = useState(null);
+  const [editPriceValue, setEditPriceValue] = useState('');
   const isOccupied = room.status === 'occupied';
   const [bookingData, setBookingData] = useState({
     guest_name: room.guest_name || '',
@@ -96,6 +98,25 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
       setOrderItems(res.data.items);
     } catch (err) {
       toast.error('Removal failed');
+    }
+  };
+
+  const savePriceChange = async (orderItemId, menuItemId) => {
+    try {
+      const originalItem = items.find(i => i.id === menuItemId);
+      if (originalItem && editPriceValue) {
+        await api.put(`/menu/items/${menuItemId}`, {
+           ...originalItem,
+           price: parseFloat(editPriceValue)
+        });
+        setItems(items.map(i => i.id === menuItemId ? { ...i, price: parseFloat(editPriceValue) } : i));
+        setOrderItems(orderItems.map(i => i.id === orderItemId ? { ...i, price: parseFloat(editPriceValue) } : i));
+        toast.success('Price updated in master menu');
+      }
+      setEditingPriceId(null);
+    } catch (err) {
+      toast.error('Failed to update price');
+      setEditingPriceId(null);
     }
   };
 
@@ -333,7 +354,32 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
                          </div>
                          {orderItems.map(item => (
                             <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: '#0f172a', borderRadius: '16px' }}>
-                               <div><div style={{ color: 'white', fontWeight: 900 }}>{item.name}</div><div style={{ color: '#10b981', fontSize: '13px' }}>₹{item.price * item.quantity}</div></div>
+                               <div>
+                                 <div style={{ color: 'white', fontWeight: 900 }}>{item.name}</div>
+                                 {editingPriceId === item.id ? (
+                                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                                      <span style={{ color: '#10b981', fontSize: '13px' }}>₹</span>
+                                      <input 
+                                        type="number" 
+                                        autoFocus
+                                        value={editPriceValue} 
+                                        onChange={e => setEditPriceValue(e.target.value)}
+                                        onBlur={() => savePriceChange(item.id, item.menu_item_id)}
+                                        onKeyDown={e => e.key === 'Enter' && savePriceChange(item.id, item.menu_item_id)}
+                                        style={{ width: '85px', backgroundColor: '#020617', border: '1px solid #10b981', color: '#10b981', borderRadius: '6px', padding: '4px 6px', fontSize: '13px', outline: 'none', fontWeight: 800 }}
+                                      />
+                                      <span style={{ color: '#64748b', fontSize: '11px' }}>/ unit</span>
+                                   </div>
+                                 ) : (
+                                   <div 
+                                     onClick={() => { setEditingPriceId(item.id); setEditPriceValue(Math.round(item.price)); }}
+                                     style={{ color: '#10b981', fontSize: '13px', cursor: 'pointer', display: 'inline-block', borderBottom: '1px dashed rgba(16,185,129,0.4)', paddingBottom: '2px', marginTop: '4px' }}
+                                     title="Edit Unit Price (Updates Master Menu)"
+                                   >
+                                      ₹{Math.round(item.price * item.quantity)} {item.quantity > 1 && <span style={{ color: '#64748b', fontSize: '11px', marginLeft: '6px' }}>(₹{Math.round(item.price)} each)</span>}
+                                   </div>
+                                 )}
+                               </div>
                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                   <button onClick={() => updateQuantity(item.id, -1)} style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1e293b', border: 'none', color: 'white', cursor: 'pointer' }}><Minus size={14} /></button>
                                   <span style={{ color: 'white', fontWeight: 1000 }}>{item.quantity}</span>
@@ -343,18 +389,18 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
                          ))}
                       </div>
 
-                   <div style={{ padding: '32px', backgroundColor: '#0f172a', borderTop: '1px solid #1e293b' }}>
-                      <div style={{ marginBottom: '24px' }}>
+                   <div style={{ padding: '20px 24px', backgroundColor: '#0f172a', borderTop: '1px solid #1e293b' }}>
+                      <div style={{ marginBottom: '16px' }}>
                          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', fontSize: '11px', fontWeight: 900, marginBottom: '8px' }}>
                             <span>DISCOUNT (%)</span>
-                            <input type="number" value={discount} onFocus={e => e.target.select()} onChange={e => setDiscount(e.target.value)} style={{ width: '50px', background: 'none', border: 'none', borderBottom: '2px solid #0ea5e9', color: 'white', textAlign: 'center', fontWeight: 900 }} />
+                            <input type="number" value={discount} onFocus={e => e.target.select()} onChange={e => setDiscount(e.target.value)} style={{ width: '50px', background: 'none', border: 'none', borderBottom: '2px solid #0ea5e9', color: 'white', textAlign: 'center', fontWeight: 900, outline: 'none' }} />
                          </div>
                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white' }}>
-                            <span style={{ fontSize: '28px', fontWeight: 1000 }}>Total Due</span>
-                            <span style={{ color: '#10b981', fontSize: '28px', fontWeight: 1000 }}>₹{((subtotalVal * (1 + (user?.gst_percentage || 0)/100)) * (1 - discount/100)).toFixed(2)}</span>
+                            <span style={{ fontSize: '22px', fontWeight: 1000 }}>Total Due</span>
+                            <span style={{ color: '#10b981', fontSize: '22px', fontWeight: 1000 }}>₹{((subtotalVal * (1 + (user?.gst_percentage || 0)/100)) * (1 - discount/100)).toFixed(2)}</span>
                          </div>
                       </div>
-                      <button onClick={generateBill} style={{ width: '100%', padding: '20px', borderRadius: '20px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', fontWeight: 1000, fontSize: '18px', cursor: 'pointer' }}>SETTLE ROOM BILL</button>
+                      <button onClick={generateBill} style={{ width: '100%', padding: '16px', borderRadius: '16px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', fontWeight: 1000, fontSize: '15px', cursor: 'pointer' }}>SETTLE ROOM BILL</button>
                    </div>
                 </div>
              )}

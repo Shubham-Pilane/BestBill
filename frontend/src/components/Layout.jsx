@@ -123,7 +123,7 @@ const Layout = ({ children }) => {
             </Link>
           ))}
         </nav>
-        <div style={{ padding: '24px' }}><button onClick={logout} style={{ width: '100%', padding: '14px', background: 'none', color: '#64748b', borderRadius: '12px', border: '1px solid #1e293b', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}><LogOut size={18} /> Sign Out</button></div>
+        <div style={{ padding: '24px' }}><button onClick={logout} style={{ width: '100%', padding: '14px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.3)', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}><LogOut size={18} /> Sign Out</button></div>
       </aside>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <header className="mobile-header" style={{ height: '64px', backgroundColor: '#0f172a', padding: '0 24px', display: 'none', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1e293b' }}>

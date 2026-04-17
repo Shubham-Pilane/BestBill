@@ -143,4 +143,21 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Forgot Password
+router.post('/forgot-password', async (req, res) => {
+  const { email, newPassword } = req.body;
+  try {
+    const userResult = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await db.query('UPDATE users SET password = $1 WHERE email = $2', [hashedPassword, email]);
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error updating password' });
+  }
+});
+
 module.exports = router;

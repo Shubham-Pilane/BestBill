@@ -16,14 +16,29 @@ const Login = () => {
   const [logoFile, setLogoFile] = useState(null);
   const [blockedInfo, setBlockedInfo] = useState(null);
   
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const loadingToast = toast.loading(isRegister ? 'Creating account...' : 'Signing in...');
+    const loadingToast = toast.loading(isForgotPassword ? 'Resetting password...' : isRegister ? 'Creating account...' : 'Signing in...');
     try {
-      if (isRegister) {
+      if (isForgotPassword) {
+        if (newPassword !== confirmPassword) {
+           toast.dismiss(loadingToast);
+           return toast.error("Passwords do not match");
+        }
+        await api.post('/auth/forgot-password', { email, newPassword });
+        toast.success('Password updated successfully!', { id: loadingToast });
+        setIsForgotPassword(false);
+        setPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else if (isRegister) {
         const formData = new FormData();
         formData.append('name', name);
         formData.append('email', email);
@@ -193,12 +208,36 @@ const Login = () => {
               Best<span style={{ color: '#38bdf8' }}>Bill</span>
             </h1>
             <p style={{ color: '#94a3b8', fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
-              {isRegister ? 'New Business Registration' : 'Hotel Owner Login'}
+              {isForgotPassword ? 'Reset Password' : isRegister ? 'New Business Registration' : 'Hotel Owner Login'}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {isRegister && (
+            {isForgotPassword ? (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ color: '#64748b', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: '4px' }}>Username (Email)</label>
+                  <div style={{ position: 'relative' }}>
+                    <Mail style={{ position: 'absolute', top: '18px', left: '16px', color: '#475569' }} size={18} />
+                    <input type="email" style={{ width: '100%', backgroundColor: '#020617', border: '2px solid #1e293b', color: 'white', padding: '16px 16px 16px 48px', borderRadius: '16px', outline: 'none', transition: 'border-color 0.2s', fontSize: '14px', fontWeight: 600 }} placeholder="owner@hotel.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ color: '#64748b', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: '4px' }}>New Password</label>
+                  <div style={{ position: 'relative' }}>
+                    <Lock style={{ position: 'absolute', top: '18px', left: '16px', color: '#475569' }} size={18} />
+                    <input type="password" style={{ width: '100%', backgroundColor: '#020617', border: '2px solid #1e293b', color: 'white', padding: '16px 16px 16px 48px', borderRadius: '16px', outline: 'none', transition: 'border-color 0.2s', fontSize: '14px', fontWeight: 600 }} placeholder="••••••••" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ color: '#64748b', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: '4px' }}>Confirm New Password</label>
+                  <div style={{ position: 'relative' }}>
+                    <Lock style={{ position: 'absolute', top: '18px', left: '16px', color: '#475569' }} size={18} />
+                    <input type="password" style={{ width: '100%', backgroundColor: '#020617', border: '2px solid #1e293b', color: 'white', padding: '16px 16px 16px 48px', borderRadius: '16px', outline: 'none', transition: 'border-color 0.2s', fontSize: '14px', fontWeight: 600 }} placeholder="••••••••" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                  </div>
+                </div>
+              </>
+            ) : isRegister ? (
               <>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <label style={{ color: '#64748b', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: '4px' }}>Owner Name</label>
@@ -274,37 +313,46 @@ const Login = () => {
                   <input id="reg-logo-upload" type="file" accept="image/*" onChange={e => setLogoFile(e.target.files[0])} style={{ display: 'none' }} />
                 </div>
               </>
+            ) : null}
+
+            {!isForgotPassword && (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ color: '#64748b', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: '4px' }}>Email Address</label>
+                  <div style={{ position: 'relative' }}>
+                    <Mail style={{ position: 'absolute', top: '18px', left: '16px', color: '#475569' }} size={18} />
+                    <input
+                      type="email"
+                      style={{ width: '100%', backgroundColor: '#020617', border: '2px solid #1e293b', color: 'white', padding: '16px 16px 16px 48px', borderRadius: '16px', outline: 'none', transition: 'border-color 0.2s', fontSize: '14px', fontWeight: 600 }}
+                      placeholder="owner@hotel.com"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginLeft: '4px' }}>
+                     <label style={{ color: '#64748b', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Password</label>
+                     {!isRegister && (
+                       <button type="button" onClick={() => setIsForgotPassword(true)} style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '11px', fontWeight: 800, cursor: 'pointer', padding: 0 }}>Forgot Password?</button>
+                     )}
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <Lock style={{ position: 'absolute', top: '18px', left: '16px', color: '#475569' }} size={18} />
+                    <input
+                      type="password"
+                      style={{ width: '100%', backgroundColor: '#020617', border: '2px solid #1e293b', color: 'white', padding: '16px 16px 16px 48px', borderRadius: '16px', outline: 'none', transition: 'border-color 0.2s', fontSize: '14px', fontWeight: 600 }}
+                      placeholder="••••••••"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </>
             )}
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ color: '#64748b', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: '4px' }}>Email Address</label>
-              <div style={{ position: 'relative' }}>
-                <Mail style={{ position: 'absolute', top: '18px', left: '16px', color: '#475569' }} size={18} />
-                <input
-                  type="email"
-                  style={{ width: '100%', backgroundColor: '#020617', border: '2px solid #1e293b', color: 'white', padding: '16px 16px 16px 48px', borderRadius: '16px', outline: 'none', transition: 'border-color 0.2s', fontSize: '14px', fontWeight: 600 }}
-                  placeholder="owner@hotel.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ color: '#64748b', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: '4px' }}>Password</label>
-              <div style={{ position: 'relative' }}>
-                <Lock style={{ position: 'absolute', top: '18px', left: '16px', color: '#475569' }} size={18} />
-                <input
-                  type="password"
-                  style={{ width: '100%', backgroundColor: '#020617', border: '2px solid #1e293b', color: 'white', padding: '16px 16px 16px 48px', borderRadius: '16px', outline: 'none', transition: 'border-color 0.2s', fontSize: '14px', fontWeight: 600 }}
-                  placeholder="••••••••"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-            </div>
 
             <button
               type="submit"
@@ -328,20 +376,29 @@ const Login = () => {
                 transition: 'all 0.2s'
               }}
             >
-              {isRegister ? <><UserPlus size={22} /> Register</> : <><LogIn size={22} /> Login</>}
+              {isForgotPassword ? 'Change Password' : isRegister ? <><UserPlus size={22} /> Register</> : <><LogIn size={22} /> Login</>}
                <ChevronRight size={18} />
             </button>
           </form>
 
           <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid rgba(255, 255, 255, 0.05)', textAlign: 'center' }}>
             <p style={{ color: '#64748b', fontSize: '13px', fontWeight: 700 }}>
-              {isRegister ? 'Already have an account?' : "Don't have a hotel account?"}{' '}
-              <button
-                onClick={() => setIsRegister(!isRegister)}
-                style={{ color: '#38bdf8', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 800, textDecoration: 'underline', paddingLeft: '4px' }}
-              >
-                {isRegister ? 'Login now' : 'Register here'}
-              </button>
+              {isForgotPassword ? (
+                <>
+                  Remember your password?{' '}
+                  <button onClick={() => setIsForgotPassword(false)} style={{ color: '#38bdf8', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 800, textDecoration: 'underline', paddingLeft: '4px' }}>Back to login</button>
+                </>
+              ) : isRegister ? (
+                <>
+                  Already have an account?{' '}
+                  <button onClick={() => setIsRegister(false)} style={{ color: '#38bdf8', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 800, textDecoration: 'underline', paddingLeft: '4px' }}>Login now</button>
+                </>
+              ) : (
+                <>
+                  Don't have a hotel account?{' '}
+                  <button onClick={() => setIsRegister(true)} style={{ color: '#38bdf8', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 800, textDecoration: 'underline', paddingLeft: '4px' }}>Register here</button>
+                </>
+              )}
             </p>
           </div>
         </div>

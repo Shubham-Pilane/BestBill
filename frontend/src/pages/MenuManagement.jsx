@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../services/api';
 import ConfirmModal from '../components/ConfirmModal';
 import { toast } from 'react-hot-toast';
-import { Plus, Utensils, Tag, IndianRupee, Layers, ListChecks, Trash2, Edit2, X, Save } from 'lucide-react';
+import { Plus, Utensils, Tag, IndianRupee, Layers, ListChecks, Trash2, Edit2, X, Save, Search } from 'lucide-react';
 
 const MenuManagement = () => {
   const [categories, setCategories] = useState([]);
@@ -22,6 +22,7 @@ const MenuManagement = () => {
     description: ''
   });
 
+  const [searchTerm, setSearchTerm] = useState('');
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
 
   const fetchData = async () => {
@@ -256,12 +257,25 @@ const MenuManagement = () => {
 
         {/* Master Menu View with Edit Capability */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-             <ListChecks size={20} style={{ color: '#64748b' }} />
-             <h3 style={{ fontSize: '14px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.2em' }}>Current Master Menu</h3>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+               <ListChecks size={20} style={{ color: '#64748b' }} />
+               <h3 style={{ fontSize: '14px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.2em', margin: 0 }}>Current Master Menu</h3>
+            </div>
+            
+            <div style={{ position: 'relative', width: '320px', maxWidth: '100%' }}>
+               <Search style={{ position: 'absolute', top: '12px', left: '16px', color: '#64748b' }} size={16} />
+               <input
+                 type="text"
+                 placeholder="Search dishes or groups..."
+                 value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+                 style={{ width: '100%', backgroundColor: '#020617', border: '2px solid #1e293b', color: 'white', padding: '10px 16px 10px 42px', borderRadius: '12px', outline: 'none', fontSize: '13px', fontWeight: 700 }}
+               />
+            </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
-            {(items || []).map(item => (
+            {(items || []).filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()) || (item.category_name && item.category_name.toLowerCase().includes(searchTerm.toLowerCase()))).map(item => (
               <div key={item.id} style={{ backgroundColor: '#0f172a', border: editingItemId === item.id ? '2px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '24px', padding: '24px', position: 'relative' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                    <div style={{ flex: 1 }}>
