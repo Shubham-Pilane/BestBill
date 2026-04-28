@@ -153,9 +153,12 @@ body {
       padding: 0 !important;
   }
   .order-modal-container {
+      width: 100% !important;
+      max-width: 100% !important;
       border-radius: 0 !important;
       height: 100vh !important;
       max-height: 100vh !important;
+      border: none !important;
   }
   .order-modal-header {
       padding: 16px 20px !important;
@@ -187,6 +190,8 @@ body {
       flex-direction: column !important;
       border-radius: 0 !important;
       height: 100vh !important;
+      width: 100% !important;
+      max-width: 100% !important;
   }
   .bill-container > div {
       width: 100% !important;
@@ -205,43 +210,65 @@ body {
       padding: 24px !important;
   }
 
-  /* Specific Layout Overrides */
-  .hotel-title {
-      font-size: 24px !important;
+  /* --- Page Specific Responsiveness --- */
+  .responsive-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 32px;
   }
   
-  .header-meta {
-      width: 100% !important;
-      justify-content: space-between !important;
-      gap: 12px !important;
+  .responsive-grid-12 {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 40px;
   }
 
-  .plan-badge, .date-display {
-      text-align: left !important;
-      padding: 8px !important;
+  @media (max-width: 1024px) {
+    .responsive-grid-3, .responsive-grid-12 {
+        grid-template-columns: 1fr !important;
+        gap: 24px !important;
+    }
+    
+    .responsive-grid-12 > div {
+        grid-column: span 12 !important;
+    }
   }
 
-  .date-display span {
-      font-size: 13px !important;
-  }
+  @media (max-width: 640px) {
+    .billing-card {
+        padding: 16px !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 16px !important;
+    }
 
-  /* Billing History Card responsive */
-  .billing-card {
-      padding: 16px !important;
-      flex-direction: column !important;
-      align-items: flex-start !important;
-      gap: 16px !important;
-  }
-
-  .billing-card-right {
-      text-align: left !important;
-      width: 100% !important;
-      align-items: flex-start !important;
-      border-top: 1px solid rgba(255,255,255,0.05);
-      padding-top: 16px !important;
-  }
-
-  button {
-      font-size: 14px !important;
+    .billing-card-right {
+        text-align: left !important;
+        width: 100% !important;
+        align-items: flex-start !important;
+        border-top: 1px solid rgba(255,255,255,0.05);
+        padding-top: 16px !important;
+    }
+    
+    .dashboard-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 20px !important;
+    }
+    
+    .dashboard-header > div {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    
+    .hotel-title-section {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 20px !important;
+    }
+    
+    .stats-card {
+        padding: 24px !important;
+    }
   }
 }

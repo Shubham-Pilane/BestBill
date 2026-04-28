@@ -21,9 +21,10 @@ const OrderModal = ({ table, onClose }) => {
   const [allTables, setAllTables] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [syncingItems, setSyncingItems] = useState(new Set());
   const [editingPriceId, setEditingPriceId] = useState(null);
   const [editPriceValue, setEditPriceValue] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,37 +48,76 @@ const OrderModal = ({ table, onClose }) => {
   }, [table]);
 
   const addToOrder = async (item) => {
+    if (syncingItems.has(item.id)) return;
+    setSyncingItems(prev => new Set(prev).add(item.id));
     try {
       const res = await api.post(`/tables/${table.id}/order`, {
         menuItemId: item.id,
         quantity: 1
       });
       setOrderItems(res.data.items);
-      toast.success(`+ ${item.name}`, { icon: '🍽️' });
+      toast.success(`+ ${item.name}`, { id: `add-${item.id}` });
     } catch (err) {
       toast.error('Add failed');
+    } finally {
+      setSyncingItems(prev => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
     }
   };
 
   const updateQuantity = async (itemId, change) => {
+    if (syncingItems.has(itemId)) return;
+    
     const item = orderItems.find(i => i.id === itemId);
+    if (!item) return;
+    
     const newQty = item.quantity + change;
     if (newQty < 1) return removeFromOrder(itemId);
-    
+
+    // Optimistic Update
+    const originalItems = [...orderItems];
+    setOrderItems(prev => prev.map(i => i.id === itemId ? { ...i, quantity: newQty } : i));
+    setSyncingItems(prev => new Set(prev).add(itemId));
+
     try {
       const res = await api.put(`/tables/${table.id}/order/items/${itemId}`, { quantity: newQty });
       setOrderItems(res.data.items);
     } catch (err) {
+      setOrderItems(originalItems);
       toast.error('Sync failed');
+    } finally {
+      setSyncingItems(prev => {
+        const next = new Set(prev);
+        next.delete(itemId);
+        return next;
+      });
     }
   };
 
   const removeFromOrder = async (itemId) => {
+    if (syncingItems.has(itemId)) return;
+    setSyncingItems(prev => new Set(prev).add(itemId));
+    
     try {
       const res = await api.delete(`/tables/${table.id}/order/items/${itemId}`);
       setOrderItems(res.data.items);
+      if (res.data.order_deleted) {
+         toast.success('Table Cleared', { icon: '✨' });
+         setTimeout(() => onClose(), 800);
+      }
     } catch (err) {
-      toast.error('Removal failed');
+      if (err.response?.status !== 404) {
+        toast.error('Removal failed');
+      }
+    } finally {
+      setSyncingItems(prev => {
+        const next = new Set(prev);
+        next.delete(itemId);
+        return next;
+      });
     }
   };
 
@@ -214,7 +254,7 @@ const OrderModal = ({ table, onClose }) => {
     msg += `*GST (${billData.gst_percentage}%):* ₹${taxVal.toFixed(2)}\n`;
     if (billData.discount_percentage > 0) msg += `*Discount (${billData.discount_percentage}%):* -₹${(preVal * billData.discount_percentage / 100).toFixed(2)}\n`;
     msg += `*GRAND TOTAL: ₹${parseFloat(billData.final_amount).toFixed(2)}*\n`;
-    msg += `\nThank you! Visit again.\n`;
+    msg += `\n*Visit Again!* - ${(user?.hotel_name || 'BestBill').toUpperCase()}\n`;
     
     const cleanPhone = customerPhone.replace(/\D/g, '');
     const finalPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
@@ -229,10 +269,10 @@ const OrderModal = ({ table, onClose }) => {
   if (loading) return null;
 
   return (
-    <div className="order-modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.95)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '40px' }}>
+    <div className="order-modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.95)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
       <div className="order-modal-container" style={{ width: '100%', maxWidth: '1440px', height: '90vh', backgroundColor: '#0f172a', borderRadius: '40px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.05)' }}>
         {/* Header */}
-        <div className="order-modal-header" style={{ padding: '32px 48px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="order-modal-header" style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
             <div style={{ width: '64px', height: '64px', backgroundColor: table.active_order_id ? '#f43f5e' : '#10b981', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: '28px' }}>
               {table.table_number}

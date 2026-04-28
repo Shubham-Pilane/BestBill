@@ -179,11 +179,11 @@ const Profile = () => {
     };
 
     return (
-        <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '64px', paddingBottom: '100px' }}>
+    <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '64px', paddingBottom: '100px', overflow: 'hidden' }}>
             
-            <div style={{ display: 'grid', gridTemplateColumns: isOwner ? '1fr 1fr' : '1fr', gap: '48px' }}>
+            <div className="responsive-grid-12" style={{ gap: '48px' }}>
                 {/* Personal Section */}
-                <div style={{ maxWidth: isOwner ? '100%' : '600px', margin: isOwner ? '0' : '0 auto', width: '100%' }}>
+                <div style={{ gridColumn: isOwner ? 'span 6' : 'span 12', maxWidth: isOwner ? '100%' : '600px', margin: isOwner ? '0' : '0 auto', width: '100%' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
                         <UserCircle size={32} style={{ color: themeColor }} />
                         <h2 style={{ fontSize: '24px', fontWeight: 950, color: 'white', margin: 0 }}>Security Core</h2>
@@ -294,8 +294,8 @@ const Profile = () => {
                         <Users size={32} style={{ color: '#f59e0b' }} />
                         <h2 style={{ fontSize: '24px', fontWeight: 950, color: 'white', margin: 0 }}>Staff Command</h2>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '48px' }}>
-                        <div style={{ backgroundColor: '#0f172a', borderRadius: '32px', padding: '32px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <div className="responsive-grid-12" style={{ gap: '48px' }}>
+                        <div style={{ gridColumn: 'span 5', backgroundColor: '#0f172a', borderRadius: '32px', padding: '32px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
                             <h3 style={{ fontSize: '15px', fontWeight: 900, color: 'white', marginBottom: '24px' }}>Hire New Staff</h3>
                             <form onSubmit={handleHiring} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <input required placeholder="Staff Name" value={staffForm.name} onChange={e => setStaffForm({...staffForm, name: e.target.value})} style={{ padding: '14px', borderRadius: '12px', backgroundColor: '#020617', border: '1px solid #1e293b', color: 'white' }} />
@@ -304,7 +304,7 @@ const Profile = () => {
                                 <button type="submit" disabled={hiring} style={{ backgroundColor: '#f59e0b', color: 'white', padding: '16px', borderRadius: '16px', fontWeight: 1000, cursor: 'pointer', border: 'none' }}>Onboard Staff</button>
                             </form>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ gridColumn: 'span 7', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             {staff.length === 0 ? (
                                 <div style={{ padding: '48px', textAlign: 'center', color: '#475569', backgroundColor: '#0f172a', borderRadius: '24px', border: '2px dashed #1e293b' }}>No active waitstaff protocol</div>
                             ) : (

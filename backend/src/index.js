@@ -10,6 +10,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`[API RESPONSE] ${req.method} ${req.url} ${res.statusCode} (${duration}ms)`);
+  });
   console.log(`[API REQUEST] ${req.method} ${req.url}`);
   next();
 });
@@ -25,8 +30,14 @@ app.use('/api/profile', require('./routes/profile'));
 app.use('/api/bills', require('./routes/bills'));
 app.use('/api/rooms', require('./routes/rooms'));
 app.use('/api/guest', require('./routes/guest'));
+app.use('/api/master-menu', require('./routes/master_menu'));
+
+app.get('/api/ping', (req, res) => {
+  res.json({ message: 'pong', timestamp: new Date().toISOString() });
+});
+
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'BestBill API is running' });
+  res.json({ status: 'ok', message: 'BestBill API is running (Master Menu Update)' });
 });
 
 const PORT = process.env.PORT || 8080;
@@ -52,6 +63,17 @@ const runCleanupTask = async () => {
 
 // Run migrations before listening
 syncSchema().then(() => {
+    // Error handling middleware
+    app.use((err, req, res, next) => {
+        console.error('------- GLOBAL ERROR HANDLER -------');
+        console.error('PATH:', req.path);
+        console.error('METHOD:', req.method);
+        console.error('ERROR:', err.message);
+        console.error('STACK:', err.stack);
+        console.error('------------------------------------');
+        res.status(500).json({ message: 'Internal Server Error', error: err.message });
+    });
+
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`Server running on port ${PORT}`);
         // Run first cleanup on start

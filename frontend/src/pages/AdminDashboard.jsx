@@ -26,6 +26,13 @@ const AdminDashboard = () => {
     subscriptionValidity: ''
   });
   const [logoFile, setLogoFile] = useState(null);
+  const [masterItems, setMasterItems] = useState([]);
+  const [hotelCategories, setHotelCategories] = useState([]);
+  const [showAttachModal, setShowAttachModal] = useState({ isOpen: false, item: null });
+  const [attachData, setAttachData] = useState({ price: '', category_id: '', isCreatingCategory: false, newCategoryName: '' });
+  const [showAddMasterModal, setShowAddMasterModal] = useState(false);
+  const [newMasterItem, setNewMasterItem] = useState({ name: '', category_name: '', description: '' });
+  const [searchMasterQuery, setSearchMasterQuery] = useState('');
 
   const fetchHotels = async () => {
     try {
@@ -40,16 +47,34 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchHotels();
+    fetchMasterItems();
   }, []);
+
+  const fetchMasterItems = async () => {
+    try {
+      const res = await api.get('/master-menu');
+      setMasterItems(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const openHotelInspector = async (hotelId) => {
     const loadingToast = toast.loading('Synchronizing hotel data...');
     try {
-      const res = await api.get(`/admin/hotels/${hotelId}/stats`);
-      setSelectedHotelData(res.data);
+      const [statsRes, catRes] = await Promise.all([
+        api.get(`/admin/hotels/${hotelId}/stats`),
+        api.get(`/admin/hotels/${hotelId}/categories`)
+      ]);
+      
+      setSelectedHotelData(statsRes.data);
+      setHotelCategories(catRes.data || []);
       toast.dismiss(loadingToast);
     } catch (err) {
-      toast.error('Sync failed', { id: loadingToast });
+      const msg = err.response?.data?.message || err.message;
+      const failedUrl = err.config?.url || 'unknown';
+      toast.error(`Sync failed (${failedUrl}): ${msg}`, { id: loadingToast });
+      console.error('Inspector Error:', err);
     }
   };
 
@@ -119,10 +144,59 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleAttachItem = async (e) => {
+    e.preventDefault();
+    if (!attachData.price) return toast.error('Please enter a price');
+    if (!attachData.isCreatingCategory && !attachData.category_id) return toast.error('Please select a category');
+    if (attachData.isCreatingCategory && !attachData.newCategoryName) return toast.error('Please enter a category name');
+
+    const l = toast.loading('Linking item to hotel menu...');
+    try {
+      let finalCategoryId = attachData.category_id;
+
+      // Create category if needed
+      if (attachData.isCreatingCategory) {
+        const catRes = await api.post(`/admin/hotels/${selectedHotelData.hotel.id}/categories`, {
+          name: attachData.newCategoryName
+        });
+        finalCategoryId = catRes.data.id;
+      }
+
+      await api.post('/master-menu/attach', {
+        hotel_id: selectedHotelData.hotel.id,
+        master_id: showAttachModal.item.id,
+        price: attachData.price,
+        category_id: finalCategoryId
+      });
+
+      toast.success('Item linked successfully', { id: l });
+      setShowAttachModal({ isOpen: false, item: null });
+      setAttachData({ price: '', category_id: '', isCreatingCategory: false, newCategoryName: '' });
+      openHotelInspector(selectedHotelData.hotel.id); // Refresh hotel data
+    } catch (err) {
+      toast.error('Linking failed', { id: l });
+    }
+  };
+
+  const handleAddMasterItem = async (e) => {
+    e.preventDefault();
+    const l = toast.loading('Registering global menu item...');
+    try {
+      await api.post('/master-menu', newMasterItem);
+      toast.success('Global item registered', { id: l });
+      setShowAddMasterModal(false);
+      setNewMasterItem({ name: '', category_name: '', description: '' });
+      fetchMasterItems();
+    } catch (err) {
+      toast.error('Registration failed', { id: l });
+    }
+  };
+
   if (loading) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '48px', width: '100%', maxWidth: '1440px' }}>
+    <>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '48px', width: '100%', maxWidth: '1440px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <h2 style={{ fontSize: '24px', fontWeight: 900, color: 'white', display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
@@ -339,36 +413,103 @@ const AdminDashboard = () => {
               {/* Detail Tabs */}
                <div style={{ padding: '0 48px', display: 'flex', gap: '32px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                  <button onClick={() => setActiveTab('menu')} style={{ padding: '0 8px 24px', background: 'none', border: 'none', color: activeTab === 'menu' ? themeColor : '#64748b', fontSize: '14px', fontWeight: 800, cursor: 'pointer', position: 'relative' }}>MENU INVENTORY {activeTab === 'menu' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '3px', backgroundColor: themeColor, borderRadius: '3px 3px 0 0' }}></div>}</button>
+                 <button onClick={() => setActiveTab('master')} style={{ padding: '0 8px 24px', background: 'none', border: 'none', color: activeTab === 'master' ? themeColor : '#64748b', fontSize: '14px', fontWeight: 800, cursor: 'pointer', position: 'relative' }}>MASTER CATALOG {activeTab === 'master' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '3px', backgroundColor: themeColor, borderRadius: '3px 3px 0 0' }}></div>}</button>
                  <button onClick={() => setActiveTab('history')} style={{ padding: '0 8px 24px', background: 'none', border: 'none', color: activeTab === 'history' ? themeColor : '#64748b', fontSize: '14px', fontWeight: 800, cursor: 'pointer', position: 'relative' }}>BILLING HISTORY {activeTab === 'history' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '3px', backgroundColor: themeColor, borderRadius: '3px 3px 0 0' }}></div>}</button>
               </div>
 
               <div style={{ padding: '48px', minHeight: '400px' }}>
-                 {activeTab === 'menu' ? (
-                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-                      {selectedHotelData.menu.map(item => (
-                        <div key={item.id} style={{ backgroundColor: '#020617', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                           <span style={{ fontSize: '10px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{item.category_name}</span>
-                           <h5 style={{ fontSize: '16px', fontWeight: 800, color: 'white', margin: '8px 0' }}>{item.name}</h5>
-                           <span style={{ fontWeight: 950, color: '#10b981' }}>₹{item.price}</span>
-                        </div>
-                      ))}
-                   </div>
-                 ) : (
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      {selectedHotelData.bills.map(bill => (
-                        <div key={bill.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '24px 32px', backgroundColor: '#020617', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-                              <Receipt size={24} style={{ color: themeColor }} />
-                              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                 <span style={{ color: 'white', fontWeight: 800 }}>Bill #{bill.id} — Table {bill.table_number}</span>
-                                 <span style={{ color: '#475569', fontSize: '12px' }}>{new Date(bill.created_at).toLocaleString()}</span>
-                              </div>
-                           </div>
-                           <span style={{ fontSize: '18px', fontWeight: 1000, color: '#10b981' }}>₹{bill.final_amount}</span>
-                        </div>
-                      ))}
-                   </div>
-                 )}
+                  {activeTab === 'menu' ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+                       {selectedHotelData.menu.map(item => (
+                         <div key={item.id} style={{ backgroundColor: '#020617', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                            <span style={{ fontSize: '10px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{item.category_name}</span>
+                            <h5 style={{ fontSize: '16px', fontWeight: 800, color: 'white', margin: '8px 0' }}>{item.name}</h5>
+                            <span style={{ fontWeight: 950, color: '#10b981' }}>₹{item.price}</span>
+                         </div>
+                       ))}
+                    </div>
+                  ) : activeTab === 'master' ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '20px' }}>
+                          <div>
+                             <h4 style={{ color: 'white', fontWeight: 800, margin: 0 }}>Global Master Catalog</h4>
+                             <p style={{ color: '#64748b', fontSize: '12px', margin: 0 }}>Select items to link to {selectedHotelData.hotel.name}</p>
+                          </div>
+                          
+                          <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
+                             <div style={{ position: 'relative', width: '100%', maxWidth: '300px' }}>
+                               <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+                               <input 
+                                 value={searchMasterQuery}
+                                 onChange={e => setSearchMasterQuery(e.target.value)}
+                                 placeholder="Search items or categories..."
+                                 style={{ width: '100%', padding: '12px 16px 12px 48px', borderRadius: '14px', border: '1px solid #1e293b', backgroundColor: '#020617', color: 'white', outline: 'none', fontSize: '13px', fontWeight: 600 }}
+                               />
+                             </div>
+
+                             <button 
+                                onClick={() => setShowAddMasterModal(true)}
+                                style={{ backgroundColor: `${themeColor}20`, color: themeColor, padding: '12px 20px', borderRadius: '14px', border: `1px solid ${themeColor}`, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
+                             >
+                                <Plus size={18} /> Add New
+                             </button>
+                          </div>
+                       </div>
+                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                          {masterItems.filter(item => item.name.toLowerCase().includes(searchMasterQuery.toLowerCase()) || item.category_name.toLowerCase().includes(searchMasterQuery.toLowerCase())).map(item => {
+                             const isLinked = selectedHotelData.menu.some(m => m.master_id === item.id);
+                             return (
+                               <div key={item.id} style={{ backgroundColor: '#020617', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.03)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <div>
+                                     <span style={{ fontSize: '10px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase' }}>{item.category_name}</span>
+                                     <h5 style={{ fontSize: '16px', fontWeight: 800, color: 'white', margin: '4px 0' }}>{item.name}</h5>
+                                  </div>
+                                  <button 
+                                     disabled={isLinked}
+                                     onClick={() => {
+                                       const existingCat = hotelCategories.find(c => c.name.toLowerCase() === item.category_name.toLowerCase());
+                                       setShowAttachModal({ isOpen: true, item });
+                                       setAttachData({
+                                         ...attachData,
+                                         category_id: existingCat ? existingCat.id : '',
+                                         isCreatingCategory: !existingCat,
+                                         newCategoryName: !existingCat ? item.category_name : ''
+                                       });
+                                     }}
+                                     style={{ 
+                                       padding: '8px 16px', 
+                                       borderRadius: '12px', 
+                                       fontSize: '12px', 
+                                       fontWeight: 900, 
+                                       border: 'none', 
+                                       cursor: isLinked ? 'default' : 'pointer',
+                                       backgroundColor: isLinked ? 'rgba(255,255,255,0.05)' : themeColor,
+                                       color: isLinked ? '#475569' : 'white'
+                                     }}
+                                  >
+                                     {isLinked ? 'LINKED' : 'LINK ITEM'}
+                                  </button>
+                               </div>
+                             );
+                          })}
+                       </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                       {selectedHotelData.bills.map(bill => (
+                         <div key={bill.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '24px 32px', backgroundColor: '#020617', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                               <Receipt size={24} style={{ color: themeColor }} />
+                               <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                  <span style={{ color: 'white', fontWeight: 800 }}>Bill #{bill.id} — Table {bill.table_number}</span>
+                                  <span style={{ color: '#475569', fontSize: '12px' }}>{new Date(bill.created_at).toLocaleString()}</span>
+                               </div>
+                            </div>
+                            <span style={{ fontSize: '18px', fontWeight: 1000, color: '#10b981' }}>₹{bill.final_amount}</span>
+                         </div>
+                       ))}
+                    </div>
+                  )}
               </div>
            </div>
         </div>
@@ -492,6 +633,97 @@ const AdminDashboard = () => {
         </div>
       )}
     </div>
+
+      {/* Attach Master Item Modal */}
+      {showAttachModal.isOpen && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.9)', backdropFilter: 'blur(24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9000, padding: '24px' }}>
+           <div style={{ width: '100%', maxWidth: '480px', backgroundColor: '#0f172a', borderRadius: '40px', padding: '48px', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 50px 100px rgba(0,0,0,0.8)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                 <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'white', margin: 0 }}>Link to {selectedHotelData.hotel.name}</h3>
+                 <button onClick={() => setShowAttachModal({ isOpen: false, item: null })} style={{ color: '#475569', background: 'none', border: 'none', cursor: 'pointer' }}><X size={28} /></button>
+              </div>
+
+              <div style={{ marginBottom: '32px', padding: '24px', backgroundColor: '#020617', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                 <span style={{ fontSize: '10px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase' }}>{showAttachModal.item.category_name}</span>
+                 <h4 style={{ fontSize: '20px', fontWeight: 800, color: 'white', margin: '4px 0' }}>{showAttachModal.item.name}</h4>
+              </div>
+
+              <form onSubmit={handleAttachItem} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Hotel Specific Price (₹)</label>
+                    <input type="number" required value={attachData.price} onChange={e => setAttachData({...attachData, price: e.target.value})} style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '2px solid #1e293b', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 800 }} placeholder="Enter price for this hotel" />
+                 </div>
+                 
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Select Category</label>
+                      <button 
+                        type="button"
+                        onClick={() => setAttachData({ ...attachData, isCreatingCategory: !attachData.isCreatingCategory, category_id: '', newCategoryName: '' })}
+                        style={{ fontSize: '11px', fontWeight: 800, color: themeColor, background: 'none', border: 'none', cursor: 'pointer' }}
+                      >
+                        {attachData.isCreatingCategory ? 'Show Existing' : '+ Create New'}
+                      </button>
+                    </div>
+
+                    {attachData.isCreatingCategory ? (
+                      <input 
+                        value={attachData.newCategoryName} 
+                        onChange={e => setAttachData({...attachData, newCategoryName: e.target.value})} 
+                        style={{ width: '100%', padding: '16px', borderRadius: '16px', border: `2px solid ${themeColor}40`, backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 800 }} 
+                        placeholder="Enter new category name" 
+                      />
+                    ) : (
+                      <select required value={attachData.category_id} onChange={e => setAttachData({...attachData, category_id: e.target.value})} style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '2px solid #1e293b', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 800 }}>
+                        <option value="">Select a category</option>
+                        {hotelCategories.map(cat => (
+                          <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
+                 <button type="submit" style={{ width: '100%', backgroundColor: themeColor, color: 'white', padding: '16px', borderRadius: '16px', fontSize: '15px', fontWeight: 900, border: 'none', cursor: 'pointer', marginTop: '12px' }}>
+                    Confirm Link
+                 </button>
+              </form>
+           </div>
+        </div>
+      )}
+
+      {/* Add New Master Item Modal */}
+      {showAddMasterModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.9)', backdropFilter: 'blur(24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9500, padding: '24px' }}>
+           <div style={{ width: '100%', maxWidth: '480px', backgroundColor: '#0f172a', borderRadius: '40px', padding: '48px', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 50px 100px rgba(0,0,0,0.8)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                 <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'white', margin: 0 }}>Add Global Item</h3>
+                 <button onClick={() => setShowAddMasterModal(false)} style={{ color: '#475569', background: 'none', border: 'none', cursor: 'pointer' }}><X size={28} /></button>
+              </div>
+
+              <form onSubmit={handleAddMasterItem} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Item Name</label>
+                    <input required value={newMasterItem.name} onChange={e => setNewMasterItem({...newMasterItem, name: e.target.value})} style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '2px solid #1e293b', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 800 }} placeholder="e.g. Paneer Masala" />
+                 </div>
+                 
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Global Category Name</label>
+                    <input required value={newMasterItem.category_name} onChange={e => setNewMasterItem({...newMasterItem, category_name: e.target.value})} style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '2px solid #1e293b', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 800 }} placeholder="e.g. Main Course" />
+                 </div>
+
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Description (Optional)</label>
+                    <textarea value={newMasterItem.description} onChange={e => setNewMasterItem({...newMasterItem, description: e.target.value})} style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '2px solid #1e293b', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 800, minHeight: '80px', resize: 'none' }} placeholder="Briefly describe the item" />
+                 </div>
+
+                 <button type="submit" style={{ width: '100%', backgroundColor: themeColor, color: 'white', padding: '16px', borderRadius: '16px', fontSize: '15px', fontWeight: 900, border: 'none', cursor: 'pointer', marginTop: '12px' }}>
+                    Register Item
+                 </button>
+              </form>
+           </div>
+        </div>
+      )}
+    </>
   );
 };
 

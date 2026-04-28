@@ -57,7 +57,7 @@ router.delete('/categories/:id', auth, async (req, res) => {
 router.get('/items', auth, async (req, res) => {
   try {
     const items = await db.query(
-      'SELECT mi.*, c.name as category_name FROM menu_items mi JOIN categories c ON mi.category_id = c.id WHERE c.hotel_id = $1 ORDER BY mi.name ASC',
+      'SELECT mi.*, c.name as category_name FROM menu_items mi JOIN categories c ON mi.category_id = c.id WHERE mi.hotel_id = $1 ORDER BY mi.name ASC',
       [req.user.hotel_id]
     );
     res.json(items.rows);
@@ -70,10 +70,30 @@ router.get('/items', auth, async (req, res) => {
 // Create menu item
 router.post('/items', auth, async (req, res) => {
   const { name, price, category_id, description, is_available } = req.body;
+  const hotelId = req.user.hotel_id;
   try {
+    // 1. Ensure it exists in master_menu
+    let masterRes = await db.query('SELECT id FROM master_menu WHERE name = $1', [name]);
+    let masterId = null;
+    
+    if (masterRes.rows.length === 0) {
+      // Get category name for master record
+      const catRes = await db.query('SELECT name FROM categories WHERE id = $1', [category_id]);
+      const catName = catRes.rows[0]?.name || 'General';
+      
+      const newMaster = await db.query(
+        'INSERT INTO master_menu (name, category_name, description) VALUES ($1, $2, $3) RETURNING id',
+        [name, catName, description]
+      );
+      masterId = newMaster.rows[0].id;
+    } else {
+      masterId = masterRes.rows[0].id;
+    }
+
+    // 2. Create the hotel-specific menu item
     const newItem = await db.query(
-      'INSERT INTO menu_items (category_id, name, price, description, is_available) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [category_id, name, price, description, is_available ?? true]
+      'INSERT INTO menu_items (hotel_id, category_id, master_id, name, price, description, is_available) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [hotelId, category_id, masterId, name, price, description, is_available ?? true]
     );
     res.status(201).json(newItem.rows[0]);
   } catch (err) {

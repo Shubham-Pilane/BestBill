@@ -27,6 +27,30 @@ const syncSchema = async () => {
                 subscription_valid_until TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )`,
+            `CREATE TABLE IF NOT EXISTS master_menu (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) UNIQUE NOT NULL,
+                category_name VARCHAR(100),
+                description TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )`,
+            `CREATE TABLE IF NOT EXISTS categories (
+                id SERIAL PRIMARY KEY,
+                hotel_id INTEGER REFERENCES hotels(id) ON DELETE CASCADE,
+                name VARCHAR(100) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )`,
+            `CREATE TABLE IF NOT EXISTS menu_items (
+                id SERIAL PRIMARY KEY,
+                hotel_id INTEGER REFERENCES hotels(id) ON DELETE CASCADE,
+                master_id INTEGER REFERENCES master_menu(id) ON DELETE SET NULL,
+                category_id INTEGER REFERENCES categories(id) ON DELETE CASCADE,
+                name VARCHAR(255) NOT NULL,
+                price DECIMAL(10,2) NOT NULL,
+                description TEXT,
+                is_available BOOLEAN DEFAULT true,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )`,
             `CREATE TABLE IF NOT EXISTS rooms (
                 id SERIAL PRIMARY KEY, 
                 hotel_id integer REFERENCES hotels(id) ON DELETE CASCADE, 
@@ -79,11 +103,27 @@ const syncSchema = async () => {
             )`
         ];
 
-        for (const sql of coreTables) {
-            await db.query(sql);
+        for (const query of coreTables) {
+            await db.query(query);
         }
 
-        // 2. Add missing columns to existing tables (Migrations)
+        // 2. Performance Indexes
+        const indexQueries = [
+            'CREATE INDEX IF NOT EXISTS idx_categories_hotel_id ON categories(hotel_id)',
+            'CREATE INDEX IF NOT EXISTS idx_menu_items_hotel_id ON menu_items(hotel_id)',
+            'CREATE INDEX IF NOT EXISTS idx_menu_items_category_id ON menu_items(category_id)',
+            'CREATE INDEX IF NOT EXISTS idx_tables_hotel_id ON tables(hotel_id)',
+            'CREATE INDEX IF NOT EXISTS idx_orders_table_id ON orders(table_id)',
+            'CREATE INDEX IF NOT EXISTS idx_bills_order_id ON bills(order_id)',
+            'CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id)',
+            'CREATE INDEX IF NOT EXISTS idx_subscription_history_hotel_id ON subscription_history(hotel_id)'
+        ];
+
+        for (const query of indexQueries) {
+            await db.query(query);
+        }
+
+        // 3. Schema Evolution (Column Checks)
         const migrations = [
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'owner'",
             "ALTER TABLE hotels ADD COLUMN IF NOT EXISTS gst_percentage DECIMAL(5,2) DEFAULT 5",
@@ -99,8 +139,13 @@ const syncSchema = async () => {
             "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS booking_days INTEGER",
             "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS total_cost DECIMAL(10,2)",
             "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS check_in_date TIMESTAMP",
-            "ALTER TABLE bills ADD COLUMN IF NOT EXISTS is_paid BOOLEAN DEFAULT false",
-            "ALTER TABLE bills ADD COLUMN IF NOT EXISTS payment_method VARCHAR(20)"
+            "ALTER TABLE bills ADD COLUMN IF NOT EXISTS payment_method VARCHAR(20)",
+            "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS hotel_id INTEGER REFERENCES hotels(id) ON DELETE CASCADE",
+            "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS master_id INTEGER REFERENCES master_menu(id) ON DELETE SET NULL",
+            // Data Migration for Master Menu
+            "UPDATE menu_items mi SET hotel_id = c.hotel_id FROM categories c WHERE mi.category_id = c.id AND mi.hotel_id IS NULL",
+            "INSERT INTO master_menu (name, category_name, description) SELECT DISTINCT name, (SELECT name FROM categories WHERE id = category_id LIMIT 1), description FROM menu_items ON CONFLICT (name) DO NOTHING",
+            "UPDATE menu_items mi SET master_id = mm.id FROM master_menu mm WHERE mi.name = mm.name AND mi.master_id IS NULL"
         ];
 
         for (const q of migrations) {

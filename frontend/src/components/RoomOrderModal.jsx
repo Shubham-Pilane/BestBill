@@ -24,6 +24,7 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [extensionDays, setExtensionDays] = useState(0);
   const [extensionCost, setExtensionCost] = useState(0);
+  const [syncingItems, setSyncingItems] = useState(new Set());
   const [editingPriceId, setEditingPriceId] = useState(null);
   const [editPriceValue, setEditPriceValue] = useState('');
   const isOccupied = room.status === 'occupied';
@@ -67,37 +68,73 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
 
   const addToOrder = async (item) => {
     if (!isOccupied) return toast.error('Please confirm booking first');
+    if (syncingItems.has(item.id)) return;
+    setSyncingItems(prev => new Set(prev).add(item.id));
+    
     try {
       const res = await api.post(`/rooms/${room.id}/order`, {
         menuItemId: item.id,
         quantity: 1
       });
       setOrderItems(res.data.items);
-      toast.success(`+ ${item.name}`, { icon: '🍽️' });
+      toast.success(`+ ${item.name}`, { id: `add-${item.id}` });
     } catch (err) {
       toast.error('Add failed');
+    } finally {
+      setSyncingItems(prev => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
     }
   };
 
   const updateQuantity = async (itemId, change) => {
+    if (syncingItems.has(itemId)) return;
+    
     const item = orderItems.find(i => i.id === itemId);
+    if (!item) return;
+    
     const newQty = item.quantity + change;
     if (newQty < 1) return removeFromOrder(itemId);
     
+    // Optimistic Update
+    const originalItems = [...orderItems];
+    setOrderItems(prev => prev.map(i => i.id === itemId ? { ...i, quantity: newQty } : i));
+    setSyncingItems(prev => new Set(prev).add(itemId));
+
     try {
       const res = await api.put(`/rooms/${room.id}/order/items/${itemId}`, { quantity: newQty });
       setOrderItems(res.data.items);
     } catch (err) {
+      setOrderItems(originalItems);
       toast.error('Sync failed');
+    } finally {
+      setSyncingItems(prev => {
+        const next = new Set(prev);
+        next.delete(itemId);
+        return next;
+      });
     }
   };
 
   const removeFromOrder = async (itemId) => {
+    if (syncingItems.has(itemId)) return;
+    setSyncingItems(prev => new Set(prev).add(itemId));
+    
     try {
       const res = await api.delete(`/rooms/${room.id}/order/items/${itemId}`);
       setOrderItems(res.data.items);
     } catch (err) {
-      toast.error('Removal failed');
+      if (err.response?.status !== 404) {
+        toast.error('Removal failed');
+      }
+    } finally {
+      setSyncingItems(prev => {
+        const next = new Set(prev);
+        next.delete(itemId);
+        return next;
+      });
     }
   };
 
@@ -207,7 +244,7 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
     msg += `Room: ${room.room_number}\nGuest: ${room.guest_name}\nBill No: #${billData.id}\n`;
     msg += `\n*Items:*\n• Room Charge: ₹${billData.room_charge}\n`;
     (billData.items || []).forEach(i => msg += `• ${i.name} x ${i.quantity} = ₹${(i.price * i.quantity).toFixed(2)}\n`);
-    msg += `\n*GRAND TOTAL: ₹${parseFloat(billData.final_amount).toFixed(2)}*\n\nThank you for staying with us!`;
+    msg += `\n*GRAND TOTAL: ₹${parseFloat(billData.final_amount).toFixed(2)}*\n\n*Thank you for staying with us!* - ${(user?.hotel_name || 'BestBill').toUpperCase()}`;
     const cleanPhone = customerPhone.replace(/\D/g, '');
     const finalPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
     window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(msg)}`, '_blank');
@@ -227,7 +264,7 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
   if (loading && items.length === 0) return null;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, backgroundColor: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '40px' }}>
+    <div className="order-modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.95)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
       <div style={{ width: '100%', maxWidth: '1440px', height: '90vh', backgroundColor: isSuccess ? '#064e3b' : '#0f172a', borderRadius: '40px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', transition: 'all 0.5s ease' }}>
         
         {/* Header */}

@@ -156,9 +156,9 @@ const Dashboard = () => {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '64px', width: '100%', maxWidth: '1440px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '64px', width: '100%', maxWidth: '1440px', overflow: 'hidden' }}>
       {/* Hotel & Subscription Branding Area */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '32px' }}>
+      <div className="hotel-title-section" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
           <div style={{ 
             width: '64px', 

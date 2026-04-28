@@ -132,7 +132,7 @@ const MenuManagement = () => {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '40px', width: '100%', maxWidth: '1400px' }}>
+    <div className="responsive-grid-12" style={{ width: '100%', maxWidth: '1400px' }}>
       
       {/* Category Management Column */}
       <div style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -203,8 +203,8 @@ const MenuManagement = () => {
             <h2 style={{ fontSize: '18px', fontWeight: 900, color: 'white', margin: 0 }}>Add To Live Menu</h2>
           </div>
 
-          <form onSubmit={addItem} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <form onSubmit={addItem} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }} className="responsive-grid-12">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', gridColumn: 'span 6' }}>
               <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Dish Name</label>
               <input
                 type="text"
@@ -214,7 +214,7 @@ const MenuManagement = () => {
                 required
               />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', gridColumn: 'span 6' }}>
               <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Price (₹)</label>
               <div style={{ position: 'relative' }}>
                 <IndianRupee style={{ position: 'absolute', top: '15px', left: '16px', color: '#475569' }} size={16} />
@@ -227,7 +227,7 @@ const MenuManagement = () => {
                 />
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', gridColumn: 'span 6' }}>
               <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Category</label>
               <select
                 style={{ width: '100%', backgroundColor: '#020617', border: '2px solid #1e293b', color: 'white', padding: '14px 16px', borderRadius: '16px', outline: 'none', fontSize: '14px', fontWeight: 700 }}
@@ -240,7 +240,7 @@ const MenuManagement = () => {
                 ))}
               </select>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', gridColumn: 'span 6' }}>
               <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Description</label>
               <input
                 type="text"
@@ -249,7 +249,7 @@ const MenuManagement = () => {
                 onChange={(e) => setNewItem({...newItem, description: e.target.value})}
               />
             </div>
-            <button type="submit" style={{ gridColumn: 'span 2', backgroundColor: '#10b981', color: 'white', border: 'none', padding: '18px', borderRadius: '20px', fontSize: '16px', fontWeight: 950, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+            <button type="submit" style={{ gridColumn: 'span 12', backgroundColor: '#10b981', color: 'white', border: 'none', padding: '18px', borderRadius: '20px', fontSize: '16px', fontWeight: 950, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
               <Plus size={22} strokeWidth={4} /> Publish To Menu
             </button>
           </form>

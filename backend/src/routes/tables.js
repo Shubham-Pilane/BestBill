@@ -68,7 +68,7 @@ router.get('/:tableId/order', auth, async (req, res) => {
     let order = await db.query('SELECT * FROM orders WHERE table_id = $1 AND status = $2', [tableId, 'active']);
     
     if (order.rows.length === 0) {
-      order = await db.query('INSERT INTO orders (table_id, status) VALUES ($1, $2) RETURNING *', [tableId, 'active']);
+      return res.json({ order: null, items: [] });
     }
 
     const orderId = order.rows[0].id;
@@ -141,6 +141,7 @@ router.delete('/:tableId/order/items/:itemId', auth, async (req, res) => {
   const { itemId } = req.params;
   try {
     const item = await db.query('SELECT order_id FROM order_items WHERE id = $1', [itemId]);
+    if (item.rows.length === 0) return res.status(404).json({ message: 'Item not found' });
     const orderId = item.rows[0].order_id;
     await db.query('DELETE FROM order_items WHERE id = $1', [itemId]);
     
@@ -148,8 +149,15 @@ router.delete('/:tableId/order/items/:itemId', auth, async (req, res) => {
       'SELECT oi.*, mi.name, mi.price FROM order_items oi JOIN menu_items mi ON oi.menu_item_id = mi.id WHERE oi.order_id = $1',
       [orderId]
     );
+
+    if (updatedItems.rows.length === 0) {
+      await db.query('DELETE FROM orders WHERE id = $1', [orderId]);
+      return res.json({ items: [], order_deleted: true });
+    }
+
     res.json({ items: updatedItems.rows });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Delete failed' });
   }
 });
@@ -243,10 +251,12 @@ router.post('/:tableId/bill/send', auth, async (req, res) => {
      );
      const items = itemsRes.rows;
 
-     // Generate Short Itemized Message (Optimized for 160 characters)
-     let msg = `${hotelName} Bill #${billId}\n`;
-     items.forEach(i => msg += `${i.name}x${i.quantity}\n`);
-     msg += `Total: ₹${bill.final_amount}\nThanks for visiting!`;
+     // Generate Short Itemized Message
+     let msg = `*--- ${hotelName.toUpperCase()} ---*\n`;
+     msg += `Bill #${billId}\n`;
+     items.forEach(i => msg += `${i.name} x ${i.quantity}\n`);
+     msg += `Total: ₹${bill.final_amount}\n`;
+     msg += `Thanks for visiting!`;
 
      if (method === 'sms') {
         await sendSMS(customerPhone, msg);

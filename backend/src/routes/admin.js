@@ -7,6 +7,8 @@ const multer = require('multer');
 const path = require('path');
 
 // Configure Multer for Memory Storage (GCS)
+
+// Configure Multer for Memory Storage (GCS)
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
@@ -137,7 +139,8 @@ router.get('/hotels/:id/stats', adminAuth, async (req, res) => {
         JOIN orders o ON b.order_id = o.id 
         JOIN tables t ON o.table_id = t.id 
         WHERE t.hotel_id = $1 
-        ORDER BY b.created_at DESC`, [hotelId])
+        ORDER BY b.created_at DESC 
+        LIMIT 100`, [hotelId])
     ]);
 
     const bills = billsRes.rows || [];
@@ -223,6 +226,34 @@ router.put('/hotels/:id/logo', adminAuth, upload.single('logo'), async (req, res
     console.error(err);
     res.status(500).json({ message: 'Failed to update brand visuals' });
   }
+});
+
+// Get Categories for a specific hotel (Super Admin)
+router.get('/hotels/:id/categories', adminAuth, async (req, res) => {
+    console.log(`[ADMIN API] Fetching categories for hotel: ${req.params.id}`);
+    const { id } = req.params;
+    try {
+        const categories = await db.query('SELECT * FROM categories WHERE hotel_id = $1 ORDER BY name ASC', [parseInt(id)]);
+        res.json(categories.rows);
+    } catch (err) {
+        console.error('[ADMIN API ERROR]', err);
+        res.status(500).json({ message: 'Failed to fetch categories' });
+    }
+});
+
+// Add Category for a specific hotel (Super Admin)
+router.post('/hotels/:id/categories', adminAuth, async (req, res) => {
+    const { id } = req.params;
+    const { name } = req.body;
+    try {
+        const result = await db.query(
+            'INSERT INTO categories (hotel_id, name) VALUES ($1, $2) RETURNING *',
+            [parseInt(id), name]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to create category' });
+    }
 });
 
 // Toggle Hotel Service (Stop/Start)

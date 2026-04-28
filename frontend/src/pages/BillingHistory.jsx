@@ -51,7 +51,7 @@ const BillingHistory = () => {
         msg += `*GST (${selectedBill.gst_percentage || 0}%):* ₹${taxVal.toFixed(2)}\n`;
         if (selectedBill.discount_percentage > 0) msg += `*Discount (${selectedBill.discount_percentage}%):* -₹${(preVal * selectedBill.discount_percentage / 100).toFixed(2)}\n`;
         msg += `*GRAND TOTAL: ₹${parseFloat(selectedBill.final_amount).toFixed(2)}*\n`;
-        msg += `\nThank you! Visit again.\n`;
+        msg += `\n*Visit Again!* - ${(user?.hotel_name || 'BestBill').toUpperCase()}\n`;
         
         const cleanPhone = customerPhone.replace(/\D/g, '');
         const finalPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
@@ -107,7 +107,7 @@ const BillingHistory = () => {
             </div>
 
             {/* Stats Overview */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '32px' }}>
+            <div className="responsive-grid-3">
                 <div style={{ backgroundColor: '#0f172a', borderRadius: '28px', padding: '32px', border: '1px solid rgba(255, 255, 255, 0.05)', position: 'relative', overflow: 'hidden' }}>
                     <span style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Today's Revenue (Last 24h)</span>
                     <h3 style={{ fontSize: '32px', fontWeight: 1000, color: '#10b981', marginTop: '12px', marginBottom: '4px' }}>
@@ -194,7 +194,7 @@ const BillingHistory = () => {
             </div>
             {selectedBill && (
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', backdropFilter: 'blur(16px)' }}>
-                <div style={{ width: '100%', maxWidth: '850px', backgroundColor: 'white', borderRadius: '40px', overflow: 'hidden', display: 'flex', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.5)' }}>
+                <div className="order-modal-container" style={{ width: '100%', maxWidth: '850px', backgroundColor: 'white', borderRadius: '40px', overflow: 'hidden', display: 'flex', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.5)' }}>
                     <div style={{ flex: 1, padding: '48px', borderRight: '1px solid #f1f5f9', backgroundColor: selectedBill.is_paid ? '#10b981' : 'white', transition: 'all 0.6s', overflowY: 'auto', position: 'relative' }}>
                         {selectedBill.is_paid && (
                         <div style={{ position: 'absolute', top: '10%', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
