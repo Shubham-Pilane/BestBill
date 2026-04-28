@@ -26,14 +26,25 @@ const Dashboard = () => {
   const [newTableFloor, setNewTableFloor] = useState('Floor 1');
 
   const [isSwapModalOpen, setSwapModalOpen] = useState(false);
+  const [menuData, setMenuData] = useState({ categories: [], items: [] });
 
   const fetchTables = async () => {
     try {
-      const res = await api.get('/tables');
-      setTables(Array.isArray(res.data) ? res.data : []);
+      // Parallel fetch for everything the dashboard needs
+      const [tablesRes, catRes, itemsRes] = await Promise.all([
+        api.get('/tables'),
+        api.get('/menu/categories'),
+        api.get('/menu/items')
+      ]);
+      
+      setTables(Array.isArray(tablesRes.data) ? tablesRes.data : []);
+      setMenuData({
+        categories: catRes.data || [],
+        items: itemsRes.data || []
+      });
     } catch (err) {
       console.error('Fetch error:', err);
-      toast.error('Failed to load tables');
+      toast.error('Failed to load dashboard data');
       setTables([]); 
     } finally {
       setLoading(false);
@@ -520,6 +531,8 @@ const Dashboard = () => {
       {isOrderModalOpen && (
         <OrderModal
           table={selectedTable}
+          initialMenu={menuData}
+          allTables={tables}
           onClose={() => {
             setOrderModalOpen(false);
             fetchTables();

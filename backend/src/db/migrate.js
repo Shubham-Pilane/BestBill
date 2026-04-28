@@ -100,6 +100,15 @@ const syncSchema = async () => {
                 sender VARCHAR(20) NOT NULL,
                 message TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )`,
+            `CREATE TABLE IF NOT EXISTS subscription_history (
+                id SERIAL PRIMARY KEY,
+                hotel_id INTEGER REFERENCES hotels(id) ON DELETE CASCADE,
+                amount DECIMAL(10,2) NOT NULL,
+                months_added INTEGER NOT NULL,
+                valid_from TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                valid_until TIMESTAMP NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )`
         ];
 
@@ -107,7 +116,7 @@ const syncSchema = async () => {
             await db.query(query);
         }
 
-        // 2. Performance Indexes
+        // 2. Performance Indexes (Non-blocking)
         const indexQueries = [
             'CREATE INDEX IF NOT EXISTS idx_categories_hotel_id ON categories(hotel_id)',
             'CREATE INDEX IF NOT EXISTS idx_menu_items_hotel_id ON menu_items(hotel_id)',
@@ -120,7 +129,11 @@ const syncSchema = async () => {
         ];
 
         for (const query of indexQueries) {
-            await db.query(query);
+            try {
+                await db.query(query);
+            } catch (e) {
+                console.warn(`[MIGRATION] Index skip: ${e.message}`);
+            }
         }
 
         // 3. Schema Evolution (Column Checks)

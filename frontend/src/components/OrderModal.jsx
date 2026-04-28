@@ -6,19 +6,19 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../context/AuthContext';
 import SwapModal from './SwapModal';
 import { generateEscposBill, printBillViaQZ, getSelectedPrinter } from '../services/qzTrayService';
-const OrderModal = ({ table, onClose }) => {
+const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) => {
   const { user } = useAuth();
-  const [categories, setCategories] = useState([]);
-  const [items, setItems] = useState([]);
+  const [categories, setCategories] = useState(initialMenu?.categories || []);
+  const [items, setItems] = useState(initialMenu?.items || []);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [orderItems, setOrderItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialMenu);
   const [showBill, setShowBill] = useState(false);
   const [billData, setBillData] = useState(null);
   const [customerPhone, setCustomerPhone] = useState('');
   const [discount, setDiscount] = useState(0);
   const [isSwapModalOpen, setSwapModalOpen] = useState(false);
-  const [allTables, setAllTables] = useState([]);
+  const [allTables, setAllTables] = useState(passedTables || []);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [syncingItems, setSyncingItems] = useState(new Set());
@@ -29,23 +29,36 @@ const OrderModal = ({ table, onClose }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Only fetch if we don't have initial props OR if there's an active order to load
+        const needsOrderFetch = !!table.active_order_id;
+        const needsStaticFetch = !initialMenu || !passedTables;
+
+        if (!needsOrderFetch && !needsStaticFetch) {
+            setLoading(false);
+            return;
+        }
+
         const [catRes, itemsRes, orderRes, tablesRes] = await Promise.all([
-          api.get('/menu/categories'),
-          api.get('/menu/items'),
-          table.active_order_id ? api.get(`/tables/${table.id}/order`) : Promise.resolve({ data: { items: [] } }),
-          api.get('/tables')
+          needsStaticFetch ? api.get('/menu/categories') : Promise.resolve({ data: initialMenu.categories }),
+          needsStaticFetch ? api.get('/menu/items') : Promise.resolve({ data: initialMenu.items }),
+          needsOrderFetch ? api.get(`/tables/${table.id}/order`) : Promise.resolve({ data: { items: [] } }),
+          needsStaticFetch ? api.get('/tables') : Promise.resolve({ data: passedTables })
         ]);
-        setCategories(catRes.data || []);
-        setItems(itemsRes.data || []);
+
+        if (needsStaticFetch) {
+            setCategories(catRes.data || []);
+            setItems(itemsRes.data || []);
+            setAllTables(tablesRes.data || []);
+        }
         setOrderItems(orderRes.data.items || []);
-        setAllTables(tablesRes.data || []);
         setLoading(false);
       } catch (err) {
+        console.error('Modal Init Error:', err);
         toast.error('Initialization failed');
       }
     };
     fetchData();
-  }, [table]);
+  }, [table, initialMenu, passedTables]);
 
   const addToOrder = async (item) => {
     if (syncingItems.has(item.id)) return;
