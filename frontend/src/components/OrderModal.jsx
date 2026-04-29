@@ -61,29 +61,42 @@ const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) =>
   }, [table, initialMenu, passedTables]);
 
   const addToOrder = async (item) => {
-    if (syncingItems.has(item.id)) return;
-    setSyncingItems(prev => new Set(prev).add(item.id));
+    // Optimistic Update
+    const originalItems = [...orderItems];
+    let found = false;
+    const newItems = originalItems.map(i => {
+      if (i.menu_item_id === item.id || i.id === item.id) {
+        found = true;
+        return { ...i, quantity: i.quantity + 1 };
+      }
+      return i;
+    });
+    if (!found) {
+      newItems.push({ ...item, quantity: 1, menu_item_id: item.id, tempId: Date.now() });
+    }
+    setOrderItems(newItems);
+    toast.success(`+ ${item.name}`, { id: `add-${item.id}` });
+
     try {
       const res = await api.post(`/tables/${table.id}/order`, {
         menuItemId: item.id,
         quantity: 1
       });
-      setOrderItems(res.data.items);
-      toast.success(`+ ${item.name}`, { id: `add-${item.id}` });
+      // Only inject the real ID from the backend to prevent UI fluctuations
+      setOrderItems(prev => prev.map(pItem => {
+         const sItem = res.data.items.find(s => s.menu_item_id === pItem.menu_item_id);
+         if (sItem && !pItem.id) {
+            return { ...pItem, id: sItem.id };
+         }
+         return pItem;
+      }));
     } catch (err) {
+      setOrderItems(originalItems);
       toast.error('Add failed');
-    } finally {
-      setSyncingItems(prev => {
-        const next = new Set(prev);
-        next.delete(item.id);
-        return next;
-      });
     }
   };
 
   const updateQuantity = async (itemId, change) => {
-    if (syncingItems.has(itemId)) return;
-    
     const item = orderItems.find(i => i.id === itemId);
     if (!item) return;
     
@@ -93,44 +106,31 @@ const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) =>
     // Optimistic Update
     const originalItems = [...orderItems];
     setOrderItems(prev => prev.map(i => i.id === itemId ? { ...i, quantity: newQty } : i));
-    setSyncingItems(prev => new Set(prev).add(itemId));
 
     try {
-      const res = await api.put(`/tables/${table.id}/order/items/${itemId}`, { quantity: newQty });
-      setOrderItems(res.data.items);
+      await api.put(`/tables/${table.id}/order/items/${itemId}`, { quantity: newQty });
+      // We rely entirely on our optimistic state, no need to overwrite with API response
     } catch (err) {
       setOrderItems(originalItems);
       toast.error('Sync failed');
-    } finally {
-      setSyncingItems(prev => {
-        const next = new Set(prev);
-        next.delete(itemId);
-        return next;
-      });
     }
   };
 
   const removeFromOrder = async (itemId) => {
-    if (syncingItems.has(itemId)) return;
-    setSyncingItems(prev => new Set(prev).add(itemId));
+    const originalItems = [...orderItems];
+    setOrderItems(prev => prev.filter(i => i.id !== itemId));
     
     try {
       const res = await api.delete(`/tables/${table.id}/order/items/${itemId}`);
-      setOrderItems(res.data.items);
       if (res.data.order_deleted) {
          toast.success('Table Cleared', { icon: '✨' });
          setTimeout(() => onClose(), 800);
       }
     } catch (err) {
+      setOrderItems(originalItems);
       if (err.response?.status !== 404) {
         toast.error('Removal failed');
       }
-    } finally {
-      setSyncingItems(prev => {
-        const next = new Set(prev);
-        next.delete(itemId);
-        return next;
-      });
     }
   };
 

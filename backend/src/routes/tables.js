@@ -65,19 +65,33 @@ router.put('/:id', auth, async (req, res) => {
 router.get('/:tableId/order', auth, async (req, res) => {
   const { tableId } = req.params;
   try {
-    let order = await db.query('SELECT * FROM orders WHERE table_id = $1 AND status = $2', [tableId, 'active']);
+    const query = `
+      SELECT o.*, 
+             COALESCE(
+               json_agg(
+                 json_build_object(
+                   'id', oi.id, 
+                   'order_id', oi.order_id, 
+                   'menu_item_id', oi.menu_item_id, 
+                   'quantity', oi.quantity, 
+                   'name', mi.name, 
+                   'price', mi.price
+                 )
+               ) FILTER (WHERE oi.id IS NOT NULL), '[]'
+             ) as items
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      LEFT JOIN menu_items mi ON oi.menu_item_id = mi.id
+      WHERE o.table_id = $1 AND o.status = 'active'
+      GROUP BY o.id
+    `;
+    const result = await db.query(query, [tableId]);
     
-    if (order.rows.length === 0) {
+    if (result.rows.length === 0) {
       return res.json({ order: null, items: [] });
     }
 
-    const orderId = order.rows[0].id;
-    const items = await db.query(
-      'SELECT oi.*, mi.name, mi.price FROM order_items oi JOIN menu_items mi ON oi.menu_item_id = mi.id WHERE oi.order_id = $1',
-      [orderId]
-    );
-
-    res.json({ order: order.rows[0], items: items.rows });
+    res.json({ order: result.rows[0], items: result.rows[0].items });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error fetching order' });
@@ -90,26 +104,34 @@ router.post('/:tableId/order', auth, async (req, res) => {
   const { tableId } = req.params;
 
   try {
-    let order = await db.query('SELECT id FROM orders WHERE table_id = $1 AND status = $2', [tableId, 'active']);
-    if (order.rows.length === 0) {
-      order = await db.query('INSERT INTO orders (table_id, status) VALUES ($1, $2) RETURNING *', [tableId, 'active']);
-    }
-    const orderId = order.rows[0].id;
+    const query1 = `
+      WITH order_cte AS (
+        INSERT INTO orders (table_id, status)
+        SELECT $1, 'active'
+        WHERE NOT EXISTS (SELECT 1 FROM orders WHERE table_id = $1 AND status = 'active')
+        RETURNING id
+      ),
+      order_id_cte AS (
+        SELECT id FROM order_cte
+        UNION ALL
+        SELECT id FROM orders WHERE table_id = $1 AND status = 'active'
+      )
+      INSERT INTO order_items (order_id, menu_item_id, quantity)
+      SELECT (SELECT id FROM order_id_cte LIMIT 1), $2, $3
+      ON CONFLICT (order_id, menu_item_id) DO UPDATE SET quantity = order_items.quantity + $3
+      RETURNING order_id
+    `;
+    const res1 = await db.query(query1, [tableId, menuItemId, quantity]);
+    const orderId = res1.rows[0].order_id;
 
-    // Check if item exists in order
-    const existing = await db.query('SELECT * FROM order_items WHERE order_id = $1 AND menu_item_id = $2', [orderId, menuItemId]);
-    
-    if (existing.rows.length > 0) {
-      await db.query('UPDATE order_items SET quantity = quantity + $1 WHERE id = $2', [quantity, existing.rows[0].id]);
-    } else {
-      await db.query('INSERT INTO order_items (order_id, menu_item_id, quantity) VALUES ($1, $2, $3)', [orderId, menuItemId, quantity]);
-    }
-
-    // Return updated items
-    const updatedItems = await db.query(
-      'SELECT oi.*, mi.name, mi.price FROM order_items oi JOIN menu_items mi ON oi.menu_item_id = mi.id WHERE oi.order_id = $1',
-      [orderId]
-    );
+    const query2 = `
+      SELECT oi.*, mi.name, mi.price 
+      FROM order_items oi 
+      JOIN menu_items mi ON oi.menu_item_id = mi.id 
+      WHERE oi.order_id = $1
+      ORDER BY oi.created_at ASC
+    `;
+    const updatedItems = await db.query(query2, [orderId]);
     res.json({ items: updatedItems.rows });
   } catch (err) {
     console.error(err);
@@ -122,16 +144,23 @@ router.put('/:tableId/order/items/:itemId', auth, async (req, res) => {
   const { quantity } = req.body;
   const { itemId } = req.params;
   try {
-    await db.query('UPDATE order_items SET quantity = $1 WHERE id = $2', [quantity, itemId]);
+    const query1 = `UPDATE order_items SET quantity = $1 WHERE id = $2 RETURNING order_id`;
+    const res1 = await db.query(query1, [quantity, itemId]);
     
-    // Get order ID to return all items
-    const item = await db.query('SELECT order_id FROM order_items WHERE id = $1', [itemId]);
-    const updatedItems = await db.query(
-      'SELECT oi.*, mi.name, mi.price FROM order_items oi JOIN menu_items mi ON oi.menu_item_id = mi.id WHERE oi.order_id = $1',
-      [item.rows[0].order_id]
-    );
+    if (res1.rows.length === 0) return res.status(404).json({ message: 'Item not found' });
+    const orderId = res1.rows[0].order_id;
+
+    const query2 = `
+      SELECT oi.*, mi.name, mi.price 
+      FROM order_items oi 
+      JOIN menu_items mi ON oi.menu_item_id = mi.id 
+      WHERE oi.order_id = $1
+      ORDER BY oi.created_at ASC
+    `;
+    const updatedItems = await db.query(query2, [orderId]);
     res.json({ items: updatedItems.rows });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Update failed' });
   }
 });
@@ -140,18 +169,38 @@ router.put('/:tableId/order/items/:itemId', auth, async (req, res) => {
 router.delete('/:tableId/order/items/:itemId', auth, async (req, res) => {
   const { itemId } = req.params;
   try {
-    const item = await db.query('SELECT order_id FROM order_items WHERE id = $1', [itemId]);
-    if (item.rows.length === 0) return res.status(404).json({ message: 'Item not found' });
-    const orderId = item.rows[0].order_id;
-    await db.query('DELETE FROM order_items WHERE id = $1', [itemId]);
+    const query1 = `DELETE FROM order_items WHERE id = $1 RETURNING order_id`;
+    const res1 = await db.query(query1, [itemId]);
     
-    const updatedItems = await db.query(
-      'SELECT oi.*, mi.name, mi.price FROM order_items oi JOIN menu_items mi ON oi.menu_item_id = mi.id WHERE oi.order_id = $1',
-      [orderId]
-    );
-
+    if (res1.rows.length === 0) {
+      // Need to find the order ID to delete it (if we couldn't delete item, it's already gone)
+      return res.json({ items: [], order_deleted: true });
+    }
+    
+    const orderId = res1.rows[0].order_id;
+    
+    const query2 = `
+      SELECT oi.*, mi.name, mi.price 
+      FROM order_items oi 
+      JOIN menu_items mi ON oi.menu_item_id = mi.id 
+      WHERE oi.order_id = $1
+      ORDER BY oi.created_at ASC
+    `;
+    const updatedItems = await db.query(query2, [orderId]);
+    
     if (updatedItems.rows.length === 0) {
-      await db.query('DELETE FROM orders WHERE id = $1', [orderId]);
+      // Need to find the order ID to delete it
+      const item = await db.query('SELECT order_id FROM order_items WHERE id = $1', [itemId]); // Won't work because it's deleted!
+      // Since it's deleted, we can just delete the order if it has no items.
+      const orderIdQuery = await db.query('SELECT id FROM orders WHERE table_id = $1 AND status = $2', [req.params.tableId, 'active']);
+      if (orderIdQuery.rows.length > 0) {
+         const oId = orderIdQuery.rows[0].id;
+         const checkItems = await db.query('SELECT id FROM order_items WHERE order_id = $1 LIMIT 1', [oId]);
+         if (checkItems.rows.length === 0) {
+           await db.query('DELETE FROM orders WHERE id = $1', [oId]);
+           return res.json({ items: [], order_deleted: true });
+         }
+      }
       return res.json({ items: [], order_deleted: true });
     }
 
