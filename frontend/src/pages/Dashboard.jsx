@@ -16,6 +16,7 @@ const Dashboard = () => {
   const [isAddTableOpen, setAddTableOpen] = useState(false);
   const [tableCount, setTableCount] = useState('5');
   const [loading, setLoading] = useState(true);
+  const [clickShield, setClickShield] = useState(false);
 
   const [isDeleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [tableToDelete, setTableToDelete] = useState(null);
@@ -535,6 +536,8 @@ const Dashboard = () => {
           allTables={tables}
           onClose={() => {
             setOrderModalOpen(false);
+            setClickShield(true);
+            setTimeout(() => setClickShield(false), 800);
             fetchTables();
           }}
         />
@@ -547,6 +550,7 @@ const Dashboard = () => {
          onSwap={handleSwapTable} 
          currentTable={selectedTable}
       />
+      {clickShield && <div style={{ position: 'fixed', inset: 0, zIndex: 99999, cursor: 'not-allowed' }} />}
     </div>
   );
 };

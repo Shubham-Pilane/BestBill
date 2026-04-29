@@ -82,14 +82,8 @@ const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) =>
         menuItemId: item.id,
         quantity: 1
       });
-      // Only inject the real ID from the backend to prevent UI fluctuations
-      setOrderItems(prev => prev.map(pItem => {
-         const sItem = res.data.items.find(s => s.menu_item_id === pItem.menu_item_id);
-         if (sItem && !pItem.id) {
-            return { ...pItem, id: sItem.id };
-         }
-         return pItem;
-      }));
+      // Replace with official state from backend to ensure all IDs are perfect
+      setOrderItems(res.data.items);
     } catch (err) {
       setOrderItems(originalItems);
       toast.error('Add failed');
@@ -111,26 +105,37 @@ const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) =>
       await api.put(`/tables/${table.id}/order/items/${itemId}`, { quantity: newQty });
       // We rely entirely on our optimistic state, no need to overwrite with API response
     } catch (err) {
-      setOrderItems(originalItems);
-      toast.error('Sync failed');
+      if (err.response?.status !== 404) {
+        setOrderItems(originalItems);
+        toast.error('Sync failed');
+      }
     }
   };
 
   const removeFromOrder = async (itemId) => {
+    if (!itemId || syncingItems.has(itemId)) return;
+    
     const originalItems = [...orderItems];
+    setSyncingItems(prev => new Set(prev).add(itemId));
     setOrderItems(prev => prev.filter(i => i.id !== itemId));
     
     try {
       const res = await api.delete(`/tables/${table.id}/order/items/${itemId}`);
       if (res.data.order_deleted) {
          toast.success('Table Cleared', { icon: '✨' });
-         setTimeout(() => onClose(), 800);
+         onClose();
       }
     } catch (err) {
       setOrderItems(originalItems);
       if (err.response?.status !== 404) {
         toast.error('Removal failed');
       }
+    } finally {
+      setSyncingItems(prev => {
+        const next = new Set(prev);
+        next.delete(itemId);
+        return next;
+      });
     }
   };
 
@@ -404,9 +409,21 @@ const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) =>
                     )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <button onClick={() => updateQuantity(item.id, -1)} style={{ cursor: 'pointer', border: 'none', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1e293b', color: 'white' }}><Minus size={14} /></button>
+                    <button 
+                      onClick={() => updateQuantity(item.id, -1)} 
+                      disabled={!item.id}
+                      style={{ cursor: !item.id ? 'not-allowed' : 'pointer', opacity: !item.id ? 0.3 : 1, border: 'none', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1e293b', color: 'white' }}
+                    >
+                      <Minus size={14} />
+                    </button>
                     <span style={{ color: 'white', fontWeight: 900 }}>{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, 1)} style={{ cursor: 'pointer', border: 'none', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1e293b', color: 'white' }}><Plus size={14} /></button>
+                    <button 
+                      onClick={() => updateQuantity(item.id, 1)} 
+                      disabled={!item.id}
+                      style={{ cursor: !item.id ? 'not-allowed' : 'pointer', opacity: !item.id ? 0.3 : 1, border: 'none', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1e293b', color: 'white' }}
+                    >
+                      <Plus size={14} />
+                    </button>
                   </div>
                 </div>
               ))}

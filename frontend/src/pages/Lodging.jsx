@@ -15,6 +15,7 @@ const Lodging = () => {
   const [isAddRoomOpen, setAddRoomOpen] = useState(false);
   const [roomConfigs, setRoomConfigs] = useState([{ floor: 'Floor 1', count: '10' }]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [clickShield, setClickShield] = useState(false);
 
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
@@ -326,11 +327,14 @@ const Lodging = () => {
           room={rooms.find(r => r.id === selectedRoom.id) || selectedRoom} 
           onClose={() => {
             setBookingModalOpen(false);
+            setClickShield(true);
+            setTimeout(() => setClickShield(false), 800);
             setSelectedRoom(null);
           }} 
           onRefresh={fetchRooms}
         />
       )}
+      {clickShield && <div style={{ position: 'fixed', inset: 0, zIndex: 99999, cursor: 'not-allowed' }} />}
 
       {/* Edit/Rename Modal */}
       {isEditModalOpen && (

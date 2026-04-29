@@ -167,47 +167,57 @@ router.put('/:tableId/order/items/:itemId', auth, async (req, res) => {
 
 // Delete item
 router.delete('/:tableId/order/items/:itemId', auth, async (req, res) => {
-  const { itemId } = req.params;
+  const { itemId, tableId } = req.params;
+  
   try {
-    const query1 = `DELETE FROM order_items WHERE id = $1 RETURNING order_id`;
-    const res1 = await db.query(query1, [itemId]);
+    // 1. Delete the item and get its order_id
+    const deleteRes = await db.query('DELETE FROM order_items WHERE id = $1 RETURNING order_id', [itemId]);
     
-    if (res1.rows.length === 0) {
-      // Need to find the order ID to delete it (if we couldn't delete item, it's already gone)
-      return res.json({ items: [], order_deleted: true });
+    if (deleteRes.rows.length === 0) {
+      // Already deleted, check if order still exists
+      const orderCheck = await db.query('SELECT id FROM orders WHERE table_id = $1 AND status = $2', [tableId, 'active']);
+      if (orderCheck.rows.length === 0) return res.json({ items: [], order_deleted: true });
+      
+      const currentItems = await db.query(`
+        SELECT oi.*, mi.name, mi.price FROM order_items oi 
+        JOIN menu_items mi ON oi.menu_item_id = mi.id 
+        WHERE oi.order_id = $1 ORDER BY oi.created_at ASC
+      `, [orderCheck.rows[0].id]);
+      return res.json({ items: currentItems.rows, order_deleted: false });
     }
+
+    const orderId = deleteRes.rows[0].order_id;
+
+    // 2. Atomic check and cleanup of the order if empty
+    const cleanupRes = await db.query(`
+      WITH remaining AS (
+        SELECT count(*) as count FROM order_items WHERE order_id = $1
+      ),
+      deleted_order AS (
+        DELETE FROM orders WHERE id = $1 AND (SELECT count FROM remaining) = 0 RETURNING id
+      )
+      SELECT 
+        (SELECT count FROM remaining) as remaining_count,
+        (SELECT id FROM deleted_order) as deleted_order_id
+    `, [orderId]);
+
+    const { remaining_count, deleted_order_id } = cleanupRes.rows[0];
     
-    const orderId = res1.rows[0].order_id;
-    
-    const query2 = `
-      SELECT oi.*, mi.name, mi.price 
-      FROM order_items oi 
-      JOIN menu_items mi ON oi.menu_item_id = mi.id 
-      WHERE oi.order_id = $1
-      ORDER BY oi.created_at ASC
-    `;
-    const updatedItems = await db.query(query2, [orderId]);
-    
-    if (updatedItems.rows.length === 0) {
-      // Need to find the order ID to delete it
-      const item = await db.query('SELECT order_id FROM order_items WHERE id = $1', [itemId]); // Won't work because it's deleted!
-      // Since it's deleted, we can just delete the order if it has no items.
-      const orderIdQuery = await db.query('SELECT id FROM orders WHERE table_id = $1 AND status = $2', [req.params.tableId, 'active']);
-      if (orderIdQuery.rows.length > 0) {
-         const oId = orderIdQuery.rows[0].id;
-         const checkItems = await db.query('SELECT id FROM order_items WHERE order_id = $1 LIMIT 1', [oId]);
-         if (checkItems.rows.length === 0) {
-           await db.query('DELETE FROM orders WHERE id = $1', [oId]);
-           return res.json({ items: [], order_deleted: true });
-         }
-      }
+    if (deleted_order_id || parseInt(remaining_count) === 0) {
       return res.json({ items: [], order_deleted: true });
     }
 
-    res.json({ items: updatedItems.rows });
+    const updatedItems = await db.query(`
+      SELECT oi.*, mi.name, mi.price FROM order_items oi 
+      JOIN menu_items mi ON oi.menu_item_id = mi.id 
+      WHERE oi.order_id = $1 ORDER BY oi.created_at ASC
+    `, [orderId]);
+
+    res.json({ items: updatedItems.rows, order_deleted: false });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Delete failed' });
+    console.error('Delete error:', err);
+    res.status(500).json({ message: 'Removal failed' });
   }
 });
 
@@ -217,42 +227,46 @@ router.post('/:tableId/bill', auth, async (req, res) => {
   const { discount_percentage } = req.body;
   
   try {
-    const hotelRes = await db.query('SELECT name, phone, location, gst_percentage FROM hotels WHERE id = $1', [req.user.hotel_id]);
+    const [hotelRes, orderRes] = await Promise.all([
+      db.query('SELECT name, phone, location, gst_percentage FROM hotels WHERE id = $1', [req.user.hotel_id]),
+      db.query(`
+        SELECT o.id as order_id, oi.quantity, mi.name, mi.price
+        FROM orders o
+        JOIN order_items oi ON oi.order_id = o.id
+        JOIN menu_items mi ON oi.menu_item_id = mi.id
+        WHERE o.table_id = $1 AND o.status = 'active'
+      `, [tableId])
+    ]);
+
+    if (orderRes.rows.length === 0) return res.status(404).json({ message: 'No active order' });
+    
+    const orderId = orderRes.rows[0].order_id;
     const gstRate = parseFloat(hotelRes.rows[0].gst_percentage || 0);
 
-    const order = await db.query('SELECT id FROM orders WHERE table_id = $1 AND status = $2', [tableId, 'active']);
-    if (order.rows.length === 0) return res.status(404).json({ message: 'No active order' });
-    const orderId = order.rows[0].id;
-
-    const items = await db.query(
-      'SELECT oi.quantity, mi.price FROM order_items oi JOIN menu_items mi ON oi.menu_item_id = mi.id WHERE oi.order_id = $1',
-      [orderId]
-    );
-
-    const subtotal = items.rows.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const subtotal = orderRes.rows.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const gst = subtotal * (gstRate / 100);
     const initialTotal = subtotal + gst;
     const discount = parseFloat(discount_percentage) || 0;
     const finalAmount = initialTotal - (initialTotal * (discount / 100));
 
-    const bill = await db.query(
-      'INSERT INTO bills (order_id, total_amount, gst, final_amount, discount_percentage) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [orderId, subtotal, gst, finalAmount, discount]
-    );
-
-    await db.query('UPDATE orders SET status = $1 WHERE id = $2', ['completed', orderId]);
-
-    const billItems = await db.query(
-      'SELECT oi.quantity, mi.name, mi.price FROM order_items oi JOIN menu_items mi ON oi.menu_item_id = mi.id WHERE oi.order_id = $1',
-      [orderId]
-    );
+    const billQuery = `
+      WITH inserted_bill AS (
+        INSERT INTO bills (order_id, total_amount, gst, final_amount, discount_percentage) 
+        VALUES ($1, $2, $3, $4, $5) RETURNING *
+      ),
+      update_order AS (
+        UPDATE orders SET status = 'completed' WHERE id = $1
+      )
+      SELECT * FROM inserted_bill;
+    `;
+    const bill = await db.query(billQuery, [orderId, subtotal, gst, finalAmount, discount]);
 
     res.json({
       ...bill.rows[0],
       subtotal: subtotal,
       total_amount: finalAmount,
       gst_percentage: gstRate,
-      items: billItems.rows,
+      items: orderRes.rows,
       hotel_name: hotelRes.rows[0].name,
       hotel_phone: hotelRes.rows[0].phone,
       hotel_location: hotelRes.rows[0].location
@@ -265,20 +279,22 @@ router.post('/:tableId/bill', auth, async (req, res) => {
 
 // Rollback/Cancel Bill (Return to active order)
 router.delete('/:tableId/bill/:billId', auth, async (req, res) => {
-  const { tableId, billId } = req.params;
+  const { billId } = req.params;
   try {
-    const bill = await db.query('SELECT order_id FROM bills WHERE id = $1', [billId]);
-    if (bill.rows.length === 0) return res.status(404).json({ message: 'Bill not found' });
-    const orderId = bill.rows[0].order_id;
-
-    await db.query('BEGIN');
-    await db.query('DELETE FROM bills WHERE id = $1', [billId]);
-    await db.query('UPDATE orders SET status = $1 WHERE id = $2', ['active', orderId]);
-    await db.query('COMMIT');
-
+    const query = `
+      WITH deleted_bill AS (
+        DELETE FROM bills WHERE id = $1 RETURNING order_id
+      )
+      UPDATE orders SET status = 'active' 
+      WHERE id = (SELECT order_id FROM deleted_bill LIMIT 1)
+      RETURNING id;
+    `;
+    const res1 = await db.query(query, [billId]);
+    if (res1.rows.length === 0) return res.status(404).json({ message: 'Bill not found' });
+    
     res.json({ message: 'Bill rolled back, order is active again' });
   } catch (err) {
-    await db.query('ROLLBACK');
+    console.error(err);
     res.status(500).json({ message: 'Rollback failed' });
   }
 });

@@ -504,6 +504,20 @@ ALTER TABLE ONLY public.tables
 
 
 --
+-- Name: orders unique_active_table_order; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX unique_active_table_order ON public.orders (table_id) WHERE status = 'active' AND table_id IS NOT NULL;
+
+
+--
+-- Name: orders unique_active_room_order; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX unique_active_room_order ON public.orders (room_id) WHERE status = 'active' AND room_id IS NOT NULL;
+
+
+--
 -- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 

@@ -89,14 +89,8 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
         menuItemId: item.id,
         quantity: 1
       });
-      // Only inject the real ID from the backend to prevent UI fluctuations
-      setOrderItems(prev => prev.map(pItem => {
-         const sItem = res.data.items.find(s => s.menu_item_id === pItem.menu_item_id);
-         if (sItem && !pItem.id) {
-            return { ...pItem, id: sItem.id };
-         }
-         return pItem;
-      }));
+      // Adopting full backend state for perfect ID sync
+      setOrderItems(res.data.items);
     } catch (err) {
       setOrderItems(originalItems);
       toast.error('Add failed');
@@ -118,26 +112,38 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
       await api.put(`/rooms/${room.id}/order/items/${itemId}`, { quantity: newQty });
       // We rely entirely on our optimistic state
     } catch (err) {
-      setOrderItems(originalItems);
-      toast.error('Sync failed');
+      if (err.response?.status !== 404) {
+        setOrderItems(originalItems);
+        toast.error('Sync failed');
+      }
     }
   };
 
   const removeFromOrder = async (itemId) => {
+    if (!itemId || syncingItems.has(itemId)) return;
+    
     const originalItems = [...orderItems];
+    setSyncingItems(prev => new Set(prev).add(itemId));
     // Optimistic Update
     setOrderItems(prev => prev.filter(i => i.id !== itemId));
     
     try {
       const res = await api.delete(`/rooms/${room.id}/order/items/${itemId}`);
       if (res.data.order_deleted) {
-         // Keep room logic as is, usually doesn't close modal
+         toast.success('Table Cleared', { icon: '✨' });
+         onClose();
       }
     } catch (err) {
       setOrderItems(originalItems);
       if (err.response?.status !== 404) {
         toast.error('Removal failed');
       }
+    } finally {
+      setSyncingItems(prev => {
+        const next = new Set(prev);
+        next.delete(itemId);
+        return next;
+      });
     }
   };
 
@@ -421,9 +427,21 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
                                  )}
                                </div>
                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                  <button onClick={() => updateQuantity(item.id, -1)} style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1e293b', border: 'none', color: 'white', cursor: 'pointer' }}><Minus size={14} /></button>
+                                  <button 
+                                    onClick={() => item.id && updateQuantity(item.id, -1)} 
+                                    disabled={!item.id}
+                                    style={{ cursor: !item.id ? 'not-allowed' : 'pointer', opacity: !item.id ? 0.3 : 1, border: 'none', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1e293b', color: 'white' }}
+                                  >
+                                    <Minus size={14} />
+                                  </button>
                                   <span style={{ color: 'white', fontWeight: 1000 }}>{item.quantity}</span>
-                                  <button onClick={() => updateQuantity(item.id, 1)} style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1e293b', border: 'none', color: 'white', cursor: 'pointer' }}><Plus size={14} /></button>
+                                  <button 
+                                    onClick={() => item.id && updateQuantity(item.id, 1)} 
+                                    disabled={!item.id}
+                                    style={{ cursor: !item.id ? 'not-allowed' : 'pointer', opacity: !item.id ? 0.3 : 1, border: 'none', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1e293b', color: 'white' }}
+                                  >
+                                    <Plus size={14} />
+                                  </button>
                                </div>
                             </div>
                          ))}
