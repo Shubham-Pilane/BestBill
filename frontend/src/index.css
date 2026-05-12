@@ -210,65 +210,67 @@ body {
       padding: 24px !important;
   }
 
-  /* --- Page Specific Responsiveness --- */
-  .responsive-grid-3 {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 32px;
+}
+
+/* --- Page Specific Responsiveness Base Classes --- */
+.responsive-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 32px;
+}
+
+.responsive-grid-12 {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 40px;
+}
+
+@media (max-width: 1024px) {
+  .responsive-grid-3, .responsive-grid-12 {
+      grid-template-columns: 1fr !important;
+      gap: 24px !important;
   }
   
-  .responsive-grid-12 {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 40px;
-  }
-
-  @media (max-width: 1024px) {
-    .responsive-grid-3, .responsive-grid-12 {
-        grid-template-columns: 1fr !important;
-        gap: 24px !important;
-    }
-    
-    .responsive-grid-12 > div {
-        grid-column: span 12 !important;
-    }
-  }
-
-  @media (max-width: 640px) {
-    .billing-card {
-        padding: 16px !important;
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 16px !important;
-    }
-
-    .billing-card-right {
-        text-align: left !important;
-        width: 100% !important;
-        align-items: flex-start !important;
-        border-top: 1px solid rgba(255,255,255,0.05);
-        padding-top: 16px !important;
-    }
-    
-    .dashboard-header {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 20px !important;
-    }
-    
-    .dashboard-header > div {
-        max-width: 100% !important;
-        width: 100% !important;
-    }
-    
-    .hotel-title-section {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 20px !important;
-    }
-    
-    .stats-card {
-        padding: 24px !important;
-    }
+  .responsive-grid-12 > * {
+      grid-column: 1 / -1 !important;
   }
 }
+
+@media (max-width: 640px) {
+  .billing-card {
+      padding: 16px !important;
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 16px !important;
+  }
+
+  .billing-card-right {
+      text-align: left !important;
+      width: 100% !important;
+      align-items: flex-start !important;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 16px !important;
+  }
+  
+  .dashboard-header {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 20px !important;
+  }
+  
+  .dashboard-header > div {
+      max-width: 100% !important;
+      width: 100% !important;
+  }
+  
+  .hotel-title-section {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 20px !important;
+  }
+  
+  .stats-card {
+      padding: 24px !important;
+  }
+}
+

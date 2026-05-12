@@ -203,7 +203,7 @@ const MenuManagement = () => {
             <h2 style={{ fontSize: '18px', fontWeight: 900, color: 'white', margin: 0 }}>Add To Live Menu</h2>
           </div>
 
-          <form onSubmit={addItem} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }} className="responsive-grid-12">
+          <form onSubmit={addItem} style={{ gap: '24px' }} className="responsive-grid-12">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', gridColumn: 'span 6' }}>
               <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Dish Name</label>
               <input
@@ -282,12 +282,14 @@ const MenuManagement = () => {
                 borderRadius: '16px', 
                 padding: '16px 24px', 
                 display: 'flex', 
+                flexWrap: 'wrap',
+                gap: '16px',
                 alignItems: 'center', 
                 justifyContent: 'space-between',
                 transition: 'all 0.2s ease',
                 cursor: 'default'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1, minWidth: '250px', flexWrap: 'wrap' }}>
                    <div style={{ display: 'flex', flexDirection: 'column', minWidth: '120px' }}>
                       <span style={{ fontSize: '9px', color: '#10b981', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.1em', backgroundColor: 'rgba(16, 185, 129, 0.08)', padding: '2px 8px', borderRadius: '6px', width: 'fit-content', marginBottom: '4px' }}>{item.category_name}</span>
                       {editingItemId === item.id ? (
@@ -306,7 +308,7 @@ const MenuManagement = () => {
                    </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '32px', flexWrap: 'wrap' }}>
                    <div style={{ textAlign: 'right', minWidth: '80px' }}>
                       {editingItemId === item.id ? (
                         <div style={{ position: 'relative' }}>

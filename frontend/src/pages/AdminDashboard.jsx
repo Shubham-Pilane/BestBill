@@ -213,7 +213,7 @@ const AdminDashboard = () => {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))', gap: '32px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 340px), 1fr))', gap: '32px' }}>
         {hotels.map(h => (
           <div 
             key={h.id} 
@@ -282,7 +282,7 @@ const AdminDashboard = () => {
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.98)', backdropFilter: 'blur(32px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', zIndex: 7000, padding: '40px', overflowY: 'auto' }}>
            <div style={{ width: '100%', maxWidth: '1200px', backgroundColor: '#0f172a', borderRadius: '48px', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 100px 200px -40px rgba(0,0,0,1)', marginBottom: '40px' }}>
               
-              <div style={{ padding: '48px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: `linear-gradient(180deg, ${themeColor}10 0%, transparent 100%)`, borderRadius: '48px 48px 0 0' }}>
+              <div style={{ padding: '32px 24px', display: 'flex', flexWrap: 'wrap', gap: '24px', justifyContent: 'space-between', alignItems: 'flex-start', background: `linear-gradient(180deg, ${themeColor}10 0%, transparent 100%)`, borderRadius: '48px 48px 0 0' }}>
                   <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
                      <div 
                         onClick={() => document.getElementById('inspect-logo-upload').click()}
@@ -367,7 +367,7 @@ const AdminDashboard = () => {
               </div>
 
               {/* Inspector Stats Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', padding: '0 48px 48px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: '24px', padding: '0 24px 32px' }}>
                  <div style={{ backgroundColor: '#020617', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.02)', position: 'relative' }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                        <span style={{ fontSize: '11px', fontWeight: 900, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
@@ -411,15 +411,15 @@ const AdminDashboard = () => {
               </div>
 
               {/* Detail Tabs */}
-               <div style={{ padding: '0 48px', display: 'flex', gap: '32px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+               <div style={{ padding: '0 24px', display: 'flex', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                  <button onClick={() => setActiveTab('menu')} style={{ padding: '0 8px 24px', background: 'none', border: 'none', color: activeTab === 'menu' ? themeColor : '#64748b', fontSize: '14px', fontWeight: 800, cursor: 'pointer', position: 'relative' }}>MENU INVENTORY {activeTab === 'menu' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '3px', backgroundColor: themeColor, borderRadius: '3px 3px 0 0' }}></div>}</button>
                  <button onClick={() => setActiveTab('master')} style={{ padding: '0 8px 24px', background: 'none', border: 'none', color: activeTab === 'master' ? themeColor : '#64748b', fontSize: '14px', fontWeight: 800, cursor: 'pointer', position: 'relative' }}>MASTER CATALOG {activeTab === 'master' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '3px', backgroundColor: themeColor, borderRadius: '3px 3px 0 0' }}></div>}</button>
                  <button onClick={() => setActiveTab('history')} style={{ padding: '0 8px 24px', background: 'none', border: 'none', color: activeTab === 'history' ? themeColor : '#64748b', fontSize: '14px', fontWeight: 800, cursor: 'pointer', position: 'relative' }}>BILLING HISTORY {activeTab === 'history' && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '3px', backgroundColor: themeColor, borderRadius: '3px 3px 0 0' }}></div>}</button>
               </div>
 
-              <div style={{ padding: '48px', minHeight: '400px' }}>
+              <div style={{ padding: '24px', minHeight: '400px' }}>
                   {activeTab === 'menu' ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))', gap: '20px' }}>
                        {selectedHotelData.menu.map(item => (
                          <div key={item.id} style={{ backgroundColor: '#020617', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.03)' }}>
                             <span style={{ fontSize: '10px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{item.category_name}</span>
@@ -455,7 +455,7 @@ const AdminDashboard = () => {
                              </button>
                           </div>
                        </div>
-                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: '20px' }}>
                           {masterItems.filter(item => item.name.toLowerCase().includes(searchMasterQuery.toLowerCase()) || item.category_name.toLowerCase().includes(searchMasterQuery.toLowerCase())).map(item => {
                              const isLinked = selectedHotelData.menu.some(m => m.master_id === item.id);
                              return (
@@ -497,7 +497,7 @@ const AdminDashboard = () => {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                        {selectedHotelData.bills.map(bill => (
-                         <div key={bill.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '24px 32px', backgroundColor: '#020617', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                         <div key={bill.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', padding: '20px 24px', backgroundColor: '#020617', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.03)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
                                <Receipt size={24} style={{ color: themeColor }} />
                                <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -518,14 +518,14 @@ const AdminDashboard = () => {
       {/* Expanded Onboarding Modal */}
       {showAddModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.9)', backdropFilter: 'blur(24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 6000, padding: '24px' }}>
-           <div style={{ width: '100%', maxWidth: '640px', backgroundColor: '#0f172a', borderRadius: '48px', padding: '56px', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 50px 100px rgba(0,0,0,0.8)', overflowY: 'auto', maxHeight: '90vh' }}>
+           <div className="modal-container" style={{ width: '100%', maxWidth: '640px', backgroundColor: '#0f172a', borderRadius: '48px', padding: '32px', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 50px 100px rgba(0,0,0,0.8)', overflowY: 'auto', maxHeight: '90vh' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
                  <h2 style={{ fontSize: '28px', fontWeight: 900, color: 'white', margin: 0 }}>Onboard New Hotel</h2>
                  <button onClick={() => setShowAddModal(false)} style={{ color: '#475569', background: 'none', border: 'none', cursor: 'pointer' }}><X size={32} /></button>
               </div>
 
               <form onSubmit={handleOnboard} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Hotel Name</label>
                         <input autoFocus required value={formData.hotelName} onChange={e => setFormData({...formData, hotelName: e.target.value})} style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '2px solid #1e293b', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 800 }} />
@@ -541,7 +541,7 @@ const AdminDashboard = () => {
                     <input required value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '2px solid #1e293b', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 800 }} />
                  </div>
 
-                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Subscription Fee (₹)</label>
                         <input type="number" required value={formData.subscriptionAmount} onChange={e => setFormData({...formData, subscriptionAmount: e.target.value})} placeholder="e.g. 1500" style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '2px solid #0ea5e9', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 800 }} />
@@ -573,7 +573,7 @@ const AdminDashboard = () => {
 
                  <div style={{ height: '1px', backgroundColor: 'rgba(255,255,255,0.05)' }}></div>
 
-                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Login ID (Email)</label>
                         <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '2px solid #1e293b', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 800 }} />
@@ -608,7 +608,7 @@ const AdminDashboard = () => {
       {/* Subscription Update Modal */}
       {subUpdateModal.isOpen && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.9)', backdropFilter: 'blur(24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 8000, padding: '24px' }}>
-           <div style={{ width: '100%', maxWidth: '480px', backgroundColor: '#0f172a', borderRadius: '40px', padding: '48px', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 50px 100px rgba(0,0,0,0.8)' }}>
+           <div className="modal-container" style={{ width: '100%', maxWidth: '480px', backgroundColor: '#0f172a', borderRadius: '40px', padding: '32px', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 50px 100px rgba(0,0,0,0.8)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                  <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'white', margin: 0 }}>Renew Subscription</h3>
                  <button onClick={() => setSubUpdateModal({ isOpen: false, amount: '', validityDate: '' })} style={{ color: '#475569', background: 'none', border: 'none', cursor: 'pointer' }}><X size={28} /></button>
@@ -637,7 +637,7 @@ const AdminDashboard = () => {
       {/* Attach Master Item Modal */}
       {showAttachModal.isOpen && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.9)', backdropFilter: 'blur(24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9000, padding: '24px' }}>
-           <div style={{ width: '100%', maxWidth: '480px', backgroundColor: '#0f172a', borderRadius: '40px', padding: '48px', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 50px 100px rgba(0,0,0,0.8)' }}>
+           <div className="modal-container" style={{ width: '100%', maxWidth: '480px', backgroundColor: '#0f172a', borderRadius: '40px', padding: '32px', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 50px 100px rgba(0,0,0,0.8)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                  <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'white', margin: 0 }}>Link to {selectedHotelData.hotel.name}</h3>
                  <button onClick={() => setShowAttachModal({ isOpen: false, item: null })} style={{ color: '#475569', background: 'none', border: 'none', cursor: 'pointer' }}><X size={28} /></button>
@@ -694,7 +694,7 @@ const AdminDashboard = () => {
       {/* Add New Master Item Modal */}
       {showAddMasterModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.9)', backdropFilter: 'blur(24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9500, padding: '24px' }}>
-           <div style={{ width: '100%', maxWidth: '480px', backgroundColor: '#0f172a', borderRadius: '40px', padding: '48px', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 50px 100px rgba(0,0,0,0.8)' }}>
+           <div className="modal-container" style={{ width: '100%', maxWidth: '480px', backgroundColor: '#0f172a', borderRadius: '40px', padding: '32px', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 50px 100px rgba(0,0,0,0.8)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                  <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'white', margin: 0 }}>Add Global Item</h3>
                  <button onClick={() => setShowAddMasterModal(false)} style={{ color: '#475569', background: 'none', border: 'none', cursor: 'pointer' }}><X size={28} /></button>
