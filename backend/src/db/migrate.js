@@ -139,6 +139,7 @@ const syncSchema = async () => {
 
         // 3. Schema Evolution (Column Checks)
         const migrations = [
+            "WITH duplicates AS (SELECT id, ROW_NUMBER() OVER (PARTITION BY order_id, menu_item_id ORDER BY created_at) as rn FROM order_items) DELETE FROM order_items WHERE id IN (SELECT id FROM duplicates WHERE rn > 1)",
             "ALTER TABLE order_items ADD CONSTRAINT unique_order_item UNIQUE (order_id, menu_item_id)",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'owner'",
             "ALTER TABLE hotels ADD COLUMN IF NOT EXISTS gst_percentage DECIMAL(5,2) DEFAULT 5",

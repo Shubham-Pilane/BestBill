@@ -107,8 +107,8 @@ router.post('/:tableId/order', auth, async (req, res) => {
     const query1 = `
       WITH order_cte AS (
         INSERT INTO orders (table_id, status)
-        SELECT $1, 'active'
-        WHERE NOT EXISTS (SELECT 1 FROM orders WHERE table_id = $1 AND status = 'active')
+        VALUES ($1, 'active')
+        ON CONFLICT (table_id) WHERE status = 'active' DO NOTHING
         RETURNING id
       ),
       order_id_cte AS (
