@@ -92,7 +92,8 @@ const syncSchema = async () => {
                 order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
                 menu_item_id INTEGER REFERENCES menu_items(id),
                 quantity INTEGER NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (order_id, menu_item_id)
             )`,
             `CREATE TABLE IF NOT EXISTS order_chats (
                 id SERIAL PRIMARY KEY,
@@ -138,6 +139,7 @@ const syncSchema = async () => {
 
         // 3. Schema Evolution (Column Checks)
         const migrations = [
+            "ALTER TABLE order_items ADD CONSTRAINT unique_order_item UNIQUE (order_id, menu_item_id)",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'owner'",
             "ALTER TABLE hotels ADD COLUMN IF NOT EXISTS gst_percentage DECIMAL(5,2) DEFAULT 5",
             "ALTER TABLE hotels ADD COLUMN IF NOT EXISTS is_service_stopped BOOLEAN DEFAULT false",
