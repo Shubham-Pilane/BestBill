@@ -354,19 +354,46 @@ const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) =>
               </div>
             </div>
             
-            <div style={{ flex: 1, padding: '32px 48px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px', alignContent: 'start' }}>
+            <div style={{ flex: 1, padding: '32px 48px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', alignContent: 'start' }}>
               {items.filter(i => 
                 (selectedCategory === 'all' || i.category_id === selectedCategory) &&
                 (i.name.toLowerCase().includes(searchQuery.toLowerCase()))
               ).map(item => (
-                <div key={item.id} onClick={() => addToOrder(item)} style={{ backgroundColor: '#020617', border: '2px solid #1e293b', padding: '20px', borderRadius: '24px', cursor: 'pointer', position: 'relative', transition: '0.2s' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 950, color: 'white', marginBottom: '8px', fontSize: '15px' }}>
-                    <span>{item.name}</span>
-                    <span style={{ color: '#10b981' }}>₹{item.price}</span>
+                <div key={item.id} onClick={() => addToOrder(item)} style={{ 
+                  backgroundColor: '#020617', 
+                  border: '1px solid #1e293b', 
+                  padding: '16px 24px', 
+                  borderRadius: '16px', 
+                  cursor: 'pointer', 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  position: 'relative'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#0f172a';
+                  e.currentTarget.style.borderColor = '#0ea5e9';
+                  e.currentTarget.style.transform = 'translateX(4px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#020617';
+                  e.currentTarget.style.borderColor = '#1e293b';
+                  e.currentTarget.style.transform = 'translateX(0)';
+                }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '16px', fontWeight: 900, color: 'white', textTransform: 'uppercase' }}>{item.name}</span>
+                      <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 800, backgroundColor: 'rgba(100, 116, 139, 0.1)', padding: '2px 8px', borderRadius: '6px' }}>{item.category_name?.toUpperCase()}</span>
+                    </div>
+                    <p style={{ fontSize: '12px', color: '#475569', margin: 0 }}>{item.description || 'Standard culinary selection'}</p>
                   </div>
-                  <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 40px 0', lineClamp: 2, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.description || 'Standard culinary selection'}</p>
-                  <div style={{ position: 'absolute', bottom: '16px', right: '16px', width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                    <Plus size={16} strokeWidth={4} />
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                    <span style={{ color: '#10b981', fontSize: '18px', fontWeight: 900 }}>₹{item.price}</span>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '12px', backgroundColor: 'rgba(14, 165, 233, 0.1)', border: '1px solid #0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0ea5e9' }}>
+                      <Plus size={18} strokeWidth={3} />
+                    </div>
                   </div>
                 </div>
               ))}

@@ -172,7 +172,37 @@ const GuestOrders = () => {
             {selectedOrder && (
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.98)', backdropFilter: 'blur(32px)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
                     <div style={{ width: '100%', maxWidth: '900px', backgroundColor: '#0f172a', borderRadius: '48px', padding: '48px', border: '1px solid rgba(255,255,255,0.05)', display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '48px' }}>
-                        <div><h3 style={{ fontSize: '28px', fontWeight: 900, color: 'white', margin: '0 0 32px' }}>Room {selectedOrder.order.room_number}</h3><div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '350px', overflowY: 'auto' }}>{selectedOrder.items.map(item => (<div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '16px' }}><span style={{ fontWeight: 800, color: 'white' }}>{item.quantity}× {item.name}</span><span style={{ fontWeight: 900, color: themeColor }}>₹{item.price * item.quantity}</span></div>))}</div><div style={{ marginTop: '32px', borderTop: '1px solid #1e293b', paddingTop: '24px', display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#64748b', fontWeight: 800 }}>TOTAL</span><span style={{ fontSize: '32px', fontWeight: 1000, color: 'white' }}>₹{selectedOrder.order.total_amount || selectedOrder.items.reduce((s, i) => s + (i.price * i.quantity), 0)}</span></div></div>
+                        <div>
+                            <h3 style={{ fontSize: '28px', fontWeight: 900, color: 'white', margin: '0 0 32px' }}>Room {selectedOrder.order.room_number}</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
+                                {selectedOrder.items.map(item => (
+                                    <div key={item.id} style={{ 
+                                        display: 'flex', 
+                                        justifyContent: 'space-between', 
+                                        alignItems: 'center',
+                                        backgroundColor: 'rgba(255,255,255,0.02)', 
+                                        padding: '16px 20px', 
+                                        borderRadius: '16px',
+                                        border: '1px solid rgba(255,255,255,0.05)'
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                            <div style={{ width: '32px', height: '32px', backgroundColor: `${themeColor}15`, color: themeColor, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 900 }}>
+                                                {item.quantity}
+                                            </div>
+                                            <span style={{ fontWeight: 800, color: 'white', fontSize: '15px' }}>{item.name}</span>
+                                        </div>
+                                        <span style={{ fontWeight: 900, color: themeColor }}>₹{item.price * item.quantity}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div style={{ marginTop: '32px', borderTop: '1px solid #1e293b', paddingTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                                <div>
+                                    <span style={{ color: '#64748b', fontWeight: 800, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Grand Total</span>
+                                    <div style={{ fontSize: '32px', fontWeight: 1000, color: 'white' }}>₹{selectedOrder.order.total_amount || selectedOrder.items.reduce((s, i) => s + (i.price * i.quantity), 0)}</div>
+                                </div>
+                                <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 900, backgroundColor: '#10b98115', padding: '6px 12px', borderRadius: '100px' }}>VERIFIED GUEST</span>
+                            </div>
+                        </div>
                         <div style={{ borderLeft: '1px solid #1e293b', paddingLeft: '48px', display: 'flex', flexDirection: 'column', height: '600px' }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}><h4 style={{ fontWeight: 900, color: '#0ea5e9' }}>Chat</h4><button onClick={() => setSelectedOrder(null)} style={{ color: '#475569', background: 'none', border: 'none', cursor: 'pointer' }}><X size={32}/></button></div><div style={{ flex: 1, overflowY: 'auto', backgroundColor: '#020617', borderRadius: '24px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid #1e293b', marginBottom: '20px' }}>{chatMessages.map(msg => (<div key={msg.id} style={{ alignSelf: msg.sender === 'owner' ? 'flex-end' : 'flex-start', maxWidth: '85%', backgroundColor: msg.sender === 'owner' ? '#1e293b' : '#0ea5e920', padding: '10px 16px', borderRadius: '14px' }}><p style={{ margin: 0, fontSize: '14px', color: 'white' }}>{msg.message}</p></div>))}<div ref={chatEndRef} /></div><form onSubmit={sendMessage} style={{ display: 'flex', gap: '10px' }}><input placeholder="Type..." value={ownerMessage} onChange={e => setOwnerMessage(e.target.value)} style={{ flex: 1, backgroundColor: '#0f172a', border: '1px solid #1e293b', padding: '14px', borderRadius: '16px', color: 'white' }} /><button type="submit" style={{ backgroundColor: themeColor, color: 'white', padding: '14px 20px', borderRadius: '16px', border: 'none' }}><Send size={18}/></button></form></div>
                     </div>
                 </div>

@@ -274,40 +274,63 @@ const MenuManagement = () => {
                />
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {(items || []).filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()) || (item.category_name && item.category_name.toLowerCase().includes(searchTerm.toLowerCase()))).map(item => (
-              <div key={item.id} style={{ backgroundColor: '#0f172a', border: editingItemId === item.id ? '2px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '24px', padding: '24px', position: 'relative' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                   <div style={{ flex: 1 }}>
+              <div key={item.id} style={{ 
+                backgroundColor: '#0f172a', 
+                border: editingItemId === item.id ? '2px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.05)', 
+                borderRadius: '16px', 
+                padding: '16px 24px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                transition: 'all 0.2s ease',
+                cursor: 'default'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1 }}>
+                   <div style={{ display: 'flex', flexDirection: 'column', minWidth: '120px' }}>
+                      <span style={{ fontSize: '9px', color: '#10b981', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.1em', backgroundColor: 'rgba(16, 185, 129, 0.08)', padding: '2px 8px', borderRadius: '6px', width: 'fit-content', marginBottom: '4px' }}>{item.category_name}</span>
                       {editingItemId === item.id ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                           <input value={editItemData.name} onChange={(e) => setEditItemData({...editItemData, name: e.target.value})} style={{ background: '#020617', border: '1px solid #1e293b', color: 'white', padding: '4px 8px', borderRadius: '8px', fontSize: '16px', fontWeight: 900 }} />
-                           <input type="number" value={editItemData.price} onChange={(e) => setEditItemData({...editItemData, price: e.target.value})} style={{ background: '#020617', border: '1px solid #1e293b', color: '#10b981', padding: '4px 8px', borderRadius: '8px', fontSize: '16px', fontWeight: 900 }} />
-                           <textarea value={editItemData.description} onChange={(e) => setEditItemData({...editItemData, description: e.target.value})} style={{ background: '#020617', border: '1px solid #1e293b', color: '#94a3b8', padding: '4px 8px', borderRadius: '8px', fontSize: '12px' }} />
+                        <input value={editItemData.name} onChange={(e) => setEditItemData({...editItemData, name: e.target.value})} style={{ background: '#020617', border: '1px solid #1e293b', color: 'white', padding: '4px 8px', borderRadius: '8px', fontSize: '15px', fontWeight: 900, width: '200px' }} />
+                      ) : (
+                        <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'white', margin: 0, textTransform: 'uppercase' }}>{item.name}</h4>
+                      )}
+                   </div>
+                   
+                   <div style={{ flex: 1, padding: '0 24px' }}>
+                      {editingItemId === item.id ? (
+                        <textarea value={editItemData.description} onChange={(e) => setEditItemData({...editItemData, description: e.target.value})} style={{ width: '100%', background: '#020617', border: '1px solid #1e293b', color: '#94a3b8', padding: '4px 8px', borderRadius: '8px', fontSize: '12px', minHeight: '40px' }} />
+                      ) : (
+                        <p style={{ color: '#475569', fontSize: '13px', margin: 0, lineHeight: '1.4' }}>{item.description || 'No description provided'}</p>
+                      )}
+                   </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+                   <div style={{ textAlign: 'right', minWidth: '80px' }}>
+                      {editingItemId === item.id ? (
+                        <div style={{ position: 'relative' }}>
+                          <span style={{ position: 'absolute', left: '8px', top: '6px', color: '#10b981', fontSize: '14px', fontWeight: 900 }}>₹</span>
+                          <input type="number" value={editItemData.price} onChange={(e) => setEditItemData({...editItemData, price: e.target.value})} style={{ background: '#020617', border: '1px solid #1e293b', color: '#10b981', padding: '4px 8px 4px 20px', borderRadius: '8px', fontSize: '16px', fontWeight: 900, width: '90px' }} />
                         </div>
                       ) : (
+                        <span style={{ fontSize: '18px', fontWeight: 900, color: 'white' }}>₹{item.price}</span>
+                      )}
+                   </div>
+
+                   <div style={{ display: 'flex', gap: '10px', borderLeft: '1px solid rgba(255,255,255,0.05)', paddingLeft: '24px' }}>
+                      {editingItemId === item.id ? (
                         <>
-                          <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.1em', backgroundColor: 'rgba(16, 185, 129, 0.05)', padding: '4px 10px', borderRadius: '8px', width: 'fit-content' }}>{item.category_name}</span>
-                          <h4 style={{ fontSize: '18px', fontWeight: 900, color: 'white', margin: '8px 0 4px', textTransform: 'uppercase' }}>{item.name}</h4>
-                          <p style={{ color: '#475569', fontSize: '12px', margin: 0, lineHeight: '1.4' }}>{item.description}</p>
+                          <button onClick={() => setEditingItemId(null)} style={{ padding: '8px', color: '#64748b', background: 'rgba(100, 116, 139, 0.1)', border: 'none', borderRadius: '10px', cursor: 'pointer' }}><X size={18} /></button>
+                          <button onClick={() => saveItemUpdate(item.id)} style={{ padding: '8px', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', border: 'none', borderRadius: '10px', cursor: 'pointer' }}><Save size={18} /></button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={() => startEditItem(item)} style={{ padding: '8px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', transition: 'all 0.2s', borderRadius: '10px' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(100, 116, 139, 0.1)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}><Edit2 size={18} /></button>
+                          <button onClick={() => deleteItem(item.id)} style={{ padding: '8px', color: '#f43f5e', background: 'none', border: 'none', cursor: 'pointer', transition: 'all 0.2s', borderRadius: '10px' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(244, 63, 94, 0.1)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}><Trash2 size={18} /></button>
                         </>
                       )}
                    </div>
-                   {!editingItemId && <span style={{ fontSize: '20px', fontWeight: 1000, color: 'white' }}>₹{item.price}</span>}
-                </div>
-
-                <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: '16px' }}>
-                   {editingItemId === item.id ? (
-                      <>
-                        <button onClick={() => setEditingItemId(null)} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 800 }}><X size={16} /> Cancel</button>
-                        <button onClick={() => saveItemUpdate(item.id)} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 800 }}><Save size={16} /> Save Changes</button>
-                      </>
-                   ) : (
-                      <>
-                        <button onClick={() => startEditItem(item)} style={{ color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s' }}><Edit2 size={18} /></button>
-                        <button onClick={() => deleteItem(item.id)} style={{ color: '#f43f5e', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s' }}><Trash2 size={18} /></button>
-                      </>
-                   )}
                 </div>
               </div>
             ))}

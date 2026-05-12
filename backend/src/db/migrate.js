@@ -151,6 +151,7 @@ const syncSchema = async () => {
             "ALTER TABLE orders ADD COLUMN IF NOT EXISTS owner_message TEXT",
             "ALTER TABLE orders ADD COLUMN IF NOT EXISTS guest_note TEXT",
             "ALTER TABLE orders ADD COLUMN IF NOT EXISTS is_delivered BOOLEAN DEFAULT false",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS source VARCHAR(20) DEFAULT 'admin'",
             "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS guest_name VARCHAR(255)",
             "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS guest_phone VARCHAR(20)",
             "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS booking_days INTEGER",

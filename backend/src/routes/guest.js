@@ -72,7 +72,7 @@ router.post('/order', async (req, res) => {
         let orderId;
         if (orderRes.rows.length === 0) {
             const newOrder = await db.query(
-                'INSERT INTO orders (room_id, status, guest_note) VALUES ($1, $2, $3) RETURNING id',
+                "INSERT INTO orders (room_id, status, guest_note, source) VALUES ($1, $2, $3, 'guest') RETURNING id",
                 [roomId, 'active', note]
             );
             orderId = newOrder.rows[0].id;
@@ -86,9 +86,9 @@ router.post('/order', async (req, res) => {
                 );
             }
             // IMPORTANT: If they already had a 'Delivered' order and they order again, 
-            // we must make it 'Incoming' again for the owner.
+            // we must make it 'Incoming' again for the owner, and ensure it's marked as 'guest' source.
             await db.query(
-                'UPDATE orders SET is_delivered = false, owner_message = NULL WHERE id = $1',
+                "UPDATE orders SET is_delivered = false, owner_message = NULL, source = 'guest' WHERE id = $1",
                 [orderId]
             );
         }

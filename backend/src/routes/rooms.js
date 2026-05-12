@@ -46,6 +46,7 @@ router.get('/guest-orders-all', auth, async (req, res) => {
        FROM orders o
        JOIN rooms r ON o.room_id = r.id
        WHERE r.hotel_id = $1
+       AND o.source = 'guest'
        AND EXISTS (SELECT 1 FROM order_items WHERE order_id = o.id)
        ORDER BY o.created_at DESC
        LIMIT 50`,
@@ -153,7 +154,7 @@ router.post('/:id/book', auth, async (req, res) => {
 
         // Initialize active order for billing parity - matching our existing schema
         await db.query(
-            'INSERT INTO orders (room_id, status) VALUES ($1, $2)',
+            "INSERT INTO orders (room_id, status, source) VALUES ($1, $2, 'admin')",
             [id, 'active']
         );
 
@@ -232,8 +233,8 @@ router.post('/:roomId/order', auth, async (req, res) => {
     try {
       const query1 = `
         WITH order_cte AS (
-          INSERT INTO orders (room_id, status)
-          VALUES ($1, 'active')
+          INSERT INTO orders (room_id, status, source)
+          VALUES ($1, 'active', 'admin')
           ON CONFLICT (room_id) WHERE status = 'active' AND room_id IS NOT NULL DO NOTHING
           RETURNING id
         ),
