@@ -108,7 +108,7 @@ router.post('/:tableId/order', auth, async (req, res) => {
       WITH order_cte AS (
         INSERT INTO orders (table_id, status)
         VALUES ($1, 'active')
-        ON CONFLICT (table_id) WHERE status = 'active' DO NOTHING
+        ON CONFLICT (table_id) WHERE status = 'active' AND table_id IS NOT NULL DO NOTHING
         RETURNING id
       ),
       order_id_cte AS (
