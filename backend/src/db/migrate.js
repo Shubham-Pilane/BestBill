@@ -67,7 +67,8 @@ const syncSchema = async () => {
                 table_number VARCHAR(50) NOT NULL,
                 capacity INTEGER DEFAULT 4,
                 status VARCHAR(20) DEFAULT 'available',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (hotel_id, table_number)
             )`,
             `CREATE TABLE IF NOT EXISTS orders (
                 id SERIAL PRIMARY KEY,
@@ -158,6 +159,12 @@ const syncSchema = async () => {
             "ALTER TABLE bills ADD COLUMN IF NOT EXISTS payment_method VARCHAR(20)",
             "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS hotel_id INTEGER REFERENCES hotels(id) ON DELETE CASCADE",
             "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS master_id INTEGER REFERENCES master_menu(id) ON DELETE SET NULL",
+            
+            // 4. Critical Unique Indexes (for ON CONFLICT logic)
+            "CREATE UNIQUE INDEX IF NOT EXISTS unique_active_table_order ON orders (table_id) WHERE status = 'active' AND table_id IS NOT NULL",
+            "CREATE UNIQUE INDEX IF NOT EXISTS unique_active_room_order ON orders (room_id) WHERE status = 'active' AND room_id IS NOT NULL",
+            "ALTER TABLE tables ADD CONSTRAINT tables_hotel_id_table_number_key UNIQUE (hotel_id, table_number)",
+
             // Data Migration for Master Menu
             "UPDATE menu_items mi SET hotel_id = c.hotel_id FROM categories c WHERE mi.category_id = c.id AND mi.hotel_id IS NULL",
             "INSERT INTO master_menu (name, category_name, description) SELECT DISTINCT name, (SELECT name FROM categories WHERE id = category_id LIMIT 1), description FROM menu_items ON CONFLICT (name) DO NOTHING",
