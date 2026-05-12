@@ -315,25 +315,6 @@ router.delete('/:roomId/order/items/:itemId', auth, async (req, res) => {
 
       const orderId = deleteRes.rows[0].order_id;
 
-      // 2. Atomic check and cleanup of the order if empty
-      const cleanupRes = await db.query(`
-        WITH remaining AS (
-          SELECT count(*) as count FROM order_items WHERE order_id = $1
-        ),
-        deleted_order AS (
-          DELETE FROM orders WHERE id = $1 AND (SELECT count FROM remaining) = 0 RETURNING id
-        )
-        SELECT 
-          (SELECT count FROM remaining) as remaining_count,
-          (SELECT id FROM deleted_order) as deleted_order_id
-      `, [orderId]);
-
-      const { remaining_count, deleted_order_id } = cleanupRes.rows[0];
-      
-      if (deleted_order_id || parseInt(remaining_count) === 0) {
-        return res.json({ items: [], order_deleted: true });
-      }
-
       const updatedItems = await db.query(`
         SELECT oi.*, mi.name, mi.price FROM order_items oi 
         JOIN menu_items mi ON oi.menu_item_id = mi.id 

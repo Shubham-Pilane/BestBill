@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import api from '../services/api';
 import OrderModal from '../components/OrderModal';
 import ConfirmModal from '../components/ConfirmModal';
@@ -142,13 +142,13 @@ const Dashboard = () => {
     }
   };
 
-  // Group tables by floor
-  const groupedTables = (tables || []).reduce((acc, table) => {
+  // Group tables by floor - Memoized for performance
+  const groupedTables = useMemo(() => (tables || []).reduce((acc, table) => {
     const floor = table.floor || 'Floor 1';
     if (!acc[floor]) acc[floor] = [];
     acc[floor].push(table);
     return acc;
-  }, {});
+  }, {}), [tables]);
 
   const floorOrder = (name) => {
     if (name.startsWith('Floor ')) return parseInt(name.replace('Floor ', '')) || 99;
@@ -158,7 +158,7 @@ const Dashboard = () => {
     return 200;
   };
 
-  const floors = Object.keys(groupedTables).sort((a, b) => floorOrder(a) - floorOrder(b));
+  const floors = useMemo(() => Object.keys(groupedTables).sort((a, b) => floorOrder(a) - floorOrder(b)), [groupedTables]);
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
@@ -311,103 +311,21 @@ const Dashboard = () => {
                   gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
                   gap: '24px'
                }}>
-                  {groupedTables[floor].map((table) => {
-                    const tableNum = parseInt(table.table_number) || 0;
-                    return (
-                      <div
-                        key={table.id}
-                        onClick={() => openTable(table)}
-                        style={{
-                          backgroundColor: '#0f172a',
-                          borderRadius: '32px',
-                          padding: '32px',
-                          cursor: 'pointer',
-                          position: 'relative',
-                          overflow: 'hidden',
-                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                          border: table.active_order_id ? '2px solid rgba(244, 63, 94, 0.2)' : '2px solid rgba(16, 185, 129, 0.2)',
-                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '16px'
+                  {groupedTables[floor].map((table) => (
+                      <TableCard 
+                        key={table.id} 
+                        table={table} 
+                        isOwner={isOwner} 
+                        onOpen={openTable}
+                        onEdit={initiateEditTable}
+                        onDelete={initiateDeleteTable}
+                        onSwap={(e) => {
+                          e.stopPropagation();
+                          setSelectedTable(table);
+                          setSwapModalOpen(true);
                         }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-8px)';
-                          e.currentTarget.style.backgroundColor = '#1e293b';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.backgroundColor = '#0f172a';
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '11px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>TABLE {table.table_number}</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                             {isOwner && (
-                                <div style={{ display: 'flex', gap: '12px' }}>
-                                   <button 
-                                      onClick={(e) => {
-                                         if (table.active_order_id) {
-                                            e.stopPropagation();
-                                            setSelectedTable(table);
-                                            setSwapModalOpen(true);
-                                         } else {
-                                            initiateEditTable(e, table);
-                                         }
-                                      }}
-                                      style={{ color: '#0ea5e9', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 900, fontSize: '11px', textTransform: 'uppercase' }}
-                                   >
-                                      Swap
-                                   </button>
-                                   <button 
-                                      onClick={(e) => initiateDeleteTable(e, table)} 
-                                      style={{ color: '#475569', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                                   >
-                                      <Trash2 size={14} />
-                                   </button>
-                                </div>
-                             )}
-                             <div style={{
-                               width: '12px',
-                               height: '12px',
-                               borderRadius: '50%',
-                               backgroundColor: table.active_order_id ? '#f43f5e' : '#10b981',
-                               boxShadow: table.active_order_id ? '0 0 12px #f43f5e' : '0 0 12px #10b981'
-                             }}></div>
-                          </div>
-                        </div>
-        
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <h3 style={{ fontSize: '48px', fontWeight: 900, color: 'white', margin: 0, letterSpacing: '-0.05em' }}>{table.table_number}</h3>
-                          <span style={{ fontSize: '12px', fontWeight: 800, color: table.active_order_id ? '#f43f5e' : '#10b981', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                            {table.active_order_id ? 'OCCUPIED' : 'AVAILABLE'}
-                          </span>
-                        </div>
-        
-                        <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                           {table.active_order_id ? (
-                              <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, fontStyle: 'italic' }}>Ongoing Order</span>
-                           ) : (
-                              <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700 }}>Ready to serve</span>
-                           )}
-                           <div style={{ padding: '8px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.03)' }}>
-                              <PlusCircle size={18} style={{ color: '#475569' }} />
-                           </div>
-                        </div>
-        
-                        <div style={{
-                          position: 'absolute',
-                          bottom: '-20px',
-                          right: '-20px',
-                          width: '100px',
-                          height: '100px',
-                          borderRadius: '50%',
-                          backgroundColor: table.active_order_id ? 'rgba(244, 63, 94, 0.05)' : 'rgba(16, 185, 129, 0.05)',
-                          filter: 'blur(30px)'
-                        }}></div>
-                      </div>
-                    );
-                  })}
+                      />
+                   ))}
                </div>
             </div>
           ))}
@@ -554,5 +472,94 @@ const Dashboard = () => {
     </div>
   );
 };
+
+// Memoized Table Card for performance
+const TableCard = React.memo(({ table, isOwner, onOpen, onEdit, onDelete, onSwap }) => {
+  return (
+    <div
+      onClick={() => onOpen(table)}
+      style={{
+        backgroundColor: '#0f172a',
+        borderRadius: '32px',
+        padding: '32px',
+        cursor: 'pointer',
+        position: 'relative',
+        overflow: 'hidden',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        border: table.active_order_id ? '2px solid rgba(244, 63, 94, 0.2)' : '2px solid rgba(16, 185, 129, 0.2)',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-8px)';
+        e.currentTarget.style.backgroundColor = '#1e293b';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.backgroundColor = '#0f172a';
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: '11px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>TABLE {table.table_number}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+           {isOwner && (
+              <div style={{ display: 'flex', gap: '12px' }}>
+                 <button 
+                    onClick={table.active_order_id ? onSwap : (e) => onEdit(e, table)}
+                    style={{ color: '#0ea5e9', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 900, fontSize: '11px', textTransform: 'uppercase' }}
+                 >
+                    {table.active_order_id ? 'Swap' : 'Edit'}
+                 </button>
+                 <button 
+                    onClick={(e) => onDelete(e, table)} 
+                    style={{ color: '#475569', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                 >
+                    <Trash2 size={14} />
+                 </button>
+              </div>
+           )}
+           <div style={{
+             width: '12px',
+             height: '12px',
+             borderRadius: '50%',
+             backgroundColor: table.active_order_id ? '#f43f5e' : '#10b981',
+             boxShadow: table.active_order_id ? '0 0 12px #f43f5e' : '0 0 12px #10b981'
+           }}></div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <h3 style={{ fontSize: '48px', fontWeight: 900, color: 'white', margin: 0, letterSpacing: '-0.05em' }}>{table.table_number}</h3>
+        <span style={{ fontSize: '12px', fontWeight: 800, color: table.active_order_id ? '#f43f5e' : '#10b981', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {table.active_order_id ? 'OCCUPIED' : 'AVAILABLE'}
+        </span>
+      </div>
+
+      <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+         {table.active_order_id ? (
+            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, fontStyle: 'italic' }}>Ongoing Order</span>
+         ) : (
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700 }}>Ready to serve</span>
+         )}
+         <div style={{ padding: '8px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.03)' }}>
+            <PlusCircle size={18} style={{ color: '#475569' }} />
+         </div>
+      </div>
+
+      <div style={{
+        position: 'absolute',
+        bottom: '-20px',
+        right: '-20px',
+        width: '100px',
+        height: '100px',
+        borderRadius: '50%',
+        backgroundColor: table.active_order_id ? 'rgba(244, 63, 94, 0.05)' : 'rgba(16, 185, 129, 0.05)',
+        filter: 'blur(30px)'
+      }}></div>
+    </div>
+  );
+});
 
 export default Dashboard;

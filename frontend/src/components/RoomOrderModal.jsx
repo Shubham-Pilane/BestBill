@@ -6,13 +6,13 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../context/AuthContext';
 import { generateEscposBill, printBillViaQZ, getSelectedPrinter } from '../services/qzTrayService';
 
-const RoomOrderModal = ({ room, onClose, onRefresh }) => {
+const RoomOrderModal = ({ room, onClose, onRefresh, initialMenu }) => {
   const { user } = useAuth();
-  const [categories, setCategories] = useState([]);
-  const [items, setItems] = useState([]);
+  const [categories, setCategories] = useState(initialMenu?.categories || []);
+  const [items, setItems] = useState(initialMenu?.items || []);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [orderItems, setOrderItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialMenu);
   const [showBill, setShowBill] = useState(false);
   const [billData, setBillData] = useState(null);
   const [customerPhone, setCustomerPhone] = useState(room.guest_phone || '');
@@ -50,10 +50,18 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const needsOrderFetch = isOccupied;
+        const needsStaticFetch = !initialMenu || categories.length === 0;
+
+        if (!needsOrderFetch && !needsStaticFetch) {
+            setLoading(false);
+            return;
+        }
+
         const [catRes, itemsRes, orderRes] = await Promise.all([
-          api.get('/menu/categories'),
-          api.get('/menu/items'),
-          isOccupied ? api.get(`/rooms/${room.id}/order`) : Promise.resolve({ data: { items: [] } })
+          needsStaticFetch ? api.get('/menu/categories') : Promise.resolve({ data: categories }),
+          needsStaticFetch ? api.get('/menu/items') : Promise.resolve({ data: items }),
+          needsOrderFetch ? api.get(`/rooms/${room.id}/order`) : Promise.resolve({ data: { items: [] } })
         ]);
         setCategories(catRes.data || []);
         setItems(itemsRes.data || []);
@@ -64,7 +72,7 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
       }
     };
     fetchData();
-  }, [room]);
+  }, [room, initialMenu]);
 
   const addToOrder = async (item) => {
     if (!isOccupied) return toast.error('Please confirm booking first');
@@ -130,9 +138,9 @@ const RoomOrderModal = ({ room, onClose, onRefresh }) => {
     
     try {
       const res = await api.delete(`/rooms/${room.id}/order/items/${itemId}`);
+      // For rooms, we stay in the modal even if the food order is empty
       if (res.data.order_deleted) {
-         toast.success('Table Cleared', { icon: '✨' });
-         onClose();
+         setOrderItems([]);
       }
     } catch (err) {
       setOrderItems(originalItems);

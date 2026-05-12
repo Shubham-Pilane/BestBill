@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import api from '../services/api';
 import { toast } from 'react-hot-toast';
 import { PlusCircle, Bed, LayoutGrid, Search, X, Hash, Trash2, Hotel } from 'lucide-react';
@@ -25,13 +25,23 @@ const Lodging = () => {
   const [isBookingModalOpen, setBookingModalOpen] = useState(false);
   const [isQRModalOpen, setQRModalOpen] = useState(false);
 
+  const [menuData, setMenuData] = useState({ categories: [], items: [] });
+
   const fetchRooms = async () => {
     try {
-      const res = await api.get('/rooms');
-      setRooms(Array.isArray(res.data) ? res.data : []);
+      const [roomsRes, catRes, itemsRes] = await Promise.all([
+        api.get('/rooms'),
+        api.get('/menu/categories'),
+        api.get('/menu/items')
+      ]);
+      setRooms(Array.isArray(roomsRes.data) ? roomsRes.data : []);
+      setMenuData({
+        categories: catRes.data || [],
+        items: itemsRes.data || []
+      });
     } catch (err) {
       console.error('Fetch error:', err);
-      toast.error('Failed to load rooms');
+      toast.error('Failed to load lodging data');
     } finally {
       setLoading(false);
     }
@@ -92,19 +102,19 @@ const Lodging = () => {
     }
   };
 
-  const groupedRooms = (rooms || []).reduce((acc, room) => {
+  const groupedRooms = useMemo(() => (rooms || []).reduce((acc, room) => {
     const floor = room.floor || 'Floor 1';
     if (!acc[floor]) acc[floor] = [];
     acc[floor].push(room);
     return acc;
-  }, {});
+  }, {}), [rooms]);
 
   const floorOrder = (name) => {
     if (name.startsWith('Floor ')) return parseInt(name.replace('Floor ', '')) || 99;
     return 200;
   };
 
-  const floors = Object.keys(groupedRooms).sort((a, b) => floorOrder(a) - floorOrder(b));
+  const floors = useMemo(() => Object.keys(groupedRooms).sort((a, b) => floorOrder(a) - floorOrder(b)), [groupedRooms]);
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
@@ -224,52 +234,19 @@ const Lodging = () => {
                </div>
                
                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '24px' }}>
-                  {groupedRooms[floor].filter(r => r.room_number.includes(searchQuery) || (r.room_name && r.room_name.toLowerCase().includes(searchQuery.toLowerCase()))).map((room) => {
-                    const isOccupied = room.status === 'occupied';
-                    return (
-                      <div
+                  {groupedRooms[floor].map((room) => (
+                      <RoomCard 
                         key={room.id}
-                        onClick={() => {
-                          setSelectedRoom(room);
+                        room={room}
+                        onOpen={(r) => {
+                          setSelectedRoom(r);
                           setBookingModalOpen(true);
                         }}
-                        style={{ 
-                          backgroundColor: '#0f172a', 
-                          borderRadius: '32px', 
-                          padding: '32px', 
-                          border: isOccupied ? '2px solid rgba(244, 63, 94, 0.4)' : '2px solid rgba(16, 185, 129, 0.4)', 
-                          position: 'relative', 
-                          overflow: 'hidden', 
-                          display: 'flex', 
-                          flexDirection: 'column', 
-                          gap: '16px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s'
-                        }}
-                      >
-                        {isOccupied && (
-                          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', backgroundColor: '#f43f5e' }}></div>
-                        )}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '11px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase' }}>ROOM {room.room_number}</span>
-                          <div style={{ display: 'flex', gap: '12px' }}>
-                             <button onClick={(e) => initiateEditRoom(e, room)} style={{ color: '#0ea5e9', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 900, fontSize: '11px' }}>RENAME</button>
-                             <button onClick={(e) => deleteRoom(e, room.id)} style={{ color: '#f43f5e', border: 'none', background: 'none', cursor: 'pointer' }}><Trash2 size={14} /></button>
-                          </div>
-                        </div>
-                        <div>
-                          <h3 style={{ fontSize: '32px', fontWeight: 900, color: 'white', margin: 0 }}>{room.room_name || room.room_number}</h3>
-                          <span style={{ fontSize: '12px', fontWeight: 800, color: isOccupied ? '#f43f5e' : '#10b981' }}>{room.status.toUpperCase()}</span>
-                        </div>
-                        {isOccupied && (
-                          <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                            <span style={{ fontSize: '12px', color: '#94a3b8', display: 'block' }}>{room.guest_name}</span>
-                            <span style={{ fontSize: '11px', color: '#64748b' }}>Check-in: {new Date(room.check_in_date).toLocaleDateString()}</span>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                        onEdit={initiateEditRoom}
+                        onDelete={deleteRoom}
+                        searchQuery={searchQuery}
+                      />
+                   ))}
                </div>
             </div>
           ))}
@@ -325,6 +302,7 @@ const Lodging = () => {
       {selectedRoom && isBookingModalOpen && (
         <RoomOrderModal 
           room={rooms.find(r => r.id === selectedRoom.id) || selectedRoom} 
+          initialMenu={menuData}
           onClose={() => {
             setBookingModalOpen(false);
             setClickShield(true);
@@ -403,5 +381,54 @@ const Lodging = () => {
     </div>
   );
 };
+
+// Memoized Room Card component
+const RoomCard = React.memo(({ room, onOpen, onEdit, onDelete, searchQuery }) => {
+  const isOccupied = room.status === 'occupied';
+  const matchesSearch = room.room_number.includes(searchQuery) || 
+                       (room.room_name && room.room_name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  if (!matchesSearch) return null;
+
+  return (
+    <div
+      onClick={() => onOpen(room)}
+      style={{ 
+        backgroundColor: '#0f172a', 
+        borderRadius: '32px', 
+        padding: '32px', 
+        border: isOccupied ? '2px solid rgba(244, 63, 94, 0.4)' : '2px solid rgba(16, 185, 129, 0.4)', 
+        position: 'relative', 
+        overflow: 'hidden', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: '16px',
+        cursor: 'pointer',
+        transition: 'all 0.2s'
+      }}
+    >
+      {isOccupied && (
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', backgroundColor: '#f43f5e' }}></div>
+      )}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: '11px', fontWeight: 900, color: '#64748b', textTransform: 'uppercase' }}>ROOM {room.room_number}</span>
+        <div style={{ display: 'flex', gap: '12px' }}>
+           <button onClick={(e) => onEdit(e, room)} style={{ color: '#0ea5e9', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 900, fontSize: '11px' }}>RENAME</button>
+           <button onClick={(e) => onDelete(e, room.id)} style={{ color: '#f43f5e', border: 'none', background: 'none', cursor: 'pointer' }}><Trash2 size={14} /></button>
+        </div>
+      </div>
+      <div>
+        <h3 style={{ fontSize: '32px', fontWeight: 900, color: 'white', margin: 0 }}>{room.room_name || room.room_number}</h3>
+        <span style={{ fontSize: '12px', fontWeight: 800, color: isOccupied ? '#f43f5e' : '#10b981' }}>{room.status.toUpperCase()}</span>
+      </div>
+      {isOccupied && (
+        <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+          <span style={{ fontSize: '12px', color: '#94a3b8', display: 'block' }}>{room.guest_name}</span>
+          <span style={{ fontSize: '11px', color: '#64748b' }}>Check-in: {new Date(room.check_in_date).toLocaleDateString()}</span>
+        </div>
+      )}
+    </div>
+  );
+});
 
 export default Lodging;
