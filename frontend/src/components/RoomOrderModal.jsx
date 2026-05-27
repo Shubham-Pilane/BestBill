@@ -261,12 +261,12 @@ const RoomOrderModal = ({ room, onClose, onRefresh, initialMenu }) => {
       toast.error('Failed to print KOT', { id: t });
     }
   };
-
   const printBill = async () => {
     if (!billData) return;
     try {
       if (user?.billing_method === 'agent') {
-        toast.success('Print command resent to Local Agent');
+        await api.post(`/bills/${billData.id}/print`);
+        toast.success('Print command sent to Local Agent');
       } else {
         const tableStr = `Room ${room.room_number}`;
         const escposString = generateEscposBill(billData, user, tableStr);
@@ -277,6 +277,7 @@ const RoomOrderModal = ({ room, onClose, onRefresh, initialMenu }) => {
       await confirmPayment();
     } catch (err) {
       console.error('Print and settle failed:', err);
+      toast.error('Print failed');
     }
   };
 

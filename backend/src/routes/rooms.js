@@ -443,28 +443,7 @@ router.post('/:roomId/bill', auth, async (req, res) => {
         hotel_location: hotelRes.rows[0].location
       };
 
-      const hotelBillingMethod = hotelRes.rows[0]?.billing_method || 'qz';
-      if (hotelBillingMethod === 'agent') {
-        const printService = require('../services/printService');
-        // Include the room charge in the final bill items
-        const printItems = [
-          { name: `Room Charge (${room.booking_days} Days)`, price: roomCharge, quantity: 1 },
-          ...orderRes.rows
-        ];
-        printService.sendFinalBill({
-          hotelId: req.user.hotel_id,
-          billId: bill.rows[0].id,
-          table: `Room ${room.room_number}`,
-          subtotal: subtotal,
-          gst: gst,
-          finalAmount: finalAmount,
-          discountPercentage: discount,
-          items: printItems,
-          hotelName: hotelRes.rows[0].name,
-          hotelPhone: hotelRes.rows[0].phone,
-          hotelLocation: hotelRes.rows[0].location
-        });
-      }
+
 
       notifyUpdate(req.user.hotel_id, 'room-update');
       res.json(responsePayload);

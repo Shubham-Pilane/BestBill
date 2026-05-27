@@ -329,23 +329,7 @@ router.post('/:tableId/bill', auth, async (req, res) => {
       hotel_location: hotelRes.rows[0].location
     };
 
-    const hotelBillingMethod = hotelRes.rows[0]?.billing_method || 'qz';
-    if (hotelBillingMethod === 'agent') {
-      const printService = require('../services/printService');
-      printService.sendFinalBill({
-        hotelId: req.user.hotel_id,
-        billId: bill.rows[0].id,
-        table: tableRes.rows[0]?.table_number || tableId,
-        subtotal: subtotal,
-        gst: gst,
-        finalAmount: finalAmount,
-        discountPercentage: discount,
-        items: orderRes.rows,
-        hotelName: hotelRes.rows[0].name,
-        hotelPhone: hotelRes.rows[0].phone,
-        hotelLocation: hotelRes.rows[0].location
-      });
-    }
+
 
     notifyUpdate(req.user.hotel_id, 'table-update');
     res.json(responsePayload);
