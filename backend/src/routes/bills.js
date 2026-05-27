@@ -78,7 +78,7 @@ router.post('/:id/print', auth, async (req, res) => {
     const { id } = req.params;
     const bill = await db.query(`
       SELECT b.*, o.room_id, o.table_id,
-             h.name as hotel_name, h.phone as hotel_phone, h.location as hotel_location, h.gst_percentage, h.upi_id
+             h.name as hotel_name, h.phone as hotel_phone, h.location as hotel_location, h.gst_percentage, h.upi_id, h.printer_size
       FROM bills b 
       JOIN orders o ON b.order_id = o.id 
       LEFT JOIN tables t ON o.table_id = t.id 
@@ -139,7 +139,7 @@ router.post('/:id/print', auth, async (req, res) => {
       hotelId: Number(req.user.hotel_id),
       billId: Number(billData.id),
       table: String(tableName),
-      subtotal: Number(billData.total_amount), // In DB, total_amount stores the subtotal
+      subtotal: Number(billData.total_amount),
       gst: Number(billData.gst),
       finalAmount: Number(billData.final_amount),
       discountPercentage: Number(billData.discount_percentage || 0),
@@ -151,7 +151,8 @@ router.post('/:id/print', auth, async (req, res) => {
       upiId: billData.upi_id || '',
       isPaid: billData.is_paid || false,
       room_charge: roomCharge,
-      booking_days: bookingDays
+      booking_days: bookingDays,
+      printerSize: billData.printer_size || '80mm'
     };
 
     printService.emitPrintJob(req.user.hotel_id, payload);
