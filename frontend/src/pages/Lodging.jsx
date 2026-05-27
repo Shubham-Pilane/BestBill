@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { io } from 'socket.io-client';
 import api from '../services/api';
 import { toast } from 'react-hot-toast';
 import { PlusCircle, Bed, LayoutGrid, Search, X, Hash, Trash2, Hotel } from 'lucide-react';
@@ -49,7 +50,22 @@ const Lodging = () => {
 
   useEffect(() => {
     fetchRooms();
-  }, []);
+
+    const serverUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:8080';
+    const socket = io(serverUrl, { transports: ['websocket'] });
+
+    if (user?.hotel_id) {
+      socket.emit('register-hotel', { hotelId: user.hotel_id });
+    }
+
+    socket.on('room-update', () => {
+      fetchRooms();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user]);
 
   const addRoomsBatch = async (e) => {
     e.preventDefault();
@@ -171,6 +187,22 @@ const Lodging = () => {
               ) : 'No Active Plan'}
             </span>
           </div>
+          
+          {isOwner && (
+            <div style={{ 
+              backgroundColor: 'rgba(245, 158, 11, 0.05)', 
+              border: '1px solid rgba(245, 158, 11, 0.1)', 
+              padding: '16px 24px', 
+              borderRadius: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <span style={{ fontSize: '10px', fontWeight: 900, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Hotel ID</span>
+              <span style={{ fontSize: '20px', fontWeight: 900, color: 'white' }}>{user?.hotel_id}</span>
+            </div>
+          )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
             <span style={{ fontSize: '10px', fontWeight: 900, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Current Date</span>

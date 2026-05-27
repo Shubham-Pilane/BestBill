@@ -3,6 +3,7 @@ const db = require('../db/db');
 const auth = require('../middleware/auth');
 const router = express.Router();
 const { sendSMS } = require('../services/smsService');
+const { notifyUpdate } = require('../socket');
 
 // Get all tables for a hotel
 router.get('/', auth, async (req, res) => {
@@ -51,6 +52,7 @@ router.put('/:id', auth, async (req, res) => {
       [table_number, capacity, floor, id, req.user.hotel_id]
     );
     if (result.rows.length === 0) return res.status(404).json({ message: 'Table not found' });
+    notifyUpdate(req.user.hotel_id, 'table-update');
     res.json(result.rows[0]);
   } catch (err) {
     if (err.code === '23505') {
@@ -98,6 +100,56 @@ router.get('/:tableId/order', auth, async (req, res) => {
   }
 });
 
+// Send KOT to Kitchen
+router.post('/:tableId/order/kot', auth, async (req, res) => {
+  const { tableId } = req.params;
+  const { waiter, notes } = req.body;
+  console.log(`[KOT DEBUG] Request received for tableId: ${tableId}, user:`, req.user);
+  try {
+    const [hotelRes, tableRes, orderRes] = await Promise.all([
+      db.query('SELECT billing_method FROM hotels WHERE id = $1', [req.user.hotel_id]),
+      db.query('SELECT table_number FROM tables WHERE id = $1', [tableId]),
+      db.query(`
+        SELECT o.id as order_id, oi.quantity, mi.name
+        FROM orders o
+        JOIN order_items oi ON oi.order_id = o.id
+        JOIN menu_items mi ON oi.menu_item_id = mi.id
+        WHERE o.table_id = $1 AND o.status = 'active'
+      `, [tableId])
+    ]);
+
+    console.log('[KOT DEBUG] hotelRes rows:', hotelRes.rows);
+    console.log('[KOT DEBUG] tableRes rows:', tableRes.rows);
+    console.log('[KOT DEBUG] orderRes rows:', orderRes.rows);
+
+    if (orderRes.rows.length === 0) {
+      console.log('[KOT DEBUG] Returning 404 - No active order items found');
+      return res.status(404).json({ message: 'No active order to print' });
+    }
+
+    const hotelBillingMethod = hotelRes.rows[0]?.billing_method || 'qz';
+    if (hotelBillingMethod === 'agent') {
+      const printService = require('../services/printService');
+      printService.sendKOT({
+        hotelId: req.user.hotel_id,
+        table: tableRes.rows[0]?.table_number || tableId,
+        waiter: waiter || req.user.name,
+        items: orderRes.rows.map(item => ({
+          name: item.name,
+          quantity: item.quantity
+        })),
+        notes: notes || ''
+      });
+      return res.json({ success: true, message: 'KOT printed via agent' });
+    } else {
+      return res.json({ success: true, message: 'QZ Tray mode active, client should handle printing' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error printing KOT' });
+  }
+});
+
 // Add item to order
 router.post('/:tableId/order', auth, async (req, res) => {
   const { menuItemId, quantity } = req.body;
@@ -132,6 +184,7 @@ router.post('/:tableId/order', auth, async (req, res) => {
       ORDER BY oi.created_at ASC
     `;
     const updatedItems = await db.query(query2, [orderId]);
+    notifyUpdate(req.user.hotel_id, 'table-update');
     res.json({ items: updatedItems.rows });
   } catch (err) {
     console.error(err);
@@ -149,6 +202,7 @@ router.put('/:tableId/order/items/:itemId', auth, async (req, res) => {
     
     if (res1.rows.length === 0) return res.status(404).json({ message: 'Item not found' });
     const orderId = res1.rows[0].order_id;
+    notifyUpdate(req.user.hotel_id, 'table-update');
 
     const query2 = `
       SELECT oi.*, mi.name, mi.price 
@@ -204,6 +258,7 @@ router.delete('/:tableId/order/items/:itemId', auth, async (req, res) => {
     const { remaining_count, deleted_order_id } = cleanupRes.rows[0];
     
     if (deleted_order_id || parseInt(remaining_count) === 0) {
+      notifyUpdate(req.user.hotel_id, 'table-update');
       return res.json({ items: [], order_deleted: true });
     }
 
@@ -213,6 +268,7 @@ router.delete('/:tableId/order/items/:itemId', auth, async (req, res) => {
       WHERE oi.order_id = $1 ORDER BY oi.created_at ASC
     `, [orderId]);
 
+    notifyUpdate(req.user.hotel_id, 'table-update');
     res.json({ items: updatedItems.rows, order_deleted: false });
 
   } catch (err) {
@@ -227,8 +283,9 @@ router.post('/:tableId/bill', auth, async (req, res) => {
   const { discount_percentage } = req.body;
   
   try {
-    const [hotelRes, orderRes] = await Promise.all([
-      db.query('SELECT name, phone, location, gst_percentage FROM hotels WHERE id = $1', [req.user.hotel_id]),
+    const [hotelRes, tableRes, orderRes] = await Promise.all([
+      db.query('SELECT name, phone, location, gst_percentage, billing_method FROM hotels WHERE id = $1', [req.user.hotel_id]),
+      db.query('SELECT table_number FROM tables WHERE id = $1', [tableId]),
       db.query(`
         SELECT o.id as order_id, oi.quantity, mi.name, mi.price
         FROM orders o
@@ -261,7 +318,7 @@ router.post('/:tableId/bill', auth, async (req, res) => {
     `;
     const bill = await db.query(billQuery, [orderId, subtotal, gst, finalAmount, discount]);
 
-    res.json({
+    const responsePayload = {
       ...bill.rows[0],
       subtotal: subtotal,
       total_amount: finalAmount,
@@ -270,7 +327,28 @@ router.post('/:tableId/bill', auth, async (req, res) => {
       hotel_name: hotelRes.rows[0].name,
       hotel_phone: hotelRes.rows[0].phone,
       hotel_location: hotelRes.rows[0].location
-    });
+    };
+
+    const hotelBillingMethod = hotelRes.rows[0]?.billing_method || 'qz';
+    if (hotelBillingMethod === 'agent') {
+      const printService = require('../services/printService');
+      printService.sendFinalBill({
+        hotelId: req.user.hotel_id,
+        billId: bill.rows[0].id,
+        table: tableRes.rows[0]?.table_number || tableId,
+        subtotal: subtotal,
+        gst: gst,
+        finalAmount: finalAmount,
+        discountPercentage: discount,
+        items: orderRes.rows,
+        hotelName: hotelRes.rows[0].name,
+        hotelPhone: hotelRes.rows[0].phone,
+        hotelLocation: hotelRes.rows[0].location
+      });
+    }
+
+    notifyUpdate(req.user.hotel_id, 'table-update');
+    res.json(responsePayload);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Billing error' });
@@ -291,6 +369,7 @@ router.delete('/:tableId/bill/:billId', auth, async (req, res) => {
     `;
     const res1 = await db.query(query, [billId]);
     if (res1.rows.length === 0) return res.status(404).json({ message: 'Bill not found' });
+    notifyUpdate(req.user.hotel_id, 'table-update');
     
     res.json({ message: 'Bill rolled back, order is active again' });
   } catch (err) {
@@ -358,6 +437,7 @@ router.put('/bill/:billId/pay', auth, async (req, res) => {
         [method, billId]
      );
      if (result.rows.length === 0) return res.status(404).json({ message: 'Bill record not found' });
+     notifyUpdate(req.user.hotel_id, 'table-update');
      res.json({ success: true, bill: result.rows[0] });
   } catch (err) {
      console.error(err);
@@ -386,6 +466,7 @@ router.post('/:tableId/swap', auth, async (req, res) => {
     await client.query('UPDATE orders SET table_id = $1 WHERE id = $2', [targetTableId, sourceOrder.rows[0].id]);
     
     await client.query('COMMIT');
+    notifyUpdate(req.user.hotel_id, 'table-update');
     res.json({ message: 'Table successfully swapped' });
   } catch (err) {
     await client.query('ROLLBACK');

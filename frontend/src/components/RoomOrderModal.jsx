@@ -248,12 +248,36 @@ const RoomOrderModal = ({ room, onClose, onRefresh, initialMenu }) => {
     }
   };
 
+  const sendToKitchen = async () => {
+    if (orderItems.length === 0) return toast.error('No items to send');
+    const t = toast.loading('Sending KOT to kitchen...');
+    try {
+      await api.post(`/rooms/${room.id}/order/kot`, {
+        waiter: user?.name || 'Waiter',
+        notes: ''
+      });
+      toast.success('KOT sent to kitchen agent!', { id: t });
+    } catch (err) {
+      toast.error('Failed to print KOT', { id: t });
+    }
+  };
+
   const printBill = async () => {
     if (!billData) return;
-    const tableStr = `Room ${room.room_number}`;
-    const escposString = generateEscposBill(billData, user, tableStr);
-    const printer = getSelectedPrinter();
-    await printBillViaQZ(printer, escposString);
+    try {
+      if (user?.billing_method === 'agent') {
+        toast.success('Print command resent to Local Agent');
+      } else {
+        const tableStr = `Room ${room.room_number}`;
+        const escposString = generateEscposBill(billData, user, tableStr);
+        const printer = getSelectedPrinter();
+        await printBillViaQZ(printer, escposString);
+      }
+      // Automatically settle the bill (same as clicking Mark Paid)
+      await confirmPayment();
+    } catch (err) {
+      console.error('Print and settle failed:', err);
+    }
   };
 
   const shareViaWhatsApp = () => {
@@ -499,7 +523,17 @@ const RoomOrderModal = ({ room, onClose, onRefresh, initialMenu }) => {
                             <span style={{ color: '#10b981', fontSize: '22px', fontWeight: 1000 }}>₹{((subtotalVal * (1 + (user?.gst_percentage || 0)/100)) * (1 - discount/100)).toFixed(2)}</span>
                          </div>
                       </div>
-                      <button onClick={generateBill} style={{ width: '100%', padding: '16px', borderRadius: '16px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', fontWeight: 1000, fontSize: '15px', cursor: 'pointer' }}>SETTLE ROOM BILL</button>
+                       {user?.role === 'waiter' ? (
+                          <button 
+                             disabled={orderItems.length === 0} 
+                             onClick={sendToKitchen} 
+                             style={{ width: '100%', padding: '16px', borderRadius: '16px', backgroundColor: '#f59e0b', color: 'white', border: 'none', fontWeight: 1000, fontSize: '15px', cursor: 'pointer', opacity: orderItems.length === 0 ? 0.3 : 1 }}
+                          >
+                             SEND TO KITCHEN
+                          </button>
+                       ) : (
+                          <button onClick={generateBill} style={{ width: '100%', padding: '16px', borderRadius: '16px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', fontWeight: 1000, fontSize: '15px', cursor: 'pointer' }}>SETTLE ROOM BILL</button>
+                       )}
                    </div>
                 </div>
              )}

@@ -23,6 +23,7 @@ const Profile = () => {
         address: user?.hotel_address || '',
         upi_id: user?.upi_id || '',
         gst_percentage: user?.gst_percentage || 0,
+        billing_method: user?.billing_method || 'qz',
         logo_url: ''
     });
 
@@ -65,6 +66,7 @@ const Profile = () => {
                 upi_id: res.data.upi_id || '',
                 gst_percentage: res.data.gst_percentage || 0,
                 printer_size: res.data.printer_size || '80mm',
+                billing_method: res.data.billing_method || 'qz',
                 logo_url: res.data.logo_url || ''
             });
         } catch (err) {
@@ -140,7 +142,8 @@ const Profile = () => {
                 hotel_address: res.data.address,
                 upi_id: res.data.upi_id, 
                 gst_percentage: res.data.gst_percentage,
-                printer_size: res.data.printer_size 
+                printer_size: res.data.printer_size,
+                billing_method: res.data.billing_method
             });
             toast.success('Hotel configuration persisted!', { id: t });
         } catch (err) {
@@ -255,6 +258,13 @@ const Profile = () => {
                                     <label style={{ color: '#64748b', fontSize: '11px', fontWeight: 900 }}>UPI ID (MERCHANT)</label>
                                     <input value={hotelData.upi_id} onChange={e => setHotelData({...hotelData, upi_id: e.target.value})} placeholder="merchant@bank" style={{ padding: '14px', borderRadius: '12px', backgroundColor: '#020617', border: '1px solid #1e293b', color: 'white', fontWeight: 700 }} />
                                 </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                     <label style={{ color: '#64748b', fontSize: '11px', fontWeight: 900 }}>BILLING & PRINT ARCHITECTURE</label>
+                                     <select value={hotelData.billing_method || 'qz'} onChange={e => setHotelData({...hotelData, billing_method: e.target.value})} style={{ padding: '14px', borderRadius: '12px', backgroundColor: '#020617', border: '1px solid #1e293b', color: 'white', fontWeight: 700, appearance: 'none' }}>
+                                         <option value="qz">QZ Tray (Browser Extension)</option>
+                                         <option value="agent">Local Print Agent (Socket.IO Realtime Agent)</option>
+                                     </select>
+                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         <label style={{ color: '#64748b', fontSize: '11px', fontWeight: 900 }}>DEFAULT THERMAL PRINTER</label>

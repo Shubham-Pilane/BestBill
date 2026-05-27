@@ -3,6 +3,8 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 const { syncSchema } = require('./db/migrate');
+const http = require('http');
+const { initSocket } = require('./socket');
 
 const app = express();
 
@@ -74,8 +76,11 @@ syncSchema().then(() => {
         res.status(500).json({ message: 'Internal Server Error', error: err.message });
     });
 
-    app.listen(PORT, '0.0.0.0', () => {
-        console.log(`Server running on port ${PORT}`);
+    const server = http.createServer(app);
+    initSocket(server);
+
+    server.listen(PORT, '0.0.0.0', () => {
+        console.log(`Server running on port ${PORT} (Socket.IO active)`);
         // Run first cleanup on start
         runCleanupTask();
         // Set up daily interval (24 hours)

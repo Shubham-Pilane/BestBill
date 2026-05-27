@@ -178,12 +178,36 @@ const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) =>
     }
   };
 
+  const sendToKitchen = async () => {
+    if (orderItems.length === 0) return toast.error('No items to send');
+    const t = toast.loading('Sending KOT to kitchen...');
+    try {
+      await api.post(`/tables/${table.id}/order/kot`, {
+        waiter: user?.name || 'Waiter',
+        notes: ''
+      });
+      toast.success('KOT sent to kitchen agent!', { id: t });
+    } catch (err) {
+      toast.error('Failed to print KOT', { id: t });
+    }
+  };
+
   const printBill = async () => {
     if (!billData) return;
-    const tableStr = table.table_numberByFloor || table.table_number;
-    const escposString = generateEscposBill(billData, user, tableStr);
-    const printer = getSelectedPrinter();
-    await printBillViaQZ(printer, escposString);
+    try {
+      if (user?.billing_method === 'agent') {
+        toast.success('Print command resent to Local Agent');
+      } else {
+        const tableStr = table.table_numberByFloor || table.table_number;
+        const escposString = generateEscposBill(billData, user, tableStr);
+        const printer = getSelectedPrinter();
+        await printBillViaQZ(printer, escposString);
+      }
+      // Automatically settle the bill (same as clicking Mark Paid)
+      await confirmPayment('cash');
+    } catch (err) {
+      console.error('Print and settle failed:', err);
+    }
   };
 
   const rollbackBill = async () => {
@@ -471,7 +495,17 @@ const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) =>
                     <span style={{ color: '#10b981', fontSize: '22px', fontWeight: 1000 }}>₹{((orderItems.reduce((acc, i) => acc + (i.price * i.quantity), 0) * (1 + (user?.gst_percentage || 0)/100)) * (1 - discount/100)).toFixed(2)}</span>
                  </div>
               </div>
-              <button disabled={orderItems.length === 0} onClick={generateBill} style={{ width: '100%', padding: '16px', borderRadius: '16px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', fontWeight: 1000, fontSize: '15px', cursor: 'pointer', scale: orderItems.length === 0 ? '1' : '1.02', transition: '0.2s', opacity: orderItems.length === 0 ? 0.3 : 1 }}>SETTLE TRANSACTION</button>
+              {user?.role === 'waiter' ? (
+                <button 
+                  disabled={orderItems.length === 0} 
+                  onClick={sendToKitchen} 
+                  style={{ width: '100%', padding: '16px', borderRadius: '16px', backgroundColor: '#f59e0b', color: 'white', border: 'none', fontWeight: 1000, fontSize: '15px', cursor: 'pointer', scale: orderItems.length === 0 ? '1' : '1.02', transition: '0.2s', opacity: orderItems.length === 0 ? 0.3 : 1 }}
+                >
+                  SEND TO KITCHEN
+                </button>
+              ) : (
+                <button disabled={orderItems.length === 0} onClick={generateBill} style={{ width: '100%', padding: '16px', borderRadius: '16px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', fontWeight: 1000, fontSize: '15px', cursor: 'pointer', scale: orderItems.length === 0 ? '1' : '1.02', transition: '0.2s', opacity: orderItems.length === 0 ? 0.3 : 1 }}>SETTLE TRANSACTION</button>
+              )}
             </div>
           </div>
         </div>

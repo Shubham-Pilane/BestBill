@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../db/db');
 const auth = require('../middleware/auth');
 const router = express.Router();
+const { notifyUpdate } = require('../socket');
 
 // Get all rooms for a hotel
 router.get('/', auth, async (req, res) => {
@@ -104,6 +105,7 @@ router.put('/:id', auth, async (req, res) => {
       [room_number, room_name, floor, status, booking_days, total_cost, guest_name, guest_phone, id, req.user.hotel_id]
     );
     if (result.rows.length === 0) return res.status(404).json({ message: 'Room not found' });
+    notifyUpdate(req.user.hotel_id, 'room-update');
     res.json(result.rows[0]);
   } catch (err) {
     if (err.code === '23505') {
@@ -119,6 +121,7 @@ router.delete('/:id', auth, async (req, res) => {
   const { id } = req.params;
   try {
     await db.query('DELETE FROM rooms WHERE id = $1 AND hotel_id = $2', [id, req.user.hotel_id]);
+    notifyUpdate(req.user.hotel_id, 'room-update');
     res.json({ message: 'Room deleted' });
   } catch (err) {
     res.status(500).json({ message: 'Delete failed' });
@@ -159,6 +162,7 @@ router.post('/:id/book', auth, async (req, res) => {
         );
 
         await db.query('COMMIT');
+        notifyUpdate(req.user.hotel_id, 'room-update');
         res.json(result.rows[0]);
     } catch (err) {
         await db.query('ROLLBACK');
@@ -182,6 +186,7 @@ router.post('/:id/checkout', auth, async (req, res) => {
              WHERE id = $1 AND hotel_id = $2 RETURNING *`,
             [id, req.user.hotel_id]
         );
+        notifyUpdate(req.user.hotel_id, 'room-update');
         res.json(result.rows[0]);
     } catch (err) {
         res.status(500).json({ message: 'Checkout failed' });
@@ -224,6 +229,56 @@ router.get('/:roomId/order', auth, async (req, res) => {
       res.status(500).json({ message: 'Server error fetching order' });
     }
 });
+
+// Send KOT to Kitchen
+router.post('/:roomId/order/kot', auth, async (req, res) => {
+  const { roomId } = req.params;
+  const { waiter, notes } = req.body;
+  console.log(`[KOT DEBUG] Request received for roomId: ${roomId}, user:`, req.user);
+  try {
+    const [hotelRes, roomRes, orderRes] = await Promise.all([
+      db.query('SELECT billing_method FROM hotels WHERE id = $1', [req.user.hotel_id]),
+      db.query('SELECT room_number FROM rooms WHERE id = $1', [roomId]),
+      db.query(`
+        SELECT o.id as order_id, oi.quantity, mi.name
+        FROM orders o
+        JOIN order_items oi ON oi.order_id = o.id
+        JOIN menu_items mi ON oi.menu_item_id = mi.id
+        WHERE o.room_id = $1 AND o.status = 'active'
+      `, [roomId])
+    ]);
+
+    console.log('[KOT DEBUG] hotelRes rows:', hotelRes.rows);
+    console.log('[KOT DEBUG] roomRes rows:', roomRes.rows);
+    console.log('[KOT DEBUG] orderRes rows:', orderRes.rows);
+
+    if (orderRes.rows.length === 0) {
+      console.log('[KOT DEBUG] Returning 404 - No active order items found');
+      return res.status(404).json({ message: 'No active order to print' });
+    }
+
+    const hotelBillingMethod = hotelRes.rows[0]?.billing_method || 'qz';
+    if (hotelBillingMethod === 'agent') {
+      const printService = require('../services/printService');
+      printService.sendKOT({
+        hotelId: req.user.hotel_id,
+        table: `Room ${roomRes.rows[0]?.room_number || roomId}`,
+        waiter: waiter || req.user.name,
+        items: orderRes.rows.map(item => ({
+          name: item.name,
+          quantity: item.quantity
+        })),
+        notes: notes || ''
+      });
+      return res.json({ success: true, message: 'KOT printed via agent' });
+    } else {
+      return res.json({ success: true, message: 'QZ Tray mode active, client should handle printing' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error printing KOT' });
+  }
+});
   
 // Add item to room order
 router.post('/:roomId/order', auth, async (req, res) => {
@@ -259,6 +314,7 @@ router.post('/:roomId/order', auth, async (req, res) => {
         ORDER BY oi.created_at ASC
       `;
       const updatedItems = await db.query(query2, [orderId]);
+      notifyUpdate(req.user.hotel_id, 'room-update');
       res.json({ items: updatedItems.rows });
     } catch (err) {
       console.error(err);
@@ -285,6 +341,7 @@ router.put('/:roomId/order/items/:itemId', auth, async (req, res) => {
         ORDER BY oi.created_at ASC
       `;
       const updatedItems = await db.query(query2, [orderId]);
+      notifyUpdate(req.user.hotel_id, 'room-update');
       res.json({ items: updatedItems.rows });
     } catch (err) {
       console.error(err);
@@ -314,15 +371,14 @@ router.delete('/:roomId/order/items/:itemId', auth, async (req, res) => {
       }
 
       const orderId = deleteRes.rows[0].order_id;
-
       const updatedItems = await db.query(`
         SELECT oi.*, mi.name, mi.price FROM order_items oi 
         JOIN menu_items mi ON oi.menu_item_id = mi.id 
         WHERE oi.order_id = $1 ORDER BY oi.created_at ASC
       `, [orderId]);
 
+      notifyUpdate(req.user.hotel_id, 'room-update');
       res.json({ items: updatedItems.rows, order_deleted: false });
-
     } catch (err) {
       console.error('Room Delete error:', err);
       res.status(500).json({ message: 'Removal failed' });
@@ -336,7 +392,7 @@ router.post('/:roomId/bill', auth, async (req, res) => {
     
     try {
       const [hotelRes, roomRes, orderRes] = await Promise.all([
-        db.query('SELECT name, phone, location, gst_percentage FROM hotels WHERE id = $1', [req.user.hotel_id]),
+        db.query('SELECT name, phone, location, gst_percentage, billing_method FROM hotels WHERE id = $1', [req.user.hotel_id]),
         db.query('SELECT * FROM rooms WHERE id = $1', [roomId]),
         db.query(`
           SELECT o.id as order_id, oi.quantity, mi.name, mi.price
@@ -373,7 +429,7 @@ router.post('/:roomId/bill', auth, async (req, res) => {
       `;
       const bill = await db.query(billQuery, [orderId, subtotal, gst, finalAmount, discount]);
       
-      res.json({
+      const responsePayload = {
         ...bill.rows[0],
         subtotal: subtotal,
         final_amount: finalAmount,
@@ -385,7 +441,33 @@ router.post('/:roomId/bill', auth, async (req, res) => {
         hotel_name: hotelRes.rows[0].name,
         hotel_phone: hotelRes.rows[0].phone,
         hotel_location: hotelRes.rows[0].location
-      });
+      };
+
+      const hotelBillingMethod = hotelRes.rows[0]?.billing_method || 'qz';
+      if (hotelBillingMethod === 'agent') {
+        const printService = require('../services/printService');
+        // Include the room charge in the final bill items
+        const printItems = [
+          { name: `Room Charge (${room.booking_days} Days)`, price: roomCharge, quantity: 1 },
+          ...orderRes.rows
+        ];
+        printService.sendFinalBill({
+          hotelId: req.user.hotel_id,
+          billId: bill.rows[0].id,
+          table: `Room ${room.room_number}`,
+          subtotal: subtotal,
+          gst: gst,
+          finalAmount: finalAmount,
+          discountPercentage: discount,
+          items: printItems,
+          hotelName: hotelRes.rows[0].name,
+          hotelPhone: hotelRes.rows[0].phone,
+          hotelLocation: hotelRes.rows[0].location
+        });
+      }
+
+      notifyUpdate(req.user.hotel_id, 'room-update');
+      res.json(responsePayload);
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: 'Billing error' });
@@ -409,6 +491,7 @@ router.delete('/:roomId/bill/:billId', auth, async (req, res) => {
       `;
       const res1 = await db.query(query, [billId]);
       if (res1.rows.length === 0) return res.status(404).json({ message: 'Bill not found or could not be rolled back' });
+      notifyUpdate(req.user.hotel_id, 'room-update');
   
       res.json({ message: 'Bill rolled back, order is active again' });
     } catch (err) {
