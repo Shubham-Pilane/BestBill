@@ -256,7 +256,7 @@ const RoomOrderModal = ({ room, onClose, onRefresh, initialMenu }) => {
         waiter: user?.name || 'Waiter',
         notes: ''
       });
-      toast.success('KOT sent to kitchen agent!', { id: t });
+      toast.success('KOT sent to kitchen successfully!', { id: t });
     } catch (err) {
       toast.error('Failed to print KOT', { id: t });
     }
@@ -266,7 +266,7 @@ const RoomOrderModal = ({ room, onClose, onRefresh, initialMenu }) => {
     try {
       if (user?.billing_method === 'agent') {
         await api.post(`/bills/${billData.id}/print`);
-        toast.success('Print command sent to Local Agent');
+        toast.success('Sent to printer successfully!');
       } else {
         const tableStr = `Room ${room.room_number}`;
         const escposString = generateEscposBill(billData, user, tableStr);
@@ -619,8 +619,12 @@ const RoomOrderModal = ({ room, onClose, onRefresh, initialMenu }) => {
                     <input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} style={{ border: 'none', outline: 'none', fontWeight: 800, fontSize: '15px', width: '100%', background: 'white', color: '#1e293b' }} placeholder="Guest Phone" />
                  </div>
                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <button onClick={printBill} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#0f172a', color: 'white', border: 'none', cursor: 'pointer' }}><Printer size={18} /></button>
-                    <button onClick={shareViaWhatsApp} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer' }}><MessageCircle size={18} /></button>
+                    <button onClick={printBill} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#0f172a', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '800', fontSize: '14px' }}>
+                        <Printer size={18} /> Print
+                     </button>
+                     <button onClick={shareViaWhatsApp} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '800', fontSize: '14px' }}>
+                        <MessageCircle size={18} /> WhatsApp
+                     </button>
                  </div>
                  <button onClick={onClose} style={{ width: '100%', padding: '20px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '20px', fontWeight: 900, cursor: 'pointer' }}>CLOSE</button>
               </div>

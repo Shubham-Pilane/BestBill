@@ -127,6 +127,12 @@ router.post('/:tableId/order/kot', auth, async (req, res) => {
       return res.status(404).json({ message: 'No active order to print' });
     }
 
+    // Update waiter name, notes, KOT timestamp and reset preparation status for kitchen queue
+    await db.query(
+      "UPDATE orders SET waiter_name = $1, guest_note = $2, is_prepared = false, kot_sent_at = CURRENT_TIMESTAMP WHERE id = $3", 
+      [waiter || req.user.name, notes || '', orderRes.rows[0].order_id]
+    );
+
     const hotelBillingMethod = hotelRes.rows[0]?.billing_method || 'qz';
     if (hotelBillingMethod === 'agent') {
       const printService = require('../services/printService');

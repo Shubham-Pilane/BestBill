@@ -12,6 +12,7 @@ router.get('/history', auth, async (req, res) => {
       JOIN orders o ON b.order_id = o.id 
       JOIN tables t ON o.table_id = t.id 
       WHERE t.hotel_id = $1 
+        AND b.created_at >= NOW() - INTERVAL '1 year'
       ORDER BY b.created_at DESC`, 
       [req.user.hotel_id]
     );

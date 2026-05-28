@@ -13,6 +13,10 @@ const BillingHistory = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedBill, setSelectedBill] = useState(null);
     const [customerPhone, setCustomerPhone] = useState('');
+    const [filterMonth, setFilterMonth] = useState('All');
+    const [filterYear, setFilterYear] = useState('All');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const handleBillClick = async (billId) => {
         try {
@@ -73,10 +77,43 @@ const BillingHistory = () => {
         fetchHistory();
     }, []);
 
-    const filteredBills = bills.filter(b => 
-        b.id.toString().includes(searchTerm) || 
-        b.table_number.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, filterMonth, filterYear]);
+
+    const uniqueYears = ['All', ...new Set(bills.map(b => new Date(b.created_at).getFullYear().toString()))].sort((a, b) => b - a);
+
+    const monthsList = [
+        { value: 'All', label: 'All Months' },
+        { value: '0', label: 'January' },
+        { value: '1', label: 'February' },
+        { value: '2', label: 'March' },
+        { value: '3', label: 'April' },
+        { value: '4', label: 'May' },
+        { value: '5', label: 'June' },
+        { value: '6', label: 'July' },
+        { value: '7', label: 'August' },
+        { value: '8', label: 'September' },
+        { value: '9', label: 'October' },
+        { value: '10', label: 'November' },
+        { value: '11', label: 'December' }
+    ];
+
+    const filteredBills = bills.filter(b => {
+        const matchesSearch = b.id.toString().includes(searchTerm) || 
+                              b.table_number.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        const billDate = new Date(b.created_at);
+        const matchesMonth = filterMonth === 'All' || billDate.getMonth().toString() === filterMonth;
+        const matchesYear = filterYear === 'All' || billDate.getFullYear().toString() === filterYear;
+        
+        return matchesSearch && matchesMonth && matchesYear;
+    });
+
+    const totalPages = Math.ceil(filteredBills.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentBills = filteredBills.slice(indexOfFirstItem, indexOfLastItem);
 
     const totalRevenue = bills.reduce((acc, b) => acc + parseFloat(b.final_amount), 0);
     const totalGst = bills.reduce((acc, b) => acc + parseFloat(b.gst), 0);
@@ -87,7 +124,7 @@ const BillingHistory = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '48px', width: '100%', maxWidth: '1400px' }}>
             
             {/* Header section */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '20px' }}>
                 <div>
                    <h2 style={{ fontSize: '24px', fontWeight: 900, color: 'white', display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
                       <History style={{ color: '#0ea5e9' }} size={28} />
@@ -96,13 +133,61 @@ const BillingHistory = () => {
                    <p style={{ color: '#64748b', fontWeight: 600, fontSize: '14px', margin: 0 }}>Review past transactions and financial performance.</p>
                 </div>
 
-                <div style={{ position: 'relative', width: '320px' }}>
-                    <Search style={{ position: 'absolute', top: '14px', left: '16px', color: '#475569' }} size={18} />
-                    <input 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{ width: '100%', backgroundColor: '#0f172a', border: '2px solid #1e293b', color: 'white', padding: '12px 16px 12px 48px', borderRadius: '16px', outline: 'none', fontWeight: 600, fontSize: '14px' }}
-                    />
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    {/* SEARCH */}
+                    <div style={{ position: 'relative', width: '260px' }}>
+                        <Search style={{ position: 'absolute', top: '14px', left: '16px', color: '#475569' }} size={18} />
+                        <input 
+                            placeholder="Search invoice or table..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{ width: '100%', backgroundColor: '#0f172a', border: '2px solid #1e293b', color: 'white', padding: '12px 16px 12px 48px', borderRadius: '16px', outline: 'none', fontWeight: 600, fontSize: '14px' }}
+                        />
+                    </div>
+
+                    {/* MONTH FILTER */}
+                    <select
+                        value={filterMonth}
+                        onChange={(e) => setFilterMonth(e.target.value)}
+                        style={{ 
+                            backgroundColor: '#0f172a', 
+                            border: '2px solid #1e293b', 
+                            color: 'white', 
+                            padding: '12px 16px', 
+                            borderRadius: '16px', 
+                            outline: 'none', 
+                            fontWeight: 600, 
+                            fontSize: '14px', 
+                            cursor: 'pointer',
+                            minWidth: '140px'
+                        }}
+                    >
+                        {monthsList.map(m => (
+                            <option key={m.value} value={m.value} style={{ backgroundColor: '#0f172a' }}>{m.label}</option>
+                        ))}
+                    </select>
+
+                    {/* YEAR FILTER */}
+                    <select
+                        value={filterYear}
+                        onChange={(e) => setFilterYear(e.target.value)}
+                        style={{ 
+                            backgroundColor: '#0f172a', 
+                            border: '2px solid #1e293b', 
+                            color: 'white', 
+                            padding: '12px 16px', 
+                            borderRadius: '16px', 
+                            outline: 'none', 
+                            fontWeight: 600, 
+                            fontSize: '14px', 
+                            cursor: 'pointer',
+                            minWidth: '110px'
+                        }}
+                    >
+                        {uniqueYears.map(y => (
+                            <option key={y} value={y} style={{ backgroundColor: '#0f172a' }}>{y === 'All' ? 'All Years' : y}</option>
+                        ))}
+                    </select>
                 </div>
             </div>
 
@@ -158,7 +243,7 @@ const BillingHistory = () => {
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {filteredBills.map(bill => (
+                        {currentBills.map(bill => (
                             <div key={bill.id} onClick={() => handleBillClick(bill.id)} className="billing-card" style={{ cursor: 'pointer', backgroundColor: '#0f172a', borderRadius: '24px', padding: '24px 32px', border: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'all 0.2s' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
                                     <div style={{ width: '56px', height: '56px', backgroundColor: '#020617', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #1e293b' }}>
@@ -189,6 +274,73 @@ const BillingHistory = () => {
                                 </div>
                             </div>
                         ))}
+
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '24px' }}>
+                                <button
+                                    disabled={currentPage === 1}
+                                    onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.max(prev - 1, 1)); }}
+                                    style={{
+                                        backgroundColor: currentPage === 1 ? 'rgba(255,255,255,0.02)' : '#0f172a',
+                                        border: '1px solid #1e293b',
+                                        color: currentPage === 1 ? '#475569' : '#0ea5e9',
+                                        padding: '10px 18px',
+                                        borderRadius: '12px',
+                                        fontWeight: 800,
+                                        fontSize: '13px',
+                                        cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    Previous
+                                </button>
+                                
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => {
+                                        const isCurrent = pageNum === currentPage;
+                                        return (
+                                            <button
+                                                key={pageNum}
+                                                onClick={(e) => { e.stopPropagation(); setCurrentPage(pageNum); }}
+                                                style={{
+                                                    backgroundColor: isCurrent ? '#0ea5e9' : '#0f172a',
+                                                    border: `1px solid ${isCurrent ? '#0ea5e9' : '#1e293b'}`,
+                                                    color: isCurrent ? 'white' : '#94a3b8',
+                                                    width: '38px',
+                                                    height: '38px',
+                                                    borderRadius: '12px',
+                                                    fontWeight: 900,
+                                                    fontSize: '14px',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s ease'
+                                                }}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                <button
+                                    disabled={currentPage === totalPages}
+                                    onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.min(prev + 1, totalPages)); }}
+                                    style={{
+                                        backgroundColor: currentPage === totalPages ? 'rgba(255,255,255,0.02)' : '#0f172a',
+                                        border: '1px solid #1e293b',
+                                        color: currentPage === totalPages ? '#475569' : '#0ea5e9',
+                                        padding: '10px 18px',
+                                        borderRadius: '12px',
+                                        fontWeight: 800,
+                                        fontSize: '13px',
+                                        cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -255,8 +407,12 @@ const BillingHistory = () => {
                         </div>
 
                         <div style={{ display: 'flex', gap: '12px' }}>
-                            <button onClick={printBill} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#0f172a', color: 'white', border: 'none', cursor: 'pointer' }}><Printer size={18} /></button>
-                            <button onClick={shareViaWhatsApp} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer' }}><MessageCircle size={18} /></button>
+                            <button onClick={printBill} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#0f172a', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '800', fontSize: '14px' }}>
+                                <Printer size={18} /> Print
+                            </button>
+                            <button onClick={shareViaWhatsApp} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '800', fontSize: '14px' }}>
+                                <MessageCircle size={18} /> WhatsApp
+                            </button>
                         </div>
                         <button onClick={() => setSelectedBill(null)} style={{ width: '100%', padding: '20px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '20px', fontWeight: 900, cursor: 'pointer' }}>CLOSE</button>
                     </div>

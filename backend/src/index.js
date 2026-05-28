@@ -33,6 +33,7 @@ app.use('/api/bills', require('./routes/bills'));
 app.use('/api/rooms', require('./routes/rooms'));
 app.use('/api/guest', require('./routes/guest'));
 app.use('/api/master-menu', require('./routes/master_menu'));
+app.use('/api/kitchen', require('./routes/kitchen'));
 
 app.get('/api/ping', (req, res) => {
   res.json({ message: 'pong', timestamp: new Date().toISOString() });
@@ -45,19 +46,27 @@ app.get('/api/health', (req, res) => {
 const PORT = process.env.PORT || 8080;
 const db = require('./db/db');
 
-// --- AUTO CLEANUP TASK (30 DAYS) ---
+// --- AUTO CLEANUP TASK (2 DAYS / 1 YEAR) ---
 const runCleanupTask = async () => {
     try {
-        console.log('[CLEANUP] Starting daily history cleanup...');
-        // Delete orders older than 30 days that are marked delivered or completed
-        const resOrders = await db.query(
-            "DELETE FROM orders WHERE (is_delivered = true OR status = 'completed') AND created_at < NOW() - INTERVAL '30 days'"
+        console.log('[CLEANUP] Starting daily history cleanup (Orders: 2 days, Bills: 1 year)...');
+        
+        // 1. Delete all unbilled orders older than 2 days (transient, active, or cancelled orders)
+        const resUnbilledOrders = await db.query(
+            "DELETE FROM orders WHERE id NOT IN (SELECT order_id FROM bills) AND created_at < NOW() - INTERVAL '2 days'"
         );
-        // Delete billing history older than 30 days
+        
+        // 2. Delete billing history (bills) older than 1 year
         const resBills = await db.query(
-            "DELETE FROM bills WHERE created_at < NOW() - INTERVAL '30 days'"
+            "DELETE FROM bills WHERE created_at < NOW() - INTERVAL '1 year'"
         );
-        console.log(`[CLEANUP] Success: Removed ${resOrders.rowCount} old orders and ${resBills.rowCount} old bills.`);
+        
+        // 3. Delete billed orders older than 1 year
+        const resBilledOrders = await db.query(
+            "DELETE FROM orders WHERE id IN (SELECT order_id FROM bills) AND created_at < NOW() - INTERVAL '1 year'"
+        );
+
+        console.log(`[CLEANUP] Success: Removed ${resUnbilledOrders.rowCount} unbilled orders, ${resBills.rowCount} bills, and ${resBilledOrders.rowCount} billed orders.`);
     } catch (err) {
         console.error('[CLEANUP] Error during cleanup:', err.message);
     }

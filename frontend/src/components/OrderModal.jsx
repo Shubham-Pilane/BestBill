@@ -186,7 +186,7 @@ const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) =>
         waiter: user?.name || 'Waiter',
         notes: ''
       });
-      toast.success('KOT sent to kitchen agent!', { id: t });
+      toast.success('KOT sent to kitchen successfully!', { id: t });
     } catch (err) {
       toast.error('Failed to print KOT', { id: t });
     }
@@ -196,7 +196,7 @@ const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) =>
     try {
       if (user?.billing_method === 'agent') {
         await api.post(`/bills/${billData.id}/print`);
-        toast.success('Print command sent to Local Agent');
+        toast.success('Sent to printer successfully!');
       } else {
         const tableStr = table.table_numberByFloor || table.table_number;
         const escposString = generateEscposBill(billData, user, tableStr);
@@ -586,10 +586,14 @@ const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) =>
                     />
                  </div>
 
-                 <div style={{ display: 'flex', gap: '12px' }}>
-                    <button onClick={printBill} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#0f172a', color: 'white', border: 'none', cursor: 'pointer' }}><Printer size={18} /></button>
-                    <button onClick={shareViaWhatsApp} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer' }}><MessageCircle size={18} /></button>
-                 </div>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                     <button onClick={printBill} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#0f172a', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '800', fontSize: '14px' }}>
+                        <Printer size={18} /> Print
+                     </button>
+                     <button onClick={shareViaWhatsApp} style={{ flex: 1, padding: '16px', borderRadius: '16px', backgroundColor: '#10b981', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '800', fontSize: '14px' }}>
+                        <MessageCircle size={18} /> WhatsApp
+                     </button>
+                  </div>
                  <button onClick={onClose} style={{ width: '100%', padding: '20px', backgroundColor: '#0f172a', color: 'white', border: 'none', borderRadius: '20px', fontWeight: 900, cursor: 'pointer' }}>CLOSE</button>
              </div>
           </div>

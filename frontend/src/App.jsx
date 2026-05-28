@@ -11,6 +11,7 @@ import Subscriptions from './pages/Subscriptions';
 import Lodging from './pages/Lodging';
 import GuestPortal from './pages/GuestPortal';
 import GuestOrders from './pages/GuestOrders';
+import KitchenKOT from './pages/KitchenKOT';
 import Layout from './components/Layout';
 import './index.css';
 
@@ -57,6 +58,15 @@ function App() {
               <OwnerRoute>
                 <Layout>
                   <MenuManagement />
+                </Layout>
+              </OwnerRoute>
+            </ProtectedRoute>
+          } />
+          <Route path="/kitchen-kot" element={
+            <ProtectedRoute>
+              <OwnerRoute>
+                <Layout>
+                  <KitchenKOT />
                 </Layout>
               </OwnerRoute>
             </ProtectedRoute>

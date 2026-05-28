@@ -161,6 +161,9 @@ const syncSchema = async () => {
             "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS hotel_id INTEGER REFERENCES hotels(id) ON DELETE CASCADE",
             "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS master_id INTEGER REFERENCES master_menu(id) ON DELETE SET NULL",
             "ALTER TABLE hotels ADD COLUMN IF NOT EXISTS billing_method VARCHAR(20) DEFAULT 'qz'",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS is_prepared BOOLEAN DEFAULT false",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS waiter_name VARCHAR(100)",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS kot_sent_at TIMESTAMP",
             
             // 4. Critical Unique Indexes (for ON CONFLICT logic)
             "CREATE UNIQUE INDEX IF NOT EXISTS unique_active_table_order ON orders (table_id) WHERE status = 'active' AND table_id IS NOT NULL",

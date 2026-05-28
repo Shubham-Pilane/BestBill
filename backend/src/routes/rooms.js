@@ -48,6 +48,7 @@ router.get('/guest-orders-all', auth, async (req, res) => {
        JOIN rooms r ON o.room_id = r.id
        WHERE r.hotel_id = $1
        AND o.source = 'guest'
+       AND o.created_at >= NOW() - INTERVAL '2 days'
        AND EXISTS (SELECT 1 FROM order_items WHERE order_id = o.id)
        ORDER BY o.created_at DESC
        LIMIT 50`,
@@ -256,6 +257,12 @@ router.post('/:roomId/order/kot', auth, async (req, res) => {
       console.log('[KOT DEBUG] Returning 404 - No active order items found');
       return res.status(404).json({ message: 'No active order to print' });
     }
+
+    // Update waiter name, notes, KOT timestamp and reset preparation status for kitchen queue
+    await db.query(
+      "UPDATE orders SET waiter_name = $1, guest_note = $2, is_prepared = false, kot_sent_at = CURRENT_TIMESTAMP WHERE id = $3", 
+      [waiter || req.user.name, notes || '', orderRes.rows[0].order_id]
+    );
 
     const hotelBillingMethod = hotelRes.rows[0]?.billing_method || 'qz';
     if (hotelBillingMethod === 'agent') {
