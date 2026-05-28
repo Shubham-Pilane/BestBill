@@ -181,7 +181,8 @@ const AdminDashboard = () => {
       setAttachData({ price: '', category_id: '', isCreatingCategory: false, newCategoryName: '' });
       openHotelInspector(selectedHotelData.hotel.id); // Refresh hotel data
     } catch (err) {
-      toast.error('Linking failed', { id: l });
+      const errorMsg = err.response?.data?.message || err.message || 'Linking failed';
+      toast.error(`Linking failed: ${errorMsg}`, { id: l });
     }
   };
 
@@ -206,7 +207,8 @@ const AdminDashboard = () => {
       setMasterPage(1);
       openHotelInspector(selectedHotelData.hotel.id);
     } catch (err) {
-      toast.error('Registration failed', { id: l });
+      const errorMsg = err.response?.data?.message || err.message || 'Registration failed';
+      toast.error(`Registration failed: ${errorMsg}`, { id: l });
     }
   };
 

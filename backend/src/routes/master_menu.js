@@ -84,11 +84,14 @@ router.post('/', auth, isAdmin, async (req, res) => {
 
         // If hotel_id, category_id, and price are provided, also link/attach it to the hotel
         if (hotel_id && category_id && price) {
-            const existing = await db.query('SELECT id FROM menu_items WHERE hotel_id = $1 AND master_id = $2', [hotel_id, masterItem.id]);
+            const existing = await db.query(
+                'SELECT id FROM menu_items WHERE hotel_id = $1 AND (master_id = $2 OR LOWER(name) = LOWER($3))',
+                [hotel_id, masterItem.id, lowercaseName]
+            );
             if (existing.rows.length > 0) {
                 await db.query(
-                    'UPDATE menu_items SET price = $1, category_id = $2, name = $3, description = $4 WHERE id = $5',
-                    [price, category_id, lowercaseName, description, existing.rows[0].id]
+                    'UPDATE menu_items SET price = $1, category_id = $2, name = $3, description = $4, master_id = $5 WHERE id = $6',
+                    [price, category_id, lowercaseName, description, masterItem.id, existing.rows[0].id]
                 );
             } else {
                 await db.query(
@@ -115,18 +118,21 @@ router.post('/attach', auth, isAdmin, async (req, res) => {
         
         const { name, description } = masterItem.rows[0];
 
-        // Check if item already exists for this hotel
-        const existing = await db.query('SELECT id FROM menu_items WHERE hotel_id = $1 AND master_id = $2', [hotel_id, master_id]);
+        // Check if item already exists for this hotel (either by master_id or by name)
+        const existing = await db.query(
+            'SELECT id FROM menu_items WHERE hotel_id = $1 AND (master_id = $2 OR LOWER(name) = LOWER($3))',
+            [hotel_id, master_id, name]
+        );
         
         let result;
         if (existing.rows.length > 0) {
-            // Update
+            // Update the existing item to set master_id and other details
             result = await db.query(
-                'UPDATE menu_items SET price = $1, category_id = $2, name = $3, description = $4 WHERE id = $5 RETURNING *',
-                [price, category_id, name, description, existing.rows[0].id]
+                'UPDATE menu_items SET price = $1, category_id = $2, name = $3, description = $4, master_id = $5 WHERE id = $6 RETURNING *',
+                [price, category_id, name, description, master_id, existing.rows[0].id]
             );
         } else {
-            // Insert
+            // Insert new item
             result = await db.query(
                 'INSERT INTO menu_items (hotel_id, master_id, category_id, name, price, description) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
                 [hotel_id, master_id, category_id, name, price, description]
@@ -135,8 +141,8 @@ router.post('/attach', auth, isAdmin, async (req, res) => {
         
         res.json(result.rows[0]);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Error attaching item to hotel' });
+        console.error('ATTACH ERROR:', err);
+        res.status(500).json({ message: `Error attaching item to hotel: ${err.message}` });
     }
 });
 
