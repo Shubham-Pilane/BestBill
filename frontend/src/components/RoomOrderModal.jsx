@@ -9,10 +9,12 @@ import { generateEscposBill, printBillViaQZ, getSelectedPrinter } from '../servi
 const RoomOrderModal = ({ room, onClose, onRefresh, initialMenu }) => {
   const { user } = useAuth();
   const [categories, setCategories] = useState(initialMenu?.categories || []);
-  const [items, setItems] = useState(initialMenu?.items || []);
+  const [items, setItems] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [orderItems, setOrderItems] = useState([]);
-  const [loading, setLoading] = useState(!initialMenu);
+  const [loading, setLoading] = useState(true);
   const [showBill, setShowBill] = useState(false);
   const [billData, setBillData] = useState(null);
   const [customerPhone, setCustomerPhone] = useState(room.guest_phone || '');
@@ -47,25 +49,32 @@ const RoomOrderModal = ({ room, onClose, onRefresh, initialMenu }) => {
     }
   }, [room]);
 
+  const fetchMenuPage = async (page = 1, category = 'all', search = '') => {
+    try {
+      const res = await api.get(`/menu/items?page=${page}&limit=10&category_id=${category}&search=${encodeURIComponent(search)}`);
+      setItems(res.data.items || []);
+      setTotalPages(res.data.totalPages || 1);
+      setCurrentPage(res.data.currentPage || 1);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const needsOrderFetch = isOccupied;
         const needsStaticFetch = !initialMenu || categories.length === 0;
 
-        if (!needsOrderFetch && !needsStaticFetch) {
-            setLoading(false);
-            return;
-        }
-
-        const [catRes, itemsRes, orderRes] = await Promise.all([
+        const [catRes, orderRes] = await Promise.all([
           needsStaticFetch ? api.get('/menu/categories') : Promise.resolve({ data: categories }),
-          needsStaticFetch ? api.get('/menu/items') : Promise.resolve({ data: items }),
           needsOrderFetch ? api.get(`/rooms/${room.id}/order`) : Promise.resolve({ data: { items: [] } })
         ]);
         setCategories(catRes.data || []);
-        setItems(itemsRes.data || []);
         setOrderItems(orderRes.data.items || []);
+        
+        await fetchMenuPage(1, 'all', '');
+        
         setLoading(false);
       } catch (err) {
         toast.error('Initialization failed');
@@ -73,6 +82,12 @@ const RoomOrderModal = ({ room, onClose, onRefresh, initialMenu }) => {
     };
     fetchData();
   }, [room, initialMenu]);
+
+  useEffect(() => {
+    if (!loading) {
+      fetchMenuPage(currentPage, selectedCategory, searchQuery);
+    }
+  }, [currentPage, selectedCategory, searchQuery]);
 
   const addToOrder = async (item) => {
     if (!isOccupied) return toast.error('Please confirm booking first');
@@ -299,10 +314,7 @@ const RoomOrderModal = ({ room, onClose, onRefresh, initialMenu }) => {
   const totalFoodAmount = orderItems.reduce((acc, i) => acc + (i.price * i.quantity), 0);
   const subtotalVal = totalFoodAmount + parseFloat(room.total_cost || 0);
 
-  const filteredItems = items.filter(item => 
-    (selectedCategory === 'all' || item.category_id === parseInt(selectedCategory)) &&
-    (item.name.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredItems = items;
 
   if (loading && items.length === 0) return null;
 
@@ -329,14 +341,14 @@ const RoomOrderModal = ({ room, onClose, onRefresh, initialMenu }) => {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRight: '1px solid rgba(255, 255, 255, 0.05)', overflow: 'hidden', minWidth: 0 }}>
              <div style={{ padding: '16px 48px', display: 'flex', gap: '20px', alignItems: 'center', backgroundColor: '#020617', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <div className="category-bar-container" style={{ display: 'flex', gap: '10px', overflowX: 'auto', flex: 1, paddingBottom: '4px' }}>
-                   <button onClick={() => setSelectedCategory('all')} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', backgroundColor: selectedCategory === 'all' ? '#0ea5e9' : '#1e293b', color: 'white', fontWeight: 900, fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>ALL MENU</button>
+                   <button onClick={() => { setSelectedCategory('all'); setCurrentPage(1); }} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', backgroundColor: selectedCategory === 'all' ? '#0ea5e9' : '#1e293b', color: 'white', fontWeight: 900, fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>ALL MENU</button>
                    {categories.map(cat => (
-                      <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', backgroundColor: parseInt(selectedCategory) === cat.id ? '#0ea5e9' : '#1e293b', color: 'white', fontWeight: 900, fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{cat.name.toUpperCase()}</button>
+                      <button key={cat.id} onClick={() => { setSelectedCategory(cat.id); setCurrentPage(1); }} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', backgroundColor: parseInt(selectedCategory) === cat.id ? '#0ea5e9' : '#1e293b', color: 'white', fontWeight: 900, fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{cat.name.toUpperCase()}</button>
                    ))}
                 </div>
                 <div style={{ position: 'relative', width: '300px' }}>
                     <Search style={{ position: 'absolute', top: '50%', left: '16px', transform: 'translateY(-50%)', color: '#64748b' }} size={18} />
-                    <input type="text" placeholder="Filter items..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ width: '100%', padding: '14px 48px', borderRadius: '16px', backgroundColor: '#0f172a', border: '1px solid #1e293b', color: 'white', fontWeight: 700, outline: 'none' }} />
+                    <input type="text" placeholder="Filter items..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} style={{ width: '100%', padding: '14px 48px', borderRadius: '16px', backgroundColor: '#0f172a', border: '1px solid #1e293b', color: 'white', fontWeight: 700, outline: 'none' }} />
                 </div>
              </div>
              
@@ -385,6 +397,72 @@ const RoomOrderModal = ({ room, onClose, onRefresh, initialMenu }) => {
                       </div>
                    </div>
                 ))}
+
+                {/* Pagination Bar */}
+                 {totalPages > 1 && (
+                   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '24px' }}>
+                     <button
+                       disabled={currentPage === 1}
+                       onClick={() => setCurrentPage(currentPage - 1)}
+                       style={{
+                         padding: '10px 16px',
+                         borderRadius: '12px',
+                         backgroundColor: currentPage === 1 ? 'rgba(255,255,255,0.02)' : '#1e293b',
+                         color: currentPage === 1 ? '#475569' : 'white',
+                         border: 'none',
+                         cursor: currentPage === 1 ? 'default' : 'pointer',
+                         fontWeight: 700,
+                         display: 'flex',
+                         alignItems: 'center',
+                         gap: '6px',
+                         transition: 'all 0.2s'
+                       }}
+                     >
+                       Previous
+                     </button>
+                     
+                     {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                       <button
+                         key={p}
+                         onClick={() => setCurrentPage(p)}
+                         style={{
+                           width: '40px',
+                           height: '40px',
+                           borderRadius: '12px',
+                           backgroundColor: currentPage === p ? '#0ea5e9' : '#1e293b',
+                           color: 'white',
+                           border: 'none',
+                           cursor: 'pointer',
+                           fontWeight: 800,
+                           boxShadow: currentPage === p ? '0 4px 12px rgba(14, 165, 233, 0.4)' : 'none',
+                           transition: 'all 0.2s'
+                         }}
+                       >
+                         {p}
+                       </button>
+                     ))}
+ 
+                     <button
+                       disabled={currentPage === totalPages}
+                       onClick={() => setCurrentPage(currentPage + 1)}
+                       style={{
+                         padding: '10px 16px',
+                         borderRadius: '12px',
+                         backgroundColor: currentPage === totalPages ? 'rgba(255,255,255,0.02)' : '#1e293b',
+                         color: currentPage === totalPages ? '#475569' : 'white',
+                         border: 'none',
+                         cursor: currentPage === totalPages ? 'default' : 'pointer',
+                         fontWeight: 700,
+                         display: 'flex',
+                         alignItems: 'center',
+                         gap: '6px',
+                         transition: 'all 0.2s'
+                       }}
+                     >
+                       Next
+                     </button>
+                   </div>
+                 )}
              </div>
           </div>
 

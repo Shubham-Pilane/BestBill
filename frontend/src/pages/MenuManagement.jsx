@@ -9,6 +9,9 @@ const MenuManagement = () => {
   const [items, setItems] = useState([]);
   const [newCatName, setNewCatName] = useState('');
   
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   const [editingCatId, setEditingCatId] = useState(null);
   const [editCatName, setEditCatName] = useState('');
 
@@ -25,14 +28,16 @@ const MenuManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
 
-  const fetchData = async () => {
+  const fetchData = async (page = 1, search = '') => {
     try {
       const [catRes, itemsRes] = await Promise.all([
         api.get('/menu/categories'),
-        api.get('/menu/items')
+        api.get(`/menu/items?page=${page}&limit=10&search=${encodeURIComponent(search)}`)
       ]);
       setCategories(Array.isArray(catRes.data) ? catRes.data : []);
-      setItems(Array.isArray(itemsRes.data) ? itemsRes.data : []);
+      setItems(itemsRes.data.items || []);
+      setTotalPages(itemsRes.data.totalPages || 1);
+      setCurrentPage(itemsRes.data.currentPage || 1);
     } catch (err) {
       console.error('Menu load error:', err);
       toast.error('Failed to load menu');
@@ -40,15 +45,15 @@ const MenuManagement = () => {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    fetchData(currentPage, searchTerm);
+  }, [currentPage, searchTerm]);
 
   const addCategory = async (e) => {
     e.preventDefault();
     try {
       await api.post('/menu/categories', { name: newCatName });
       setNewCatName('');
-      fetchData();
+      fetchData(currentPage, searchTerm);
       toast.success('Category successfully added!');
     } catch (err) {
       toast.error('Could not add category');
@@ -63,7 +68,7 @@ const MenuManagement = () => {
       onConfirm: async () => {
         try {
           await api.delete(`/menu/categories/${id}`);
-          fetchData();
+          fetchData(currentPage, searchTerm);
           toast.success('Group purged');
           setConfirmModal({ ...confirmModal, isOpen: false });
         } catch (err) {
@@ -77,7 +82,7 @@ const MenuManagement = () => {
     try {
       await api.put(`/menu/categories/${id}`, { name: editCatName });
       setEditingCatId(null);
-      fetchData();
+      fetchData(currentPage, searchTerm);
       toast.success('Category updated');
     } catch (err) {
       toast.error('Update failed');
@@ -90,7 +95,9 @@ const MenuManagement = () => {
     try {
       await api.post('/menu/items', newItem);
       setNewItem({ name: '', price: '', category_id: '', description: '' });
-      fetchData();
+      fetchData(1, '');
+      setCurrentPage(1);
+      setSearchTerm('');
       toast.success('Menu item successfully added!');
     } catch (err) {
       toast.error('Could not create item');
@@ -105,7 +112,7 @@ const MenuManagement = () => {
       onConfirm: async () => {
         try {
           await api.delete(`/menu/items/${id}`);
-          fetchData();
+          fetchData(currentPage, searchTerm);
           toast.success('Dish removed');
           setConfirmModal({ ...confirmModal, isOpen: false });
         } catch (err) {
@@ -124,7 +131,7 @@ const MenuManagement = () => {
     try {
       await api.put(`/menu/items/${id}`, editItemData);
       setEditingItemId(null);
-      fetchData();
+      fetchData(currentPage, searchTerm);
       toast.success('Item details updated');
     } catch (err) {
       toast.error('Update failed');
@@ -269,13 +276,13 @@ const MenuManagement = () => {
                  type="text"
                  placeholder="Search dishes or groups..."
                  value={searchTerm}
-                 onChange={(e) => setSearchTerm(e.target.value)}
+                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                  style={{ width: '100%', backgroundColor: '#020617', border: '2px solid #1e293b', color: 'white', padding: '10px 16px 10px 42px', borderRadius: '12px', outline: 'none', fontSize: '13px', fontWeight: 700 }}
                />
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {(items || []).filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()) || (item.category_name && item.category_name.toLowerCase().includes(searchTerm.toLowerCase()))).map(item => (
+            {(items || []).map(item => (
               <div key={item.id} style={{ 
                 backgroundColor: '#0f172a', 
                 border: editingItemId === item.id ? '2px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.05)', 
@@ -333,10 +340,76 @@ const MenuManagement = () => {
                         </>
                       )}
                    </div>
-                </div>
+                 </div>
               </div>
             ))}
           </div>
+
+          {/* Pagination Bar */}
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '24px' }}>
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(currentPage - 1)}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '12px',
+                  backgroundColor: currentPage === 1 ? 'rgba(255,255,255,0.02)' : '#1e293b',
+                  color: currentPage === 1 ? '#475569' : 'white',
+                  border: 'none',
+                  cursor: currentPage === 1 ? 'default' : 'pointer',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Previous
+              </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                <button
+                  key={p}
+                  onClick={() => setCurrentPage(p)}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '12px',
+                    backgroundColor: currentPage === p ? '#6366f1' : '#1e293b',
+                    color: 'white',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 800,
+                    boxShadow: currentPage === p ? '0 4px 12px rgba(99, 102, 241, 0.4)' : 'none',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {p}
+                </button>
+              ))}
+
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(currentPage + 1)}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '12px',
+                  backgroundColor: currentPage === totalPages ? 'rgba(255,255,255,0.02)' : '#1e293b',
+                  color: currentPage === totalPages ? '#475569' : 'white',
+                  border: 'none',
+                  cursor: currentPage === totalPages ? 'default' : 'pointer',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

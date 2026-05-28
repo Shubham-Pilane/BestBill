@@ -56,11 +56,69 @@ router.delete('/categories/:id', auth, async (req, res) => {
 // Get menu items
 router.get('/items', auth, async (req, res) => {
   try {
-    const items = await db.query(
-      'SELECT mi.*, c.name as category_name FROM menu_items mi JOIN categories c ON mi.category_id = c.id WHERE mi.hotel_id = $1 ORDER BY mi.name ASC',
-      [req.user.hotel_id]
-    );
-    res.json(items.rows);
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || '';
+    const category_id = req.query.category_id || 'all';
+
+    let queryStr = `
+      SELECT mi.*, c.name as category_name 
+      FROM menu_items mi 
+      JOIN categories c ON mi.category_id = c.id 
+      WHERE mi.hotel_id = $1
+    `;
+    const params = [req.user.hotel_id];
+
+    if (search) {
+      params.push(`%${search.toLowerCase()}%`);
+      queryStr += ` AND (LOWER(mi.name) LIKE $${params.length} OR LOWER(c.name) LIKE $${params.length})`;
+    }
+
+    if (category_id && category_id !== 'all') {
+      params.push(parseInt(category_id));
+      queryStr += ` AND mi.category_id = $${params.length}`;
+    }
+
+    // If page is not specified, return all items without pagination
+    if (isNaN(page)) {
+      queryStr += ` ORDER BY mi.name ASC`;
+      const result = await db.query(queryStr, params);
+      return res.json(result.rows);
+    }
+
+    // Count query for total items
+    let countQueryStr = `
+      SELECT COUNT(*) 
+      FROM menu_items mi 
+      JOIN categories c ON mi.category_id = c.id 
+      WHERE mi.hotel_id = $1
+    `;
+    const countParams = [req.user.hotel_id];
+    if (search) {
+      countParams.push(`%${search.toLowerCase()}%`);
+      countQueryStr += ` AND (LOWER(mi.name) LIKE $${countParams.length} OR LOWER(c.name) LIKE $${countParams.length})`;
+    }
+    if (category_id && category_id !== 'all') {
+      countParams.push(parseInt(category_id));
+      countQueryStr += ` AND mi.category_id = $${countParams.length}`;
+    }
+    const countResult = await db.query(countQueryStr, countParams);
+    const totalItems = parseInt(countResult.rows[0].count);
+    const totalPages = Math.ceil(totalItems / limit);
+
+    // Add pagination order and limit
+    const offset = (page - 1) * limit;
+    params.push(limit, offset);
+    queryStr += ` ORDER BY mi.name ASC LIMIT $${params.length - 1} OFFSET $${params.length}`;
+
+    const itemsResult = await db.query(queryStr, params);
+
+    res.json({
+      items: itemsResult.rows,
+      totalPages,
+      currentPage: page,
+      totalItems
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error fetching items' });
@@ -72,8 +130,9 @@ router.post('/items', auth, async (req, res) => {
   const { name, price, category_id, description, is_available } = req.body;
   const hotelId = req.user.hotel_id;
   try {
+    const lowercaseName = name.trim().toLowerCase();
     // 1. Ensure it exists in master_menu
-    let masterRes = await db.query('SELECT id FROM master_menu WHERE name = $1', [name]);
+    let masterRes = await db.query('SELECT id FROM master_menu WHERE name = $1', [lowercaseName]);
     let masterId = null;
     
     if (masterRes.rows.length === 0) {
@@ -83,7 +142,7 @@ router.post('/items', auth, async (req, res) => {
       
       const newMaster = await db.query(
         'INSERT INTO master_menu (name, category_name, description) VALUES ($1, $2, $3) RETURNING id',
-        [name, catName, description]
+        [lowercaseName, catName, description]
       );
       masterId = newMaster.rows[0].id;
     } else {
@@ -93,7 +152,7 @@ router.post('/items', auth, async (req, res) => {
     // 2. Create the hotel-specific menu item
     const newItem = await db.query(
       'INSERT INTO menu_items (hotel_id, category_id, master_id, name, price, description, is_available) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [hotelId, category_id, masterId, name, price, description, is_available ?? true]
+      [hotelId, category_id, masterId, lowercaseName, price, description, is_available ?? true]
     );
     res.status(201).json(newItem.rows[0]);
   } catch (err) {
@@ -107,12 +166,33 @@ router.put('/items/:id', auth, async (req, res) => {
   const { name, price, category_id, description, is_available } = req.body;
   const { id } = req.params;
   try {
+    const lowercaseName = name.trim().toLowerCase();
+    
+    // 1. Ensure it exists in master_menu
+    let masterRes = await db.query('SELECT id FROM master_menu WHERE name = $1', [lowercaseName]);
+    let masterId = null;
+    
+    if (masterRes.rows.length === 0) {
+      // Get category name for master record
+      const catRes = await db.query('SELECT name FROM categories WHERE id = $1', [category_id]);
+      const catName = catRes.rows[0]?.name || 'General';
+      
+      const newMaster = await db.query(
+        'INSERT INTO master_menu (name, category_name, description) VALUES ($1, $2, $3) RETURNING id',
+        [lowercaseName, catName, description]
+      );
+      masterId = newMaster.rows[0].id;
+    } else {
+      masterId = masterRes.rows[0].id;
+    }
+
     const updated = await db.query(
-      'UPDATE menu_items SET name = $1, price = $2, category_id = $3, description = $4, is_available = $5 WHERE id = $6 RETURNING *',
-      [name, price, category_id, description, is_available, id]
+      'UPDATE menu_items SET name = $1, price = $2, category_id = $3, master_id = $4, description = $5, is_available = $6 WHERE id = $7 RETURNING *',
+      [lowercaseName, price, category_id, masterId, description, is_available, id]
     );
     res.json(updated.rows[0]);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Update failed' });
   }
 });

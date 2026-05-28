@@ -9,10 +9,12 @@ import { generateEscposBill, printBillViaQZ, getSelectedPrinter } from '../servi
 const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) => {
   const { user } = useAuth();
   const [categories, setCategories] = useState(initialMenu?.categories || []);
-  const [items, setItems] = useState(initialMenu?.items || []);
+  const [items, setItems] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [orderItems, setOrderItems] = useState([]);
-  const [loading, setLoading] = useState(!initialMenu);
+  const [loading, setLoading] = useState(true);
   const [showBill, setShowBill] = useState(false);
   const [billData, setBillData] = useState(null);
   const [customerPhone, setCustomerPhone] = useState('');
@@ -26,31 +28,37 @@ const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) =>
   const [editPriceValue, setEditPriceValue] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
+  const fetchMenuPage = async (page = 1, category = 'all', search = '') => {
+    try {
+      const res = await api.get(`/menu/items?page=${page}&limit=10&category_id=${category}&search=${encodeURIComponent(search)}`);
+      setItems(res.data.items || []);
+      setTotalPages(res.data.totalPages || 1);
+      setCurrentPage(res.data.currentPage || 1);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Only fetch if we don't have initial props OR if there's an active order to load
         const needsOrderFetch = !!table.active_order_id;
         const needsStaticFetch = !initialMenu || !passedTables;
 
-        if (!needsOrderFetch && !needsStaticFetch) {
-            setLoading(false);
-            return;
-        }
-
-        const [catRes, itemsRes, orderRes, tablesRes] = await Promise.all([
+        const [catRes, orderRes, tablesRes] = await Promise.all([
           needsStaticFetch ? api.get('/menu/categories') : Promise.resolve({ data: initialMenu.categories }),
-          needsStaticFetch ? api.get('/menu/items') : Promise.resolve({ data: initialMenu.items }),
           needsOrderFetch ? api.get(`/tables/${table.id}/order`) : Promise.resolve({ data: { items: [] } }),
           needsStaticFetch ? api.get('/tables') : Promise.resolve({ data: passedTables })
         ]);
 
         if (needsStaticFetch) {
             setCategories(catRes.data || []);
-            setItems(itemsRes.data || []);
             setAllTables(tablesRes.data || []);
         }
         setOrderItems(orderRes.data.items || []);
+        
+        await fetchMenuPage(1, 'all', '');
+        
         setLoading(false);
       } catch (err) {
         console.error('Modal Init Error:', err);
@@ -59,6 +67,23 @@ const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) =>
     };
     fetchData();
   }, [table, initialMenu, passedTables]);
+
+  useEffect(() => {
+    if (!loading) {
+      fetchMenuPage(currentPage, selectedCategory, searchQuery);
+    }
+  }, [currentPage, selectedCategory, searchQuery]);
+
+  useEffect(() => {
+    if (searchQuery.length > 0) {
+      const matched = items.filter(i => 
+        i.name.toLowerCase().includes(searchQuery.toLowerCase())
+      ).slice(0, 5);
+      setSuggestions(matched);
+    } else {
+      setSuggestions([]);
+    }
+  }, [items, searchQuery]);
 
   const addToOrder = async (item) => {
     // Optimistic Update
@@ -267,14 +292,7 @@ const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) =>
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
-    if (query.length > 0) {
-      const matched = items.filter(i => 
-        i.name.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 5);
-      setSuggestions(matched);
-    } else {
-      setSuggestions([]);
-    }
+    setCurrentPage(1);
   };
 
   const shareViaWhatsApp = () => {
@@ -338,9 +356,9 @@ const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) =>
           <div className="order-modal-menu" style={{ flex: 1, borderRight: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
             <div style={{ padding: '16px 48px', display: 'flex', gap: '20px', alignItems: 'center', backgroundColor: '#020617', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               <div className="category-bar" style={{ display: 'flex', gap: '10px', overflowX: 'auto', flex: 1 }}>
-                <button onClick={() => setSelectedCategory('all')} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', fontWeight: 900, cursor: 'pointer', backgroundColor: selectedCategory === 'all' ? '#0ea5e9' : '#1e293b', color: 'white', fontSize: '12px', whiteSpace: 'nowrap' }}>ALL ITEMS</button>
+                <button onClick={() => { setSelectedCategory('all'); setCurrentPage(1); }} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', fontWeight: 900, cursor: 'pointer', backgroundColor: selectedCategory === 'all' ? '#0ea5e9' : '#1e293b', color: 'white', fontSize: '12px', whiteSpace: 'nowrap' }}>ALL ITEMS</button>
                 {categories.map(cat => (
-                  <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', fontWeight: 900, cursor: 'pointer', backgroundColor: selectedCategory === cat.id ? '#0ea5e9' : '#1e293b', color: 'white', fontSize: '12px', whiteSpace: 'nowrap' }}>{cat.name.toUpperCase()}</button>
+                  <button key={cat.id} onClick={() => { setSelectedCategory(cat.id); setCurrentPage(1); }} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', fontWeight: 900, cursor: 'pointer', backgroundColor: selectedCategory === cat.id ? '#0ea5e9' : '#1e293b', color: 'white', fontSize: '12px', whiteSpace: 'nowrap' }}>{cat.name.toUpperCase()}</button>
                 ))}
               </div>
 
@@ -380,10 +398,7 @@ const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) =>
             </div>
             
             <div style={{ flex: 1, padding: '32px 48px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', alignContent: 'start' }}>
-              {items.filter(i => 
-                (selectedCategory === 'all' || i.category_id === selectedCategory) &&
-                (i.name.toLowerCase().includes(searchQuery.toLowerCase()))
-              ).map(item => (
+              {items.map(item => (
                 <div key={item.id} onClick={() => addToOrder(item)} style={{ 
                   backgroundColor: '#020617', 
                   border: '1px solid #1e293b', 
@@ -422,6 +437,72 @@ const OrderModal = ({ table, onClose, initialMenu, allTables: passedTables }) =>
                   </div>
                 </div>
               ))}
+
+              {/* Pagination Bar */}
+              {totalPages > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '24px' }}>
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    style={{
+                      padding: '10px 16px',
+                      borderRadius: '12px',
+                      backgroundColor: currentPage === 1 ? 'rgba(255,255,255,0.02)' : '#1e293b',
+                      color: currentPage === 1 ? '#475569' : 'white',
+                      border: 'none',
+                      cursor: currentPage === 1 ? 'default' : 'pointer',
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Previous
+                  </button>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                    <button
+                      key={p}
+                      onClick={() => setCurrentPage(p)}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '12px',
+                        backgroundColor: currentPage === p ? '#0ea5e9' : '#1e293b',
+                        color: 'white',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontWeight: 800,
+                        boxShadow: currentPage === p ? '0 4px 12px rgba(14, 165, 233, 0.4)' : 'none',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {p}
+                    </button>
+                  ))}
+ 
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    style={{
+                      padding: '10px 16px',
+                      borderRadius: '12px',
+                      backgroundColor: currentPage === totalPages ? 'rgba(255,255,255,0.02)' : '#1e293b',
+                      color: currentPage === totalPages ? '#475569' : 'white',
+                      border: 'none',
+                      cursor: currentPage === totalPages ? 'default' : 'pointer',
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

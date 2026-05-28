@@ -27,11 +27,13 @@ const AdminDashboard = () => {
   });
   const [logoFile, setLogoFile] = useState(null);
   const [masterItems, setMasterItems] = useState([]);
+  const [masterPage, setMasterPage] = useState(1);
+  const [masterTotalPages, setMasterTotalPages] = useState(1);
   const [hotelCategories, setHotelCategories] = useState([]);
   const [showAttachModal, setShowAttachModal] = useState({ isOpen: false, item: null });
   const [attachData, setAttachData] = useState({ price: '', category_id: '', isCreatingCategory: false, newCategoryName: '' });
   const [showAddMasterModal, setShowAddMasterModal] = useState(false);
-  const [newMasterItem, setNewMasterItem] = useState({ name: '', category_name: '', description: '' });
+  const [newMasterItem, setNewMasterItem] = useState({ name: '', category_id: '', price: '', description: '' });
   const [searchMasterQuery, setSearchMasterQuery] = useState('');
 
   const fetchHotels = async () => {
@@ -47,17 +49,22 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchHotels();
-    fetchMasterItems();
   }, []);
 
-  const fetchMasterItems = async () => {
+  const fetchMasterItems = async (page = 1, search = '') => {
     try {
-      const res = await api.get('/master-menu');
-      setMasterItems(res.data);
+      const res = await api.get(`/master-menu?page=${page}&limit=10&search=${encodeURIComponent(search)}`);
+      setMasterItems(res.data.items || []);
+      setMasterTotalPages(res.data.totalPages || 1);
+      setMasterPage(res.data.currentPage || 1);
     } catch (err) {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    fetchMasterItems(masterPage, searchMasterQuery);
+  }, [masterPage, searchMasterQuery]);
 
   const openHotelInspector = async (hotelId) => {
     const loadingToast = toast.loading('Synchronizing hotel data...');
@@ -180,13 +187,24 @@ const AdminDashboard = () => {
 
   const handleAddMasterItem = async (e) => {
     e.preventDefault();
+    if (!newMasterItem.category_id) return toast.error('Please select a category');
+    if (!newMasterItem.price) return toast.error('Please enter a price');
+
     const l = toast.loading('Registering global menu item...');
     try {
-      await api.post('/master-menu', newMasterItem);
-      toast.success('Global item registered', { id: l });
+      await api.post('/master-menu', {
+        name: newMasterItem.name,
+        description: newMasterItem.description,
+        price: newMasterItem.price,
+        category_id: newMasterItem.category_id,
+        hotel_id: selectedHotelData.hotel.id
+      });
+      toast.success('Global item registered and linked successfully', { id: l });
       setShowAddMasterModal(false);
-      setNewMasterItem({ name: '', category_name: '', description: '' });
-      fetchMasterItems();
+      setNewMasterItem({ name: '', category_id: '', price: '', description: '' });
+      fetchMasterItems(1, searchMasterQuery);
+      setMasterPage(1);
+      openHotelInspector(selectedHotelData.hotel.id);
     } catch (err) {
       toast.error('Registration failed', { id: l });
     }
@@ -441,22 +459,25 @@ const AdminDashboard = () => {
                                <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
                                <input 
                                  value={searchMasterQuery}
-                                 onChange={e => setSearchMasterQuery(e.target.value)}
+                                 onChange={e => { setSearchMasterQuery(e.target.value); setMasterPage(1); }}
                                  placeholder="Search items or categories..."
                                  style={{ width: '100%', padding: '12px 16px 12px 48px', borderRadius: '14px', border: '1px solid #1e293b', backgroundColor: '#020617', color: 'white', outline: 'none', fontSize: '13px', fontWeight: 600 }}
                                />
                              </div>
 
                              <button 
-                                onClick={() => setShowAddMasterModal(true)}
-                                style={{ backgroundColor: `${themeColor}20`, color: themeColor, padding: '12px 20px', borderRadius: '14px', border: `1px solid ${themeColor}`, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
-                             >
-                                <Plus size={18} /> Add New
-                             </button>
+                                 onClick={() => {
+                                   setNewMasterItem({ name: '', category_id: '', price: '', description: '' });
+                                   setShowAddMasterModal(true);
+                                 }}
+                                 style={{ backgroundColor: `${themeColor}20`, color: themeColor, padding: '12px 20px', borderRadius: '14px', border: `1px solid ${themeColor}`, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
+                              >
+                                 <Plus size={18} /> Add New
+                              </button>
                           </div>
                        </div>
                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: '20px' }}>
-                          {masterItems.filter(item => item.name.toLowerCase().includes(searchMasterQuery.toLowerCase()) || item.category_name.toLowerCase().includes(searchMasterQuery.toLowerCase())).map(item => {
+                          {masterItems.map(item => {
                              const isLinked = selectedHotelData.menu.some(m => m.master_id === item.id);
                              return (
                                <div key={item.id} style={{ backgroundColor: '#020617', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.03)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -493,6 +514,72 @@ const AdminDashboard = () => {
                              );
                           })}
                        </div>
+
+                       {/* Pagination Bar */}
+                       {masterTotalPages > 1 && (
+                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '32px' }}>
+                           <button
+                             disabled={masterPage === 1}
+                             onClick={() => setMasterPage(masterPage - 1)}
+                             style={{
+                               padding: '10px 16px',
+                               borderRadius: '12px',
+                               backgroundColor: masterPage === 1 ? 'rgba(255,255,255,0.02)' : '#1e293b',
+                               color: masterPage === 1 ? '#475569' : 'white',
+                               border: 'none',
+                               cursor: masterPage === 1 ? 'default' : 'pointer',
+                               fontWeight: 700,
+                               display: 'flex',
+                               alignItems: 'center',
+                               gap: '6px',
+                               transition: 'all 0.2s'
+                             }}
+                           >
+                             Previous
+                           </button>
+                           
+                           {Array.from({ length: masterTotalPages }, (_, i) => i + 1).map(p => (
+                             <button
+                               key={p}
+                               onClick={() => setMasterPage(p)}
+                               style={{
+                                 width: '40px',
+                                 height: '40px',
+                                 borderRadius: '12px',
+                                 backgroundColor: masterPage === p ? themeColor : '#1e293b',
+                                 color: 'white',
+                                 border: 'none',
+                                 cursor: 'pointer',
+                                 fontWeight: 800,
+                                 boxShadow: masterPage === p ? `0 4px 12px ${themeColor}40` : 'none',
+                                 transition: 'all 0.2s'
+                               }}
+                             >
+                               {p}
+                             </button>
+                           ))}
+
+                           <button
+                             disabled={masterPage === masterTotalPages}
+                             onClick={() => setMasterPage(masterPage + 1)}
+                             style={{
+                               padding: '10px 16px',
+                               borderRadius: '12px',
+                               backgroundColor: masterPage === masterTotalPages ? 'rgba(255,255,255,0.02)' : '#1e293b',
+                               color: masterPage === masterTotalPages ? '#475569' : 'white',
+                               border: 'none',
+                               cursor: masterPage === masterTotalPages ? 'default' : 'pointer',
+                               fontWeight: 700,
+                               display: 'flex',
+                               alignItems: 'center',
+                               gap: '6px',
+                               transition: 'all 0.2s'
+                             }}
+                           >
+                             Next
+                           </button>
+                         </div>
+                       )}
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -691,8 +778,7 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Add New Master Item Modal */}
-      {showAddMasterModal && (
+       {showAddMasterModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.9)', backdropFilter: 'blur(24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9500, padding: '24px' }}>
            <div className="modal-container" style={{ width: '100%', maxWidth: '480px', backgroundColor: '#0f172a', borderRadius: '40px', padding: '32px', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 50px 100px rgba(0,0,0,0.8)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
@@ -707,8 +793,18 @@ const AdminDashboard = () => {
                  </div>
                  
                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Global Category Name</label>
-                    <input required value={newMasterItem.category_name} onChange={e => setNewMasterItem({...newMasterItem, category_name: e.target.value})} style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '2px solid #1e293b', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 800 }} placeholder="e.g. Main Course" />
+                    <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Hotel Specific Price (₹)</label>
+                    <input type="number" required value={newMasterItem.price} onChange={e => setNewMasterItem({...newMasterItem, price: e.target.value})} style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '2px solid #1e293b', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 800 }} placeholder="Enter price for this hotel" />
+                 </div>
+
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: 950, color: '#64748b', textTransform: 'uppercase' }}>Select Category</label>
+                    <select required value={newMasterItem.category_id} onChange={e => setNewMasterItem({...newMasterItem, category_id: e.target.value})} style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '2px solid #1e293b', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 800 }}>
+                      <option value="">Select a category</option>
+                      {hotelCategories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
                  </div>
 
                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
