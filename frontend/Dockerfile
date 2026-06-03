@@ -11,9 +11,17 @@ FROM nginx:stable-alpine
 # Copy the built files
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Create a custom Nginx config inside the Dockerfile to avoid any 404 errors
+# Create a custom Nginx config inside the Dockerfile to avoid any 404 errors and 500 memory errors on large files
 RUN echo 'server { \
     listen 8080; \
+    sendfile off; \
+    location /downloads/ { \
+        root /usr/share/nginx/html; \
+        sendfile off; \
+        tcp_nopush off; \
+        tcp_nodelay on; \
+        keepalive_timeout 65; \
+    } \
     location / { \
         root /usr/share/nginx/html; \
         index index.html index.htm; \
