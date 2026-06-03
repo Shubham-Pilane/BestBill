@@ -71,8 +71,13 @@ const LandingPage = () => {
   };
 
   const handleDownloadClick = () => {
-    window.location.href = '/downloads/BestBill Setup 1.0.0.exe';
     toast.success("Starting BestBill Setup download...", { icon: '🚀' });
+    const link = document.createElement('a');
+    link.href = '/downloads/BestBill_Setup_1.0.0.exe';
+    link.setAttribute('download', 'BestBill_Setup_1.0.0.exe');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   };
 
   return (
