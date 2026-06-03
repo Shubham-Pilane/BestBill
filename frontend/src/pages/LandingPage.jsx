@@ -373,17 +373,15 @@ const LandingPage = () => {
           {/* Demo Video Player */}
           <div className="glass-card" style={{ padding: '24px', borderRadius: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Product Walkthrough Video</h3>
-            <div style={{ width: '100%', backgroundColor: '#020617', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-              <video 
-                controls 
-                preload="metadata"
-                style={{ width: '100%', display: 'block', aspectRatio: '16/9', objectFit: 'cover' }}
-                poster="/screenshots/Table Dashboard.png"
-              >
-                <source src="/videos/Workflow.mov" type="video/mp4" />
-                <source src="/videos/Workflow.mov" type="video/quicktime" />
-                Your browser does not support the video tag.
-              </video>
+            <div style={{ width: '100%', backgroundColor: '#020617', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden', display: 'flex', justifyContent: 'center' }}>
+              <iframe 
+                src="https://www.youtube.com/embed/X3W4eDhLImU"
+                title="BestBill KOT Workflow Demo"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                style={{ width: '100%', aspectRatio: '9/16', maxHeight: '500px', display: 'block' }}
+              ></iframe>
             </div>
           </div>
 
