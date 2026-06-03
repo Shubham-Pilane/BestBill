@@ -20,3 +20,6 @@ Thumbs.db
 
 # Print Agent Local Directory
 Agent/
+
+# Large assets
+frontend/public/videos/Workflow.mov
