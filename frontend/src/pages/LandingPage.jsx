@@ -73,7 +73,8 @@ const LandingPage = () => {
   const handleDownloadClick = () => {
     toast.success("Starting BestBill Setup download...", { icon: '🚀' });
     const link = document.createElement('a');
-    link.href = '/downloads/BestBill_Setup_1.0.0.exe';
+    // Using the public bucket for reliable fast downloads
+    link.href = 'https://storage.googleapis.com/bestbill-public-logos/BestBill_Setup_1.0.0.exe';
     link.setAttribute('download', 'BestBill_Setup_1.0.0.exe');
     document.body.appendChild(link);
     link.click();
