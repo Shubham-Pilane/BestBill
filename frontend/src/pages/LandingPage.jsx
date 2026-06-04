@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Shield, 
   Cpu, 
@@ -26,12 +26,19 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import AnimatedSection from '../animations/AnimatedSection';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const LandingPage = () => {
   const [activeFaq, setActiveFaq] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+  const pageRef = React.useRef(null);
 
   const screenshots = [
     { title: "Login Page", file: "Login Page.png" },
@@ -90,7 +97,6 @@ const LandingPage = () => {
   const handleDownloadClick = () => {
     toast.success("Starting BestBill Setup download...", { icon: '🚀' });
     const link = document.createElement('a');
-    // Using the public bucket for reliable fast downloads
     link.href = 'https://storage.googleapis.com/bestbill-public-logos/BestBill_Setup_1.0.0.exe';
     link.setAttribute('download', 'BestBill_Setup_1.0.0.exe');
     document.body.appendChild(link);
@@ -98,11 +104,52 @@ const LandingPage = () => {
     link.remove();
   };
 
+  useGSAP(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    // Hero Section Animations
+    const tl = gsap.timeline({ defaults: { ease: 'power4.out', duration: 1.2 } });
+    
+    // Header comes down
+    tl.fromTo('.hero-header', 
+      { y: -50, opacity: 0 }, 
+      { y: 0, opacity: 1, duration: 1 }, 
+      0
+    );
+    
+    // Background glow pulses
+    gsap.fromTo('.hero-glow', 
+      { scale: 1, opacity: 0.2 },
+      { scale: 1.2, opacity: 0.8, duration: 4, repeat: -1, yoyo: true, ease: 'sine.inOut' }
+    );
+
+    // Hero content staggers up
+    tl.fromTo('.hero-content > *', 
+      { y: 40, opacity: 0 },
+      { y: 0, opacity: 1, stagger: 0.15, ease: 'power3.out' }, 
+      0.2
+    );
+
+    // Parallax background on scroll
+    gsap.to('.hero-glow', {
+      y: 200,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.hero-section',
+        start: 'top top',
+        end: 'bottom top',
+        scrub: true
+      }
+    });
+
+  }, { scope: pageRef });
+
   return (
-    <div style={{ backgroundColor: '#020617', color: 'white', minHeight: '100vh', fontFamily: 'Inter, sans-serif', overflowX: 'hidden', width: '100%' }}>
+    <div ref={pageRef} style={{ backgroundColor: '#020617', color: 'white', minHeight: '100vh', fontFamily: 'Inter, sans-serif', overflowX: 'hidden', width: '100%' }}>
       
       {/* Navigation Header */}
-      <header className="glass-effect" style={{ position: 'sticky', top: 0, zIndex: 1000, width: '100%', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <header className="glass-effect hero-header" style={{ position: 'sticky', top: 0, zIndex: 1000, width: '100%', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{ width: '36px', height: '36px', backgroundColor: '#0ea5e9', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 15px rgba(14, 165, 233, 0.4)' }}>
@@ -144,8 +191,8 @@ const LandingPage = () => {
       </header>
 
       {/* Hero Section */}
-      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: '80px 24px 60px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', width: '300px', height: '300px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(14,165,233,0.15) 0%, transparent 70%)', top: '10%', left: '50%', transform: 'translateX(-50%)', filter: 'blur(40px)', zIndex: -1 }}></div>
+      <section className="hero-section hero-content" style={{ maxWidth: '1280px', margin: '0 auto', padding: '80px 24px 60px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div className="hero-glow" style={{ position: 'absolute', width: '300px', height: '300px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(14,165,233,0.15) 0%, transparent 70%)', top: '10%', left: '50%', transform: 'translateX(-50%)', filter: 'blur(40px)', zIndex: -1 }}></div>
 
         {/* Free Promotional Banner */}
         <div style={{ display: 'inline-block', backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', borderRadius: '24px', padding: '12px 32px', marginBottom: '32px', boxShadow: '0 0 20px rgba(16, 185, 129, 0.15)' }}>
@@ -192,7 +239,7 @@ const LandingPage = () => {
 
       {/* About Section */}
       <section id="about" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '48px', alignItems: 'center' }}>
+        <AnimatedSection animation="fade-up" duration={1.2} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '48px', alignItems: 'center' }}>
           <div>
             <span style={{ color: '#0ea5e9', fontWeight: 900, textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.15em' }}>Complete POS Solution</span>
             <h2 style={{ fontSize: '32px', fontWeight: 900, marginTop: '8px', marginBottom: '20px', textTransform: 'uppercase' }}>About BestBill</h2>
@@ -219,20 +266,20 @@ const LandingPage = () => {
               <a href="mailto:bestbillsolutions@gmail.com" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', textDecoration: 'none' }}><Mail size={16} color="#38bdf8" /> bestbillsolutions@gmail.com</a>
             </div>
           </div>
-        </div>
+        </AnimatedSection>
       </section>
 
       {/* Feature Showcase Grid */}
       <section id="features" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+        <AnimatedSection animation="fade-up" duration={1} style={{ textAlign: 'center', marginBottom: '60px' }}>
           <h2 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>Key Software Modules</h2>
           <p style={{ color: '#94a3b8', fontSize: '16px', marginTop: '8px' }}>Powering every aspect of your hospitality or retail venue offline.</p>
-        </div>
+        </AnimatedSection>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+        <AnimatedSection animation="fade-up" stagger={0.1} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
           
           {/* Restaurant & Hotel Billing */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02) translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}>
             <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(14,165,233,0.1)', color: '#0ea5e9', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Printer size={20} />
             </div>
@@ -246,7 +293,7 @@ const LandingPage = () => {
           </div>
 
           {/* Table Management */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02) translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}>
             <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(16,185,129,0.1)', color: '#10b981', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Grid size={20} />
             </div>
@@ -260,7 +307,7 @@ const LandingPage = () => {
           </div>
 
           {/* Parcel Management */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02) translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}>
             <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(168,85,247,0.1)', color: '#a855f7', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Truck size={20} />
             </div>
@@ -273,7 +320,7 @@ const LandingPage = () => {
           </div>
 
           {/* KOT Management */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02) translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}>
             <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(20,184,166,0.1)', color: '#14b8a6', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Coffee size={20} />
             </div>
@@ -287,7 +334,7 @@ const LandingPage = () => {
           </div>
 
           {/* Credit Management */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02) translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}>
             <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(236,72,153,0.1)', color: '#ec4899', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <TrendingUp size={20} />
             </div>
@@ -301,7 +348,7 @@ const LandingPage = () => {
           </div>
 
           {/* Inventory Management */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02) translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}>
             <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(245,158,11,0.1)', color: '#f59e0b', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Cpu size={20} />
             </div>
@@ -315,7 +362,7 @@ const LandingPage = () => {
           </div>
 
           {/* Lodging & Room Management */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02) translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}>
             <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(14,165,233,0.1)', color: '#0ea5e9', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Layers size={20} />
             </div>
@@ -329,7 +376,7 @@ const LandingPage = () => {
           </div>
 
           {/* Billing History & Reports */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02) translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}>
             <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(16,185,129,0.1)', color: '#10b981', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <FileText size={20} />
             </div>
@@ -342,7 +389,7 @@ const LandingPage = () => {
           </div>
 
           {/* Printer Integration */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02) translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}>
             <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(168,85,247,0.1)', color: '#a855f7', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Printer size={20} />
             </div>
@@ -355,7 +402,7 @@ const LandingPage = () => {
           </div>
 
           {/* User Experience */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02) translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}>
             <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(236,72,153,0.1)', color: '#ec4899', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <User size={20} />
             </div>
@@ -368,7 +415,7 @@ const LandingPage = () => {
           </div>
 
           {/* Customer Support */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02) translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}>
             <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(20,184,166,0.1)', color: '#14b8a6', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <HeartHandshake size={20} />
             </div>
@@ -380,21 +427,21 @@ const LandingPage = () => {
             </ul>
           </div>
 
-        </div>
+        </AnimatedSection>
       </section>
 
       {/* Product Video & Screenshots Gallery */}
       <section id="gallery" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+        <AnimatedSection animation="fade-up" style={{ textAlign: 'center', marginBottom: '60px' }}>
           <span style={{ color: '#0ea5e9', fontWeight: 900, textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.15em' }}>Visual Guide</span>
           <h2 style={{ fontSize: '32px', fontWeight: 900, marginTop: '8px', textTransform: 'uppercase' }}>Gallery (Screenshots & Videos)</h2>
           <p style={{ color: '#94a3b8', fontSize: '16px', marginTop: '8px' }}>Take a visual tour of the BestBill interface and product demo video.</p>
-        </div>
+        </AnimatedSection>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '32px', marginBottom: '60px' }}>
           
           {/* Demo Video Player */}
-          <div className="glass-card" style={{ padding: '24px', borderRadius: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <AnimatedSection animation="slide-right" className="glass-card" style={{ padding: '24px', borderRadius: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Product Walkthrough Video</h3>
             <div style={{ width: '100%', backgroundColor: '#020617', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden', display: 'flex', justifyContent: 'center' }}>
               <iframe 
@@ -406,10 +453,10 @@ const LandingPage = () => {
                 style={{ width: '100%', aspectRatio: '9/16', maxHeight: '500px', display: 'block' }}
               ></iframe>
             </div>
-          </div>
+          </AnimatedSection>
 
           {/* Screenshots Gallery */}
-          <div className="glass-card gallery-card" style={{ padding: '24px', borderRadius: '24px', display: 'flex', flexDirection: 'column', gap: '16px', gridColumn: 'span 2' }}>
+          <AnimatedSection animation="slide-left" className="glass-card gallery-card" style={{ padding: '24px', borderRadius: '24px', display: 'flex', flexDirection: 'column', gap: '16px', gridColumn: 'span 2' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Application Screenshot Gallery</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px', overflowY: 'auto', maxHeight: '550px', paddingRight: '8px' }} className="custom-scrollbar">
               
@@ -433,13 +480,13 @@ const LandingPage = () => {
               ))}
 
             </div>
-          </div>
+          </AnimatedSection>
 
         </div>
       </section>
 
       {/* User Manual & Documents */}
-      <section id="manual" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <AnimatedSection id="manual" animation="fade-up" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '48px', alignItems: 'center' }}>
           <div className="glass-card" style={{ padding: '40px', borderRadius: '32px', borderLeft: '4px solid #38bdf8' }}>
             <span style={{ color: '#38bdf8', fontWeight: 900, textTransform: 'uppercase', fontSize: '11px' }}>User Manuals & Docs</span>
@@ -491,19 +538,19 @@ const LandingPage = () => {
             </div>
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* Plans Section */}
       <section id="plans" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+        <AnimatedSection animation="fade-up" style={{ textAlign: 'center', marginBottom: '60px' }}>
           <h2 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>Software Packages</h2>
           <p style={{ color: '#94a3b8', fontSize: '16px', marginTop: '8px' }}>Select the standard plan setup suitable for your business layout.</p>
-        </div>
+        </AnimatedSection>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '32px', flexWrap: 'wrap' }}>
+        <AnimatedSection animation="fade-up" stagger={0.2} style={{ display: 'flex', justifyContent: 'center', gap: '32px', flexWrap: 'wrap' }}>
           
           {/* Basic Plan */}
-          <div className="glass-card" style={{ padding: '40px', borderRadius: '28px', width: '100%', maxWidth: '420px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="glass-card" style={{ padding: '40px', borderRadius: '28px', width: '100%', maxWidth: '420px', display: 'flex', flexDirection: 'column', gap: '24px', transition: 'transform 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-8px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
             <div>
               <span style={{ fontSize: '11px', fontWeight: 900, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Recommended for Cafes & Small Hotels</span>
               <h3 style={{ fontSize: '26px', fontWeight: 900, marginTop: '6px' }}>Basic Plan</h3>
@@ -524,7 +571,7 @@ const LandingPage = () => {
           </div>
 
           {/* Gold Plan */}
-          <div className="glass-card" style={{ padding: '40px', borderRadius: '28px', width: '100%', maxWidth: '420px', display: 'flex', flexDirection: 'column', gap: '24px', border: '2px solid #0ea5e9', boxShadow: '0 20px 40px rgba(14,165,233,0.1)' }}>
+          <div className="glass-card" style={{ padding: '40px', borderRadius: '28px', width: '100%', maxWidth: '420px', display: 'flex', flexDirection: 'column', gap: '24px', border: '2px solid #0ea5e9', boxShadow: '0 20px 40px rgba(14,165,233,0.1)', transition: 'transform 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-8px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
             <div>
               <span style={{ fontSize: '11px', fontWeight: 900, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>All-in-One Enterprise POS</span>
               <h3 style={{ fontSize: '26px', fontWeight: 900, marginTop: '6px' }}>Gold Plan</h3>
@@ -544,40 +591,40 @@ const LandingPage = () => {
             </div>
           </div>
 
-        </div>
+        </AnimatedSection>
       </section>
 
       {/* Pricing Section */}
       <section id="pricing" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+        <AnimatedSection animation="fade-up" style={{ textAlign: 'center', marginBottom: '40px' }}>
           <h2 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>Pricing Plans</h2>
           <p style={{ color: '#94a3b8', fontSize: '16px', marginTop: '8px' }}>Transparent pricing. Select the subscription period that fits your business model.</p>
-        </div>
+        </AnimatedSection>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', flexWrap: 'wrap', marginBottom: '40px' }}>
+        <AnimatedSection animation="fade-up" stagger={0.15} style={{ display: 'flex', justifyContent: 'center', gap: '24px', flexWrap: 'wrap', marginBottom: '40px' }}>
           
           {/* Monthly */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', width: '100%', maxWidth: '280px', textAlign: 'center' }}>
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', width: '100%', maxWidth: '280px', textAlign: 'center', transition: 'transform 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
             <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>Monthly Plan</span>
             <div style={{ fontSize: '32px', fontWeight: 900, color: 'white', margin: '12px 0' }}>₹499</div>
             <span style={{ color: '#64748b', fontSize: '12px' }}>billed monthly</span>
           </div>
 
           {/* Yearly */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', width: '100%', maxWidth: '280px', textAlign: 'center', border: '1px solid rgba(56,189,248,0.2)' }}>
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', width: '100%', maxWidth: '280px', textAlign: 'center', border: '1px solid rgba(56,189,248,0.2)', transition: 'transform 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
             <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 800, textTransform: 'uppercase' }}>Yearly Plan</span>
             <div style={{ fontSize: '32px', fontWeight: 900, color: '#38bdf8', margin: '12px 0' }}>₹5,999</div>
             <span style={{ color: '#64748b', fontSize: '12px' }}>billed annually</span>
           </div>
 
           {/* Lifetime */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', width: '100%', maxWidth: '280px', textAlign: 'center' }}>
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', width: '100%', maxWidth: '280px', textAlign: 'center', transition: 'transform 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
             <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>Lifetime License</span>
             <div style={{ fontSize: '32px', fontWeight: 900, color: 'white', margin: '12px 0' }}>₹14,999</div>
             <span style={{ color: '#64748b', fontSize: '12px' }}>one-time payment</span>
           </div>
 
-        </div>
+        </AnimatedSection>
 
         <div style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto', color: '#cbd5e1', fontSize: '14px', lineHeight: 1.6 }}>
           <p style={{ marginBottom: '12px' }}>
@@ -591,11 +638,11 @@ const LandingPage = () => {
 
       {/* FAQ Section */}
       <section id="faq" style={{ maxWidth: '800px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+        <AnimatedSection animation="fade-up" style={{ textAlign: 'center', marginBottom: '40px' }}>
           <h2 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>Frequently Asked Questions</h2>
-        </div>
+        </AnimatedSection>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <AnimatedSection animation="fade-up" stagger={0.1} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {faqs.map((faq, index) => (
             <div 
               key={index} 
@@ -614,14 +661,14 @@ const LandingPage = () => {
               )}
             </div>
           ))}
-        </div>
+        </AnimatedSection>
       </section>
 
       {/* Contact Section */}
       <section id="contact" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px 100px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '48px' }}>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <AnimatedSection animation="slide-right" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div>
               <h2 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>Contact Us</h2>
               <p style={{ color: '#94a3b8', fontSize: '15px', marginTop: '8px' }}>Get in touch directly with the BestBill founder for product activation, custom bills, or service desk configuration.</p>
@@ -645,9 +692,9 @@ const LandingPage = () => {
                 <span>Pune, Maharashtra, India</span>
               </div>
             </div>
-          </div>
+          </AnimatedSection>
 
-          <div className="glass-card" style={{ padding: '36px', borderRadius: '24px' }}>
+          <AnimatedSection animation="slide-left" className="glass-card" style={{ padding: '36px', borderRadius: '24px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '20px' }}>Inquiry Form</h3>
             
             <form onSubmit={handleContactSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -697,7 +744,7 @@ const LandingPage = () => {
                 {isSubmitting ? "Sending..." : "Submit Inquiry"} <ArrowRight size={14} />
               </button>
             </form>
-          </div>
+          </AnimatedSection>
 
         </div>
       </section>
