@@ -97,8 +97,8 @@ const LandingPage = () => {
   const handleDownloadClick = () => {
     toast.success("Starting BestBill Setup download...", { icon: '🚀' });
     const link = document.createElement('a');
-    link.href = 'https://storage.googleapis.com/bestbill-public-logos/BestBill_Setup_1.0.0.exe';
-    link.setAttribute('download', 'BestBill_Setup_1.0.0.exe');
+    link.href = 'https://storage.googleapis.com/bestbill-public-logos/BestBill%20Setup%201.0.0.exe';
+    link.setAttribute('download', 'BestBill Setup 1.0.0.exe');
     document.body.appendChild(link);
     link.click();
     link.remove();
