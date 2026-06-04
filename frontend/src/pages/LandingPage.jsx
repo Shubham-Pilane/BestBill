@@ -30,12 +30,13 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import AnimatedSection from '../animations/AnimatedSection';
+import api from '../services/api';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const LandingPage = () => {
   const [activeFaq, setActiveFaq] = useState(null);
-  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
   const pageRef = React.useRef(null);
@@ -81,17 +82,26 @@ const LandingPage = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleContactSubmit = (e) => {
+  const handleContactSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.message) {
+    if (!formData.name || !formData.email || !formData.phone || !formData.message) {
       return toast.error("Please fill in all fields.");
     }
     setIsSubmitting(true);
-    setTimeout(() => {
-      toast.success("Message sent! Shubham Pilane will get back to you shortly.");
-      setFormData({ name: '', email: '', message: '' });
+    try {
+      const response = await api.post('/contact', formData);
+      if (response.data && response.data.success) {
+        toast.success(response.data.message || "Message sent! Shubham Pilane will get back to you shortly.");
+        setFormData({ name: '', email: '', phone: '', message: '' });
+      } else {
+        toast.error("Failed to send message. Please try again.");
+      }
+    } catch (err) {
+      console.error("Error submitting contact form:", err);
+      toast.error(err.response?.data?.message || "Something went wrong. Please try again later.");
+    } finally {
       setIsSubmitting(false);
-    }, 800);
+    }
   };
 
   const handleDownloadClick = () => {
@@ -628,8 +638,8 @@ const LandingPage = () => {
           <p style={{ marginBottom: '12px' }}>
             <strong>For detailed information regarding Basic Plan, Gold Plan, installation, and licensing, please contact customer care.</strong>
           </p>
-          <a href="tel:9822401802" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#38bdf8', fontSize: '18px', fontWeight: 900, textDecoration: 'none' }}>
-            <Phone size={18} /> 9822401802
+          <a href="tel:+919822401802" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#38bdf8', fontSize: '18px', fontWeight: 900, textDecoration: 'none' }}>
+            <Phone size={18} /> +91 9822401802
           </a>
         </div>
       </section>
@@ -717,6 +727,18 @@ const LandingPage = () => {
                   onChange={handleInputChange} 
                   style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 600 }}
                   placeholder="e.g. rahul@example.com"
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Mobile Number</label>
+                <input 
+                  type="tel" 
+                  name="phone" 
+                  value={formData.phone} 
+                  onChange={handleInputChange} 
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 600 }}
+                  placeholder="e.g. +91 9822401802"
                 />
               </div>
 

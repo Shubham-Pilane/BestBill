@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
+const { sendInquiryEmail } = require('./utils/mailer');
 
 const app = express();
 
@@ -19,10 +20,23 @@ app.use((req, res, next) => {
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Contact form submission
-app.post('/api/contact', (req, res) => {
-  const { name, email, message } = req.body;
-  console.log(`[CONTACT FORM] Message from ${name} (${email}): ${message}`);
-  res.json({ success: true, message: 'Thank you for contacting us. We will get back to you shortly!' });
+app.post('/api/contact', async (req, res) => {
+  const { name, email, phone, message } = req.body;
+  console.log(`[CONTACT FORM] Message from ${name} (${email}, Phone: ${phone}): ${message}`);
+  
+  try {
+    const result = await sendInquiryEmail({ name, email, phone, message });
+    if (result && result.skipped) {
+      return res.json({ 
+        success: true, 
+        message: 'Thank you for contacting us! (Warning: SMTP server not configured locally, email not sent).' 
+      });
+    }
+    res.json({ success: true, message: 'Thank you for contacting us. We will get back to you shortly!' });
+  } catch (err) {
+    console.error('[MAILER ERROR] Failed to send email:', err);
+    res.status(500).json({ success: false, message: 'Failed to process inquiry. Please try again later.' });
+  }
 });
 
 app.get('/api/health', (req, res) => {
