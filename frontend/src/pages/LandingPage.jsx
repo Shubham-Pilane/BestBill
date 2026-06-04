@@ -20,7 +20,10 @@ import {
   Grid,
   TrendingUp,
   Truck,
-  HeartHandshake
+  HeartHandshake,
+  X,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -28,6 +31,20 @@ const LandingPage = () => {
   const [activeFaq, setActiveFaq] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+
+  const screenshots = [
+    { title: "Login Page", file: "Login Page.png" },
+    { title: "Table Dashboard", file: "Table Dashboard.png" },
+    { title: "Menu Management", file: "Menu Mangement.png" },
+    { title: "Room Management", file: "Room Mangement.png" },
+    { title: "Credit Management", file: "Credit Mangement.png" },
+    { title: "Credit Settlement", file: "Credit Settlement.png" },
+    { title: "Inventory Management", file: "Inventory Mangement.png" },
+    { title: "Billing History", file: "Billing History.png" },
+    { title: "Collection Record", file: "Collection Record.png" },
+    { title: "Item Sales Report", file: "Item Sales Report.png" }
+  ];
 
   const faqs = [
     {
@@ -396,18 +413,7 @@ const LandingPage = () => {
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Application Screenshot Gallery</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px', overflowY: 'auto', maxHeight: '550px', paddingRight: '8px' }} className="custom-scrollbar">
               
-              {[
-                { title: "Login Page", file: "Login Page.png" },
-                { title: "Table Dashboard", file: "Table Dashboard.png" },
-                { title: "Menu Management", file: "Menu Mangement.png" },
-                { title: "Room Management", file: "Room Mangement.png" },
-                { title: "Credit Management", file: "Credit Mangement.png" },
-                { title: "Credit Settlement", file: "Credit Settlement.png" },
-                { title: "Inventory Management", file: "Inventory Mangement.png" },
-                { title: "Billing History", file: "Billing History.png" },
-                { title: "Collection Record", file: "Collection Record.png" },
-                { title: "Item Sales Report", file: "Item Sales Report.png" }
-              ].map((ss, idx) => (
+              {screenshots.map((ss, idx) => (
                 <div key={idx} style={{ backgroundColor: '#090d1f', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.borderColor = '#0ea5e9'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px' }}>
                     <span style={{ fontSize: '13px', fontWeight: 900, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{ss.title}</span>
@@ -420,7 +426,7 @@ const LandingPage = () => {
                       style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer', transition: 'transform 0.3s' }} 
                       onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'} 
                       onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                      onClick={() => window.open(`/screenshots/${ss.file}`, '_blank')}
+                      onClick={() => setSelectedImageIndex(idx)}
                     />
                   </div>
                 </div>
@@ -709,6 +715,73 @@ const LandingPage = () => {
         </p>
         <p style={{ color: '#475569', fontSize: '12px', fontWeight: 600 }}>© {new Date().getFullYear()} BestBill Software. All rights reserved. Windows is a trademark of Microsoft Corporation.</p>
       </footer>
+
+      {/* Image Gallery Modal */}
+      {selectedImageIndex !== null && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          backgroundColor: 'rgba(2, 6, 23, 0.95)', zIndex: 9999,
+          display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+          backdropFilter: 'blur(10px)'
+        }}>
+          {/* Header */}
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10000 }}>
+            <div style={{ color: 'white', fontWeight: 800, fontSize: '18px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ backgroundColor: '#0ea5e9', padding: '4px 12px', borderRadius: '24px', fontSize: '14px' }}>
+                {selectedImageIndex + 1} / {screenshots.length}
+              </span>
+              {screenshots[selectedImageIndex].title}
+            </div>
+            <button 
+              onClick={() => setSelectedImageIndex(null)}
+              style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', width: '48px', height: '48px', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
+              onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          {/* Left Arrow */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedImageIndex(prev => prev === 0 ? screenshots.length - 1 : prev - 1);
+            }}
+            style={{ position: 'absolute', left: '24px', backgroundColor: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', width: '56px', height: '56px', borderRadius: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10000, transition: 'all 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
+          >
+            <ChevronLeft size={32} />
+          </button>
+
+          {/* Right Arrow */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedImageIndex(prev => prev === screenshots.length - 1 ? 0 : prev + 1);
+            }}
+            style={{ position: 'absolute', right: '24px', backgroundColor: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', width: '56px', height: '56px', borderRadius: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10000, transition: 'all 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
+          >
+            <ChevronRight size={32} />
+          </button>
+
+          {/* Image Container */}
+          <div 
+            style={{ width: '90%', height: '80%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+            onClick={() => setSelectedImageIndex(null)}
+          >
+            <img 
+              src={`/screenshots/${screenshots[selectedImageIndex].file}`} 
+              alt={screenshots[selectedImageIndex].title}
+              style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
+              onClick={e => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
 
     </div>
   );
