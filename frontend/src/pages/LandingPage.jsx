@@ -152,10 +152,8 @@ const LandingPage = () => {
       <header className="glass-effect hero-header" style={{ position: 'sticky', top: 0, zIndex: 1000, width: '100%', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '36px', height: '36px', backgroundColor: '#0ea5e9', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 15px rgba(14, 165, 233, 0.4)' }}>
-              <Layers color="white" size={20} />
-            </div>
-            <span style={{ fontSize: '20px', fontWeight: 900, letterSpacing: '-0.03em' }}>Best<span style={{ color: '#38bdf8' }}>Bill</span></span>
+            <img src="/logo.svg" alt="BestBill Logo" style={{ width: '36px', height: '36px', boxShadow: '0 0 15px rgba(14, 165, 233, 0.4)', borderRadius: '9px' }} />
+            <span style={{ fontSize: '20px', fontWeight: 900, letterSpacing: '-0.03em' }}>Best<span style={{ color: '#38bdf8' }}>Bill</span><sup style={{ fontSize: '12px', fontWeight: 'bold' }}>&trade;</sup></span>
             <span className="hidden sm:inline-block" style={{ fontSize: '9px', backgroundColor: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', padding: '2px 8px', borderRadius: '100px', fontWeight: 800 }}>OFFLINE v2.4</span>
           </div>
 
@@ -752,9 +750,7 @@ const LandingPage = () => {
       {/* Footer */}
       <footer style={{ backgroundColor: '#010409', borderTop: '1px solid rgba(255,255,255,0.05)', padding: '40px 24px', textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-          <div style={{ width: '32px', height: '32px', backgroundColor: '#0ea5e9', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Layers color="white" size={18} />
-          </div>
+          <img src="/logo.svg" alt="BestBill Logo" style={{ width: '32px', height: '32px', borderRadius: '8px' }} />
           <span style={{ fontSize: '18px', fontWeight: 800 }}>BestBill Offline POS</span>
         </div>
         <p style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
