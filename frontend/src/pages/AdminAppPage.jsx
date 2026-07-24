@@ -185,10 +185,10 @@ const AdminAppPage = () => {
           </div>
 
           {/* Display Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '36px', alignItems: 'center' }}>
+          <div className="admin-showcase-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '36px', alignItems: 'center' }}>
             
             {/* Left Column: Screen details */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            <div className="admin-showcase-text" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <div style={{ display: 'inline-block', backgroundColor: 'rgba(56,189,248,0.1)', color: '#38bdf8', padding: '4px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 800, width: 'fit-content' }}>
                 SCREEN {activeTab + 1} OF {adminShowcaseItems.length}
               </div>
@@ -220,7 +220,7 @@ const AdminAppPage = () => {
             </div>
 
             {/* Right Column: Phone Frame */}
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <div className="admin-showcase-image" style={{ display: 'flex', justifyContent: 'center' }}>
               <div style={{
                 position: 'relative',
                 width: '100%',
@@ -249,6 +249,21 @@ const AdminAppPage = () => {
 
           </div>
         </AnimatedSection>
+        <style>{`
+          @media (max-width: 768px) {
+            .admin-showcase-grid {
+              display: flex !important;
+              flex-direction: column !important;
+            }
+            .admin-showcase-image {
+              order: 1 !important;
+              margin-bottom: 20px !important;
+            }
+            .admin-showcase-text {
+              order: 2 !important;
+            }
+          }
+        `}</style>
       </section>
 
       {/* Problem vs Solution Section */}
