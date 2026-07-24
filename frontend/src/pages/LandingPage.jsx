@@ -277,19 +277,13 @@ const LandingPage = () => {
             <Link to="/admin-app" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>BestBill Admin App</Link>
           </nav>
 
-          {/* Mobile Header Quick Actions */}
-          <div className="mobile-only-header" style={{ display: 'none', alignItems: 'center', gap: '8px' }}>
-            <Link 
-              to="/admin-app" 
-              style={{ backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
-            >
-              <Globe size={13} /> Admin App
-            </Link>
+          {/* Mobile Header Menu Toggle Button */}
+          <div className="mobile-only-header" style={{ display: 'none', alignItems: 'center' }}>
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '6px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px 12px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
             >
-              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
@@ -297,14 +291,14 @@ const LandingPage = () => {
         {/* Mobile Slide-Down Navigation Drawer */}
         {mobileMenuOpen && (
           <div style={{ backgroundColor: '#090d1f', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <a href="#about" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 700, fontSize: '15px' }}>About</a>
-            <a href="#android" onClick={() => setMobileMenuOpen(false)} style={{ color: '#34d399', textDecoration: 'none', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px' }}><Smartphone size={16} /> Android App</a>
-            <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 700, fontSize: '15px' }}>Features</a>
-            <a href="#gallery" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 700, fontSize: '15px' }}>Gallery</a>
-            <a href="#plans" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 700, fontSize: '15px' }}>Plans</a>
-            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 700, fontSize: '15px' }}>Pricing</a>
-            <a href="#contact" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 700, fontSize: '15px' }}>Contact</a>
-            <Link to="/admin-app" onClick={() => setMobileMenuOpen(false)} style={{ color: '#38bdf8', textDecoration: 'none', fontWeight: 800, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(56, 189, 248, 0.1)', padding: '10px 14px', borderRadius: '10px', border: '1px solid rgba(56, 189, 248, 0.3)' }}><Globe size={16} /> BestBill Admin App</Link>
+            <a href="#about" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>About</a>
+            <a href="#android" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Android App</a>
+            <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Features</a>
+            <a href="#gallery" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Gallery</a>
+            <a href="#plans" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Plans</a>
+            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Pricing</a>
+            <a href="#contact" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Contact</a>
+            <Link to="/admin-app" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>BestBill Admin App</Link>
           </div>
         )}
 

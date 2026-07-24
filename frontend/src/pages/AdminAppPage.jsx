@@ -72,19 +72,18 @@ const AdminAppPage = () => {
       
       {/* Header Bar */}
       <header className="glass-effect" style={{ position: 'sticky', top: 0, zIndex: 1000, width: '100%', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'white' }}>
               <img src="/logo.svg" alt="BestBill Logo" style={{ width: '36px', height: '36px', borderRadius: '9px', boxShadow: '0 0 15px rgba(16, 185, 129, 0.4)' }} />
               <span style={{ fontSize: '20px', fontWeight: 900, letterSpacing: '-0.03em' }}>Best<span style={{ color: '#10b981' }}>Bill</span></span>
             </Link>
-            <span style={{ fontSize: '10px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '3px 10px', borderRadius: '100px', fontWeight: 800 }}>ADMIN APP</span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <Link 
               to="/" 
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8', textDecoration: 'none', fontWeight: 700, fontSize: '14px', transition: 'color 0.2s' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8', textDecoration: 'none', fontWeight: 700, fontSize: '14px', transition: 'color 0.2s', whiteSpace: 'nowrap' }}
               onMouseEnter={e => e.target.style.color = '#38bdf8'}
               onMouseLeave={e => e.target.style.color = '#94a3b8'}
             >
@@ -93,7 +92,7 @@ const AdminAppPage = () => {
 
             <button 
               onClick={handleDownloadAdminApk}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#10b981', border: 'none', color: 'white', padding: '8px 18px', borderRadius: '10px', fontWeight: 800, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 14px rgba(16,185,129,0.3)' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#10b981', border: 'none', color: 'white', padding: '8px 18px', borderRadius: '10px', fontWeight: 800, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 14px rgba(16,185,129,0.3)', whiteSpace: 'nowrap' }}
               onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
               onMouseLeave={e => e.target.style.transform = 'scale(1)'}
             >
