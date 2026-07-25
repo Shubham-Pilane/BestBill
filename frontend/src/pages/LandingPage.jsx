@@ -188,8 +188,8 @@ const LandingPage = () => {
   const handleDownloadAndroid = () => {
     toast.success("Starting BestBill Android APK download...", { icon: '📱' });
     const link = document.createElement('a');
-    link.href = 'https://storage.googleapis.com/bestbill-public-logos/BestBill%20Setup%201.0.0.apk';
-    link.setAttribute('download', 'BestBill Setup 1.0.0.apk');
+    link.href = 'https://storage.googleapis.com/bestbill-public-logos/BestBill_Setup_v1.0.1.apk';
+    link.setAttribute('download', 'BestBill_Setup_v1.0.1.apk');
     document.body.appendChild(link);
     link.click();
     link.remove();
