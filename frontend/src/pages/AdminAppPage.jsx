@@ -447,13 +447,37 @@ const AdminAppPage = () => {
       {/* Footer */}
       <footer style={{ backgroundColor: '#010409', borderTop: '1px solid rgba(255,255,255,0.05)', padding: '40px 24px', textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-          <img src="/logo.svg" alt="BestBill Logo" style={{ width: '32px', height: '32px', borderRadius: '8px' }} />
           <span style={{ fontSize: '18px', fontWeight: 800 }}>BestBill Admin App & POS</span>
         </div>
         <p style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
           Founder & Owner: <strong>Shubham Pilane</strong> | Phone: +91 9822401802 | Email: bestbillsolutions@gmail.com
         </p>
-        <p style={{ color: '#475569', fontSize: '12px', fontWeight: 600 }}>© {new Date().getFullYear()} BestBill Software. All rights reserved.</p>
+        <p style={{ color: '#475569', fontSize: '12px', fontWeight: 600, marginBottom: '16px' }}>
+          © {new Date().getFullYear()} BestBill Software. All rights reserved.
+        </p>
+        <div style={{ marginTop: '12px' }}>
+          <Link 
+            to="/admin" 
+            style={{ 
+              color: '#94a3b8', 
+              textDecoration: 'none', 
+              fontSize: '13px', 
+              fontWeight: 700, 
+              padding: '8px 18px', 
+              borderRadius: '8px', 
+              border: '1px solid rgba(255,255,255,0.1)', 
+              backgroundColor: 'rgba(255,255,255,0.04)', 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              transition: 'all 0.2s' 
+            }} 
+            onMouseEnter={e => { e.currentTarget.style.color = '#38bdf8'; e.currentTarget.style.borderColor = '#38bdf8'; e.currentTarget.style.backgroundColor = 'rgba(56,189,248,0.08)'; }} 
+            onMouseLeave={e => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.04)'; }}
+          >
+            Admin Login
+          </Link>
+        </div>
       </footer>
 
       {/* Lightbox Modal */}
