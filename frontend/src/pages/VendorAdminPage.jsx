@@ -38,6 +38,12 @@ export default function VendorAdminPage() {
   const [loading, setLoading] = useState(false);
   const [statusToast, setStatusToast] = useState('');
 
+  // Date Filter State
+  const [dateFilter, setDateFilter] = useState('all'); // 'all', 'last_15_days', 'last_month', 'current_month', 'last_3_months', 'last_6_months', 'this_year', 'custom', 'specific'
+  const [customFromDate, setCustomFromDate] = useState('');
+  const [customToDate, setCustomToDate] = useState('');
+  const [specificDate, setSpecificDate] = useState('');
+
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -255,6 +261,51 @@ export default function VendorAdminPage() {
 
     if (statusFilter === 'active' && !item.is_active) return false;
     if (statusFilter === 'revoked' && item.is_active) return false;
+
+    if (dateFilter !== 'all') {
+      if (!item.registration_date) return false;
+      const regDate = new Date(item.registration_date);
+      const now = new Date();
+      
+      if (dateFilter === 'last_15_days') {
+        const past15 = new Date();
+        past15.setDate(now.getDate() - 15);
+        if (regDate < past15) return false;
+      } else if (dateFilter === 'last_month') {
+        const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        if (regDate < lastMonth || regDate >= thisMonth) return false;
+      } else if (dateFilter === 'current_month') {
+        const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        if (regDate < thisMonth) return false;
+      } else if (dateFilter === 'last_3_months') {
+        const past3 = new Date();
+        past3.setMonth(now.getMonth() - 3);
+        if (regDate < past3) return false;
+      } else if (dateFilter === 'last_6_months') {
+        const past6 = new Date();
+        past6.setMonth(now.getMonth() - 6);
+        if (regDate < past6) return false;
+      } else if (dateFilter === 'this_year') {
+        const thisYear = new Date(now.getFullYear(), 0, 1);
+        if (regDate < thisYear) return false;
+      } else if (dateFilter === 'custom') {
+        if (customFromDate) {
+          const from = new Date(customFromDate);
+          if (regDate < from) return false;
+        }
+        if (customToDate) {
+          const to = new Date(customToDate);
+          to.setHours(23, 59, 59, 999);
+          if (regDate > to) return false;
+        }
+      } else if (dateFilter === 'specific') {
+        if (specificDate) {
+          const spec = new Date(specificDate);
+          if (regDate.toDateString() !== spec.toDateString()) return false;
+        }
+      }
+    }
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -482,6 +533,63 @@ export default function VendorAdminPage() {
               </select>
             </div>
 
+          </div>
+
+          {/* Date Filter Row */}
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end', flexWrap: 'wrap', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
+            <div style={{ flex: 1, minWidth: '200px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', display: 'block', marginBottom: '8px' }}>Registration Date Filter</label>
+              <select
+                value={dateFilter}
+                onChange={(e) => { setDateFilter(e.target.value); setCurrentPage(1); }}
+                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '14px', backgroundColor: '#f8fafc', color: '#0f172a', fontWeight: 700 }}
+              >
+                <option value="all">All Time</option>
+                <option value="last_15_days">Last 15 Days</option>
+                <option value="last_month">Last Month</option>
+                <option value="current_month">Current Month</option>
+                <option value="last_3_months">Last 3 Months</option>
+                <option value="last_6_months">Last 6 Months</option>
+                <option value="this_year">This Year</option>
+                <option value="custom">Custom Date Range</option>
+                <option value="specific">Specific Date</option>
+              </select>
+            </div>
+
+            {dateFilter === 'custom' && (
+              <>
+                <div style={{ flex: 1, minWidth: '150px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', display: 'block', marginBottom: '8px' }}>From Date</label>
+                  <input
+                    type="date"
+                    value={customFromDate}
+                    onChange={(e) => { setCustomFromDate(e.target.value); setCurrentPage(1); }}
+                    style={{ width: '100%', padding: '11px', borderRadius: '12px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '14px', backgroundColor: '#f8fafc', color: '#0f172a' }}
+                  />
+                </div>
+                <div style={{ flex: 1, minWidth: '150px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', display: 'block', marginBottom: '8px' }}>To Date</label>
+                  <input
+                    type="date"
+                    value={customToDate}
+                    onChange={(e) => { setCustomToDate(e.target.value); setCurrentPage(1); }}
+                    style={{ width: '100%', padding: '11px', borderRadius: '12px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '14px', backgroundColor: '#f8fafc', color: '#0f172a' }}
+                  />
+                </div>
+              </>
+            )}
+
+            {dateFilter === 'specific' && (
+              <div style={{ flex: 1, minWidth: '150px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', display: 'block', marginBottom: '8px' }}>Select Date</label>
+                <input
+                  type="date"
+                  value={specificDate}
+                  onChange={(e) => { setSpecificDate(e.target.value); setCurrentPage(1); }}
+                  style={{ width: '100%', padding: '11px', borderRadius: '12px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '14px', backgroundColor: '#f8fafc', color: '#0f172a' }}
+                />
+              </div>
+            )}
           </div>
         </div>
 
