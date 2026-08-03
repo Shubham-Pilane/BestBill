@@ -254,6 +254,8 @@ export default function VendorAdminPage() {
     deduplicatedMap.set(key, item);
   }
   const combinedList = Array.from(deduplicatedMap.values());
+  const desktopCount = combinedList.filter(i => i.platform === 'desktop').length;
+  const mobileCount = combinedList.filter(i => i.platform === 'mobile').length;
 
   const filteredData = combinedList.filter(item => {
     if (platformTab === 'mobile' && item.platform !== 'mobile') return false;
@@ -417,13 +419,13 @@ export default function VendorAdminPage() {
               onClick={() => { setPlatformTab('mobile'); setCurrentPage(1); }}
               style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px', border: 'none', backgroundColor: platformTab === 'mobile' ? 'rgba(14, 165, 233, 0.15)' : 'transparent', color: platformTab === 'mobile' ? '#38bdf8' : '#cbd5e1', fontWeight: 700, fontSize: '14px', cursor: 'pointer', textAlign: 'left', width: '100%' }}
             >
-              <Smartphone size={20} /> Mobile App Licenses ({mobileData.length})
+              <Smartphone size={20} /> Mobile App Licenses ({mobileCount})
             </button>
             <button
               onClick={() => { setPlatformTab('desktop'); setCurrentPage(1); }}
               style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px', border: 'none', backgroundColor: platformTab === 'desktop' ? 'rgba(14, 165, 233, 0.15)' : 'transparent', color: platformTab === 'desktop' ? '#38bdf8' : '#cbd5e1', fontWeight: 700, fontSize: '14px', cursor: 'pointer', textAlign: 'left', width: '100%' }}
             >
-              <Monitor size={20} /> Desktop App Licenses ({desktopData.length})
+              <Monitor size={20} /> Desktop App Licenses ({desktopCount})
             </button>
           </nav>
         </div>
@@ -514,8 +516,8 @@ export default function VendorAdminPage() {
                 style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '14px', backgroundColor: '#f8fafc', color: '#0f172a', fontWeight: 700 }}
               >
                 <option value="all">All Platforms ({combinedList.length})</option>
-                <option value="mobile">Mobile Apps ({mobileData.length})</option>
-                <option value="desktop">Desktop Apps ({desktopData.length})</option>
+                <option value="mobile">Mobile Apps ({mobileCount})</option>
+                <option value="desktop">Desktop Apps ({desktopCount})</option>
               </select>
             </div>
 
