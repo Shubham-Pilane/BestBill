@@ -16,7 +16,8 @@ import {
   Lock, 
   Mail, 
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Trash2
 } from 'lucide-react';
 
 const SUPABASE_URL = 'https://vejvxpjswlmcsbfiqywp.supabase.co';
@@ -161,6 +162,51 @@ export default function VendorAdminPage() {
     } catch (err) {
       console.error('Error updating status:', err);
       alert('Error updating status');
+    }
+  };
+
+  const handleDeleteRecord = async (item) => {
+    const hotelOrOwnerName = item.hotel_name || item.owner_name || 'this record';
+    const confirmDelete = window.confirm(
+      `Are you sure you want to permanently delete "${hotelOrOwnerName}"?\n\nThis record will be permanently removed from Supabase DB.`
+    );
+    if (!confirmDelete) return;
+
+    try {
+      setLoading(true);
+      const deletePromises = [];
+      const primaryTable = item.platform === 'mobile' ? 'mobile_licenses' : 'desktop_licenses';
+
+      // 1. Primary table delete by ID & device_uuid
+      if (item.id) {
+        deletePromises.push(supabase.from(primaryTable).delete().eq('id', item.id));
+      }
+      if (item.device_uuid) {
+        deletePromises.push(supabase.from(primaryTable).delete().eq('device_uuid', item.device_uuid));
+      }
+
+      // 2. Cross-table delete to prevent lingering records across platforms/tables
+      if (item.device_uuid) {
+        deletePromises.push(supabase.from('mobile_licenses').delete().eq('device_uuid', item.device_uuid));
+        deletePromises.push(supabase.from('desktop_licenses').delete().eq('device_uuid', item.device_uuid));
+        deletePromises.push(supabase.from('hotels').delete().eq('hotel_code', item.device_uuid));
+        deletePromises.push(supabase.from('analytics_snapshots').delete().eq('hotel_code', item.device_uuid));
+      }
+      if (item.id) {
+        deletePromises.push(supabase.from('hotels').delete().eq('id', item.id));
+      }
+
+      await Promise.all(deletePromises);
+
+      setStatusToast(`Permanently deleted record for ${hotelOrOwnerName} from Supabase DB.`);
+      setTimeout(() => setStatusToast(''), 4000);
+
+      await fetchAllLicenses();
+    } catch (err) {
+      console.error('Error deleting record from Supabase DB:', err);
+      alert('Failed to delete record: ' + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -703,19 +749,35 @@ export default function VendorAdminPage() {
                         <div style={{ whiteSpace: 'nowrap' }}>{item.last_ping_at ? new Date(item.last_ping_at).toLocaleDateString() : 'Never'}</div>
                       </td>
                       <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-                        <button
-                          onClick={() => handleToggleStatus(item, item.platform)}
-                          style={{
-                            padding: '6px 12px', borderRadius: '6px', border: 'none', fontWeight: 900, fontSize: '11px', cursor: 'pointer',
-                            display: 'inline-flex', alignItems: 'center', gap: '4px',
-                            backgroundColor: item.is_active ? '#dcfce7' : '#ffe4e6',
-                            color: item.is_active ? '#15803d' : '#be123c',
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                            whiteSpace: 'nowrap'
-                          }}
-                        >
-                          <Power size={12} /> {item.is_active ? 'ACTIVE' : 'REVOKED'}
-                        </button>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <button
+                            onClick={() => handleToggleStatus(item, item.platform)}
+                            style={{
+                              padding: '6px 10px', borderRadius: '6px', border: 'none', fontWeight: 900, fontSize: '11px', cursor: 'pointer',
+                              display: 'inline-flex', alignItems: 'center', gap: '4px',
+                              backgroundColor: item.is_active ? '#dcfce7' : '#ffe4e6',
+                              color: item.is_active ? '#15803d' : '#be123c',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            <Power size={12} /> {item.is_active ? 'ACTIVE' : 'REVOKED'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteRecord(item)}
+                            style={{
+                              padding: '6px 10px', borderRadius: '6px', border: 'none', fontWeight: 900, fontSize: '11px', cursor: 'pointer',
+                              display: 'inline-flex', alignItems: 'center', gap: '4px',
+                              backgroundColor: '#fee2e2',
+                              color: '#b91c1c',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                              whiteSpace: 'nowrap'
+                            }}
+                            title="Permanently Delete Record from Supabase DB"
+                          >
+                            <Trash2 size={12} /> DELETE
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
