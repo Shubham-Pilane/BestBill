@@ -35,7 +35,9 @@ import {
   Gift,
   Bluetooth,
   Globe,
-  Menu
+  Menu,
+  Building2,
+  FileCheck2
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import gsap from 'gsap';
@@ -266,13 +268,14 @@ const LandingPage = () => {
             <span className="hidden md:inline-block" style={{ fontSize: '9px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '2px 8px', borderRadius: '100px', fontWeight: 800 }}>ANDROID READY</span>
           </div>
 
-          <nav className="nav-menu" style={{ gap: '24px' }}>
+          <nav className="nav-menu" style={{ gap: '20px' }}>
             <a href="#about" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>About</a>
             <a href="#android" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Android App</a>
             <a href="#features" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Features</a>
             <a href="#gallery" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Gallery</a>
             <a href="#plans" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Plans</a>
             <a href="#pricing" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Pricing</a>
+            <a href="#company" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Company</a>
             <a href="#contact" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Contact</a>
             <Link to="/admin-app" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Hotel Owners App</Link>
           </nav>
@@ -297,6 +300,7 @@ const LandingPage = () => {
             <a href="#gallery" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Gallery</a>
             <a href="#plans" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Plans</a>
             <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Pricing</a>
+            <a href="#company" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Company</a>
             <a href="#contact" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Contact</a>
             <Link to="/admin-app" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Hotel Owners App</Link>
           </div>
@@ -400,8 +404,8 @@ const LandingPage = () => {
           <span>✓ 100% Mobile Ready (No Laptop Needed)</span>
           <span>✓ Bluetooth & Wi-Fi Thermal Printing</span>
           <span>✓ Windows 10/11 POS Ready</span>
-          <span>✓ Local Data Safety</span>
-          <span>✓ Founder: Shubham Pilane</span>
+          <span>✓ BestBill Solutions Private Limited</span>
+          <span>✓ Founder & Director: Shubham Pilane</span>
         </div>
       </section>
 
@@ -412,7 +416,7 @@ const LandingPage = () => {
             <span style={{ color: '#0ea5e9', fontWeight: 900, textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.15em' }}>Complete POS Solution</span>
             <h2 style={{ fontSize: '32px', fontWeight: 900, marginTop: '8px', marginBottom: '20px', textTransform: 'uppercase' }}>About BestBill</h2>
             <p style={{ color: '#94a3b8', fontSize: '16px', lineHeight: 1.7, marginBottom: '24px' }}>
-              BestBill is a professional, complete hotel billing software and restaurant management solution. Designed to support high-speed local business operations, it operates as the ultimate free hotel billing software option during your 1-month trial to manage offline registers, tables, order menus, KOT workflow, customer credits, and inventory seamlessly across PC and Android mobile devices.
+              BestBill is a professional hotel billing software and restaurant management platform by <strong>BestBill Solutions Private Limited</strong>. Designed to support high-speed local business operations, it operates as the ultimate free hotel billing software option during your 1-month trial to manage offline registers, tables, order menus, KOT workflow, customer credits, and inventory seamlessly across PC and Android mobile devices.
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', color: '#e2e8f0', fontSize: '14px', fontWeight: 600 }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" /> Billing & Invoicing</span>
@@ -425,15 +429,36 @@ const LandingPage = () => {
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" /> Credit Management</span>
             </div>
           </div>
-          <div className="glass-card" style={{ padding: '40px', borderRadius: '32px', borderLeft: '4px solid #0ea5e9' }}>
-            <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '16px' }}>Owner & Licensing Desk</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6, marginBottom: '24px' }}>
-              BestBill is founded and owned by <strong>Shubham Pilane</strong>. We provide on-premises setup, hardware configuration guidance, Android APK installation, and direct customization support.
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', color: '#e2e8f0' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><User size={16} color="#38bdf8" /> <strong>Founder & Owner:</strong> Shubham Pilane</span>
-              <a href="tel:+919822401802" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', textDecoration: 'none' }}><Phone size={16} color="#38bdf8" /> +91 9822401802</a>
-              <a href="mailto:bestbillsolutions@gmail.com" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', textDecoration: 'none' }}><Mail size={16} color="#38bdf8" /> bestbillsolutions@gmail.com</a>
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '32px', borderLeft: '4px solid #0ea5e9' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '24px', alignItems: 'center' }}>
+              <div>
+                <div style={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid rgba(56, 189, 248, 0.35)', backgroundColor: '#020617', boxShadow: '0 14px 32px rgba(0, 0, 0, 0.45)' }}>
+                  <img 
+                    src="/founder-shubham-pilane.jpg" 
+                    alt="Shubham Pilane - Founder and Director of BestBill Solutions Private Limited" 
+                    style={{ width: '100%', height: 'auto', display: 'block' }}
+                  />
+                </div>
+                <div style={{ marginTop: '10px', textAlign: 'center', fontSize: '12px', fontWeight: 800, color: '#38bdf8', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                  Shubham Pilane • Founder & Director
+                </div>
+              </div>
+
+              <div>
+                <span style={{ display: 'inline-block', fontSize: '10px', fontWeight: 900, color: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '4px 10px', borderRadius: '100px', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
+                  Leadership Desk
+                </span>
+                <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '12px' }}>Owner & Licensing Desk</h3>
+                <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6, marginBottom: '20px' }}>
+                  <strong>BestBill Solutions Private Limited</strong> is founded and led by Founder &amp; Director <strong>Shubham Pilane</strong>. We provide on-premises setup, hardware configuration guidance, Android APK installation, and direct customization support.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '11px', fontSize: '13.5px', color: '#e2e8f0' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><User size={16} color="#38bdf8" style={{ flexShrink: 0 }} /> <span><strong>Founder & Director:</strong> Shubham Pilane</span></span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Building2 size={16} color="#38bdf8" style={{ flexShrink: 0 }} /> <span>BestBill Solutions Private Limited</span></span>
+                  <a href="tel:+919822401802" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', textDecoration: 'none' }}><Phone size={16} color="#38bdf8" style={{ flexShrink: 0 }} /> +91 9822401802</a>
+                  <a href="mailto:bestbillsolutions@gmail.com" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', textDecoration: 'none', wordBreak: 'break-all' }}><Mail size={16} color="#38bdf8" style={{ flexShrink: 0 }} /> bestbillsolutions@gmail.com</a>
+                </div>
+              </div>
             </div>
           </div>
         </AnimatedSection>
@@ -1108,6 +1133,117 @@ const LandingPage = () => {
         </AnimatedSection>
       </section>
 
+      {/* Company Details & Registration Section (COI) */}
+      <section id="company" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <AnimatedSection animation="fade-up" style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(14, 165, 233, 0.12)', color: '#38bdf8', padding: '6px 16px', borderRadius: '100px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '14px', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+            <FileCheck2 size={14} /> Registered Under Companies Act, 2013
+          </div>
+          <h2 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>
+            Company Details &amp; <span style={{ color: '#38bdf8' }}>Corporate Registration</span>
+          </h2>
+          <p style={{ color: '#94a3b8', fontSize: '15px', maxWidth: '720px', margin: '10px auto 0', lineHeight: 1.6 }}>
+            Official incorporation details of <strong>BestBill Solutions Private Limited</strong> as per the Certificate of Incorporation issued by the Ministry of Corporate Affairs, Government of India.
+          </p>
+        </AnimatedSection>
+
+        <AnimatedSection animation="fade-up" stagger={0.12} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+          
+          {/* Card 1: Legal Entity */}
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '24px', borderTop: '3px solid #0ea5e9', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+              <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(14,165,233,0.12)', color: '#38bdf8', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Building2 size={20} />
+              </div>
+              <div>
+                <span style={{ fontSize: '10px', fontWeight: 900, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Legal Entity</span>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginTop: '2px' }}>Corporate Identity</h3>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px', color: '#cbd5e1', lineHeight: 1.6 }}>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Company Name</div>
+                <div style={{ fontWeight: 800, color: 'white' }}>BestBill Solutions Private Limited</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Company Structure</div>
+                <div>Private Limited (Company limited by shares)</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Date of Incorporation</div>
+                <div>16 November 2026</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Founder &amp; Director</div>
+                <div style={{ fontWeight: 700, color: '#e2e8f0' }}>Shubham Pilane</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Statutory Registration Identifiers */}
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '24px', borderTop: '3px solid #10b981', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+              <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(16,185,129,0.12)', color: '#10b981', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <FileCheck2 size={20} />
+              </div>
+              <div>
+                <span style={{ fontSize: '10px', fontWeight: 900, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Government Records</span>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginTop: '2px' }}>MCA Registration</h3>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px', color: '#cbd5e1', lineHeight: 1.6 }}>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Corporate Identity Number (CIN)</div>
+                <div style={{ fontWeight: 800, color: '#38bdf8', fontFamily: 'monospace', fontSize: '14px' }}>U62090PN2026PTC262563</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Governing Act</div>
+                <div>Companies Act, 2013 (18 of 2013)</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Issuing Authority</div>
+                <div>Ministry of Corporate Affairs (MCA), Central Registration Centre, Govt. of India</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Official Verification</div>
+                <div>Verified on mca.gov.in</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3: Registered Office Address */}
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '24px', borderTop: '3px solid #38bdf8', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+              <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(56,189,248,0.12)', color: '#38bdf8', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <MapPin size={20} />
+              </div>
+              <div>
+                <span style={{ fontSize: '10px', fontWeight: 900, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Official Location</span>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginTop: '2px' }}>Registered Office Address</h3>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13.5px', color: '#cbd5e1', lineHeight: 1.65 }}>
+              <div style={{ backgroundColor: 'rgba(15,23,42,0.7)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', padding: '14px 16px' }}>
+                <div style={{ fontWeight: 800, color: 'white', marginBottom: '6px' }}>BestBill Solutions Private Limited</div>
+                <div>
+                  Flat No. 201, B Wing, Karha Vastu,<br />
+                  Near Swagat Hotel, Saswad, Purandar,<br />
+                  Pune - 412301, Maharashtra, India
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
+                <a href="tel:+919822401802" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', textDecoration: 'none' }}><Phone size={15} color="#38bdf8" /> +91 9822401802</a>
+                <a href="mailto:bestbillsolutions@gmail.com" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', textDecoration: 'none' }}><Mail size={15} color="#38bdf8" /> bestbillsolutions@gmail.com</a>
+              </div>
+            </div>
+          </div>
+
+        </AnimatedSection>
+      </section>
+
       {/* Contact Section */}
       <section id="contact" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px 100px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '48px' }}>
@@ -1115,25 +1251,29 @@ const LandingPage = () => {
           <AnimatedSection animation="slide-right" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div>
               <h2 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>Contact Us</h2>
-              <p style={{ color: '#94a3b8', fontSize: '15px', marginTop: '8px' }}>Get in touch directly with the BestBill founder for product activation, Android APK setup, custom bills, or service desk configuration.</p>
+              <p style={{ color: '#94a3b8', fontSize: '15px', marginTop: '8px' }}>Get in touch directly with <strong>BestBill Solutions Private Limited</strong> for product activation, Android APK setup, custom bills, or service desk configuration.</p>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', color: '#cbd5e1', fontSize: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <User size={16} color="#0ea5e9" />
-                <span><strong>Founder & Owner:</strong> Shubham Pilane</span>
+                <Building2 size={16} color="#0ea5e9" style={{ flexShrink: 0 }} />
+                <span><strong>Company:</strong> BestBill Solutions Private Limited</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Phone size={16} color="#0ea5e9" />
+                <User size={16} color="#0ea5e9" style={{ flexShrink: 0 }} />
+                <span><strong>Founder &amp; Director:</strong> Shubham Pilane</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Phone size={16} color="#0ea5e9" style={{ flexShrink: 0 }} />
                 <a href="tel:+919822401802" style={{ color: '#cbd5e1', textDecoration: 'none' }}>+91 9822401802</a>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Mail size={16} color="#0ea5e9" />
+                <Mail size={16} color="#0ea5e9" style={{ flexShrink: 0 }} />
                 <a href="mailto:bestbillsolutions@gmail.com" style={{ color: '#cbd5e1', textDecoration: 'none' }}>bestbillsolutions@gmail.com</a>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <MapPin size={16} color="#0ea5e9" />
-                <span>Pune, Maharashtra, India</span>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                <MapPin size={16} color="#0ea5e9" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <span>Flat No. 201, B Wing, Karha Vastu, Near Swagat Hotel, Saswad, Purandar, Pune - 412301, Maharashtra, India</span>
               </div>
             </div>
           </AnimatedSection>
@@ -1207,38 +1347,18 @@ const LandingPage = () => {
 
       {/* Footer */}
       <footer style={{ backgroundColor: '#010409', borderTop: '1px solid rgba(255,255,255,0.05)', padding: '40px 24px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-          <span style={{ fontSize: '18px', fontWeight: 800 }}>BestBill Offline POS (Windows & Android)</span>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+          <span style={{ fontSize: '18px', fontWeight: 800 }}>BestBill Solutions Private Limited</span>
         </div>
         <p style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
-          Founder & Owner: <strong>Shubham Pilane</strong> | Phone: +91 9822401802 | Email: bestbillsolutions@gmail.com
+          Founder &amp; Director: <strong>Shubham Pilane</strong> | Phone: +91 9822401802 | Email: bestbillsolutions@gmail.com
         </p>
-        <p style={{ color: '#475569', fontSize: '12px', fontWeight: 600, marginBottom: '16px' }}>
-          © {new Date().getFullYear()} BestBill Software. All rights reserved.
+        <p style={{ color: '#64748b', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>
+          CIN: U62090PN2026PTC262563 • Registered Office: Flat No. 201, B Wing, Karha Vastu, Near Swagat Hotel, Saswad, Purandar, Pune - 412301, Maharashtra
         </p>
-        <div style={{ marginTop: '12px' }}>
-          <Link 
-            to="/admin" 
-            style={{ 
-              color: '#94a3b8', 
-              textDecoration: 'none', 
-              fontSize: '13px', 
-              fontWeight: 700, 
-              padding: '8px 18px', 
-              borderRadius: '8px', 
-              border: '1px solid rgba(255,255,255,0.1)', 
-              backgroundColor: 'rgba(255,255,255,0.04)', 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: '6px', 
-              transition: 'all 0.2s' 
-            }} 
-            onMouseEnter={e => { e.currentTarget.style.color = '#38bdf8'; e.currentTarget.style.borderColor = '#38bdf8'; e.currentTarget.style.backgroundColor = 'rgba(56,189,248,0.08)'; }} 
-            onMouseLeave={e => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.04)'; }}
-          >
-            Admin Login
-          </Link>
-        </div>
+        <p style={{ color: '#475569', fontSize: '12px', fontWeight: 600, margin: 0 }}>
+          © {new Date().getFullYear()} BestBill Solutions Private Limited. All rights reserved.
+        </p>
       </footer>
 
       {/* Download Choice Modal */}
