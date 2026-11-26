@@ -49,10 +49,13 @@ import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import AnimatedSection from '../animations/AnimatedSection';
 import api from '../services/api';
+import { useTheme } from '../hooks/useTheme';
+import ThemeToggle from '../components/ThemeToggle';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const LandingPage = () => {
+  const { isLight, toggleTheme } = useTheme();
   const [activeFaq, setActiveFaq] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -192,7 +195,7 @@ const LandingPage = () => {
   };
 
   const handleDownloadAndroid = () => {
-    toast.success("Starting BestBill Android APK download...", { icon: '📱' });
+    toast.success("Starting BestBill Android App download...", { icon: '📱' });
     const link = document.createElement('a');
     link.href = 'https://storage.googleapis.com/bestbill-public-logos/BestBill_Setup_v1.0.1.apk';
     link.setAttribute('download', 'BestBill_Setup_v1.0.1.apk');
@@ -203,7 +206,7 @@ const LandingPage = () => {
   };
 
   const handleDownloadAdminApk = () => {
-    toast.success("Starting BestBill Admin App APK download...", { icon: '📲' });
+    toast.success("Starting BestBill Admin App download...", { icon: '📲' });
     const link = document.createElement('a');
     link.href = 'https://storage.googleapis.com/bestbill-public-logos/BestBill%20Admin%201.0.0.apk';
     link.setAttribute('download', 'BestBill Admin 1.0.0.apk');
@@ -260,51 +263,55 @@ const LandingPage = () => {
   }, { scope: pageRef });
 
   return (
-    <div ref={pageRef} style={{ backgroundColor: '#020617', color: 'white', minHeight: '100vh', fontFamily: 'Inter, sans-serif', overflowX: 'hidden', width: '100%' }}>
+    <div ref={pageRef} style={{ backgroundColor: 'var(--bb-bg)', color: 'var(--bb-text-primary)', minHeight: '100vh', fontFamily: 'Inter, sans-serif', overflowX: 'hidden', width: '100%', transition: 'background-color 0.25s ease, color 0.25s ease' }}>
       
       {/* Navigation Header */}
-      <header className="glass-effect hero-header" style={{ position: 'sticky', top: 0, zIndex: 1000, width: '100%', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <header className="glass-effect hero-header" style={{ position: 'sticky', top: 0, zIndex: 1000, width: '100%', borderBottom: '1px solid var(--bb-border-subtle)' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             <img src="/logo.svg" alt="BestBill Logo" style={{ width: '36px', height: '36px', boxShadow: '0 0 15px rgba(14, 165, 233, 0.4)', borderRadius: '9px' }} />
-            <span style={{ fontSize: '20px', fontWeight: 900, letterSpacing: '-0.03em' }}>Best<span style={{ color: '#38bdf8' }}>Bill</span><sup style={{ fontSize: '12px', fontWeight: 'bold' }}>&trade;</sup></span>
-            <span className="hidden sm:inline-block" style={{ fontSize: '9px', backgroundColor: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', padding: '2px 8px', borderRadius: '100px', fontWeight: 800 }}>OFFLINE v2.4</span>
+            <span style={{ fontSize: '20px', fontWeight: 900, letterSpacing: '-0.03em' }}>Best<span style={{ color: 'var(--bb-sky-text)' }}>Bill</span><sup style={{ fontSize: '12px', fontWeight: 'bold' }}>&trade;</sup></span>
+            <span className="hidden sm:inline-block" style={{ fontSize: '9px', backgroundColor: 'rgba(56, 189, 248, 0.1)', color: 'var(--bb-sky-text)', padding: '2px 8px', borderRadius: '100px', fontWeight: 800 }}>OFFLINE v2.4</span>
             <span className="hidden md:inline-block" style={{ fontSize: '9px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '2px 8px', borderRadius: '100px', fontWeight: 800 }}>ANDROID READY</span>
           </div>
 
-          <nav className="nav-menu" style={{ gap: '20px' }}>
-            <a href="#about" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>About</a>
-            <a href="#android" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Android App</a>
-            <a href="#features" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Features</a>
-            <a href="#gallery" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Gallery</a>
-            <a href="#pricing" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Pricing</a>
-            <a href="#company" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Company</a>
-            <a href="#contact" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Contact</a>
-            <Link to="/admin-app" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Hotel Owners App</Link>
+          <nav className="nav-menu" style={{ gap: '18px' }}>
+            <a href="#about" style={{ color: 'var(--bb-text-muted)', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s', whiteSpace: 'nowrap' }} onMouseEnter={e => e.target.style.color = 'var(--bb-sky-text)'} onMouseLeave={e => e.target.style.color = 'var(--bb-text-muted)'}>About</a>
+            <a href="#android" style={{ color: 'var(--bb-text-muted)', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s', whiteSpace: 'nowrap' }} onMouseEnter={e => e.target.style.color = 'var(--bb-sky-text)'} onMouseLeave={e => e.target.style.color = 'var(--bb-text-muted)'}>Android App</a>
+            <a href="#features" style={{ color: 'var(--bb-text-muted)', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s', whiteSpace: 'nowrap' }} onMouseEnter={e => e.target.style.color = 'var(--bb-sky-text)'} onMouseLeave={e => e.target.style.color = 'var(--bb-text-muted)'}>Features</a>
+            <a href="#gallery" style={{ color: 'var(--bb-text-muted)', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s', whiteSpace: 'nowrap' }} onMouseEnter={e => e.target.style.color = 'var(--bb-sky-text)'} onMouseLeave={e => e.target.style.color = 'var(--bb-text-muted)'}>Gallery</a>
+            <a href="#pricing" style={{ color: 'var(--bb-text-muted)', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s', whiteSpace: 'nowrap' }} onMouseEnter={e => e.target.style.color = 'var(--bb-sky-text)'} onMouseLeave={e => e.target.style.color = 'var(--bb-text-muted)'}>Pricing</a>
+            <a href="#company" style={{ color: 'var(--bb-text-muted)', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s', whiteSpace: 'nowrap' }} onMouseEnter={e => e.target.style.color = 'var(--bb-sky-text)'} onMouseLeave={e => e.target.style.color = 'var(--bb-text-muted)'}>Company</a>
+            <a href="#contact" style={{ color: 'var(--bb-text-muted)', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s', whiteSpace: 'nowrap' }} onMouseEnter={e => e.target.style.color = 'var(--bb-sky-text)'} onMouseLeave={e => e.target.style.color = 'var(--bb-text-muted)'}>Contact</a>
+            <Link to="/admin-app" style={{ color: 'var(--bb-text-muted)', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s', whiteSpace: 'nowrap' }} onMouseEnter={e => e.target.style.color = 'var(--bb-sky-text)'} onMouseLeave={e => e.target.style.color = 'var(--bb-text-muted)'}>Hotel Owners App</Link>
           </nav>
 
-          {/* Mobile Header Menu Toggle Button */}
-          <div className="mobile-only-header" style={{ display: 'none', alignItems: 'center' }}>
-            <button 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px 12px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-            >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
+          {/* Theme Toggle & Mobile Menu Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            <ThemeToggle isLight={isLight} onToggle={toggleTheme} />
+
+            <div className="mobile-only-header" style={{ display: 'none', alignItems: 'center' }}>
+              <button 
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                style={{ backgroundColor: 'var(--bb-bg-close)', border: '1px solid var(--bb-border-med)', color: 'var(--bb-text-primary)', padding: '8px 12px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+              >
+                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Mobile Slide-Down Navigation Drawer */}
         {mobileMenuOpen && (
-          <div style={{ backgroundColor: '#090d1f', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <a href="#about" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>About</a>
-            <a href="#android" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Android App</a>
-            <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Features</a>
-            <a href="#gallery" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Gallery</a>
-            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Pricing</a>
-            <a href="#company" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Company</a>
-            <a href="#contact" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Contact</a>
-            <Link to="/admin-app" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Hotel Owners App</Link>
+          <div style={{ backgroundColor: 'var(--bb-bg-drawer)', borderBottom: '1px solid var(--bb-border-med)', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <a href="#about" onClick={() => setMobileMenuOpen(false)} style={{ color: 'var(--bb-text-high)', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>About</a>
+            <a href="#android" onClick={() => setMobileMenuOpen(false)} style={{ color: 'var(--bb-text-high)', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Android App</a>
+            <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ color: 'var(--bb-text-high)', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Features</a>
+            <a href="#gallery" onClick={() => setMobileMenuOpen(false)} style={{ color: 'var(--bb-text-high)', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Gallery</a>
+            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ color: 'var(--bb-text-high)', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Pricing</a>
+            <a href="#company" onClick={() => setMobileMenuOpen(false)} style={{ color: 'var(--bb-text-high)', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Company</a>
+            <a href="#contact" onClick={() => setMobileMenuOpen(false)} style={{ color: 'var(--bb-text-high)', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Contact</a>
+            <Link to="/admin-app" onClick={() => setMobileMenuOpen(false)} style={{ color: 'var(--bb-text-high)', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Hotel Owners App</Link>
           </div>
         )}
 
@@ -356,20 +363,20 @@ const LandingPage = () => {
         {/* Free Promotional & Platform Banner */}
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', borderRadius: '24px', padding: '10px 24px', marginBottom: '32px', boxShadow: '0 0 20px rgba(16, 185, 129, 0.15)' }}>
           <div style={{ fontSize: '22px', fontWeight: 1000, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sparkles size={20} color="#10b981" /> FREE TO USE (1 Month Trial)
+            <Sparkles size={20} color="#10b981" /> Start Your 1 Month Free Trial
           </div>
           <div style={{ width: '1px', height: '20px', backgroundColor: 'rgba(16,185,129,0.4)' }} className="hidden sm:block"></div>
-          <div style={{ fontSize: '13px', fontWeight: 800, color: '#a7f3d0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--bb-emerald-soft)', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Laptop size={15} /> Windows PC &nbsp;•&nbsp; <Smartphone size={15} /> Android Mobile App
           </div>
         </div>
 
         <h1 style={{ fontSize: '56px', fontWeight: 950, lineHeight: 1.1, letterSpacing: '-0.03em', maxWidth: '950px', margin: '0 auto 24px', textTransform: 'uppercase' }}>
           Hotel & Restaurant <br/>
-          <span style={{ background: 'linear-gradient(to right, #38bdf8, #0ea5e9, #34d399)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Management Software</span>
+          <span className="hero-gradient-text">Management Software</span>
         </h1>
         
-        <p style={{ color: '#94a3b8', fontSize: '18px', maxWidth: '750px', margin: '0 auto 40px', fontWeight: 500, lineHeight: 1.6 }}>
+        <p style={{ color: 'var(--bb-text-muted)', fontSize: '18px', maxWidth: '750px', margin: '0 auto 40px', fontWeight: 500, lineHeight: 1.6 }}>
           Run your billing, thermal receipt printing, table grids, stock inventory, credit ledger, and sales reports 100% offline. Now available on <strong>Windows PC</strong> and <strong>Android App</strong> — <em>No PC or Laptop required if you want to use the Android mobile setup!</em>
         </p>
 
@@ -380,7 +387,7 @@ const LandingPage = () => {
             onMouseEnter={e => e.target.style.transform = 'translateY(-2px)'}
             onMouseLeave={e => e.target.style.transform = 'translateY(0)'}
           >
-            <Laptop size={18} /> Download Desktop App (.EXE)
+            <Laptop size={18} /> Download Desktop Application
           </button>
 
           <button 
@@ -389,20 +396,20 @@ const LandingPage = () => {
             onMouseEnter={e => e.target.style.transform = 'translateY(-2px)'}
             onMouseLeave={e => e.target.style.transform = 'translateY(0)'}
           >
-            <Smartphone size={18} /> Download Android App (.APK)
+            <Smartphone size={18} /> Download Android App
           </button>
           
           <a 
             href="tel:+919822401802"
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(30,41,59,0.5)', border: '1px solid rgba(255,255,255,0.05)', color: '#e2e8f0', padding: '16px 28px', borderRadius: '16px', fontWeight: 800, fontSize: '15px', textDecoration: 'none', transition: 'all 0.2s' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'var(--bb-bg-chip)', border: '1px solid var(--bb-border-subtle)', color: 'var(--bb-text-high)', padding: '16px 28px', borderRadius: '16px', fontWeight: 800, fontSize: '15px', textDecoration: 'none', transition: 'all 0.2s' }}
             onMouseEnter={e => e.target.style.borderColor = 'rgba(56,189,248,0.3)'}
-            onMouseLeave={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'}
+            onMouseLeave={e => e.target.style.borderColor = 'var(--bb-border-subtle)'}
           >
             <Phone size={16} /> Contact Customer Care
           </a>
         </div>
 
-        <div style={{ marginTop: '36px', display: 'flex', justifyContent: 'center', gap: '20px', color: '#64748b', fontSize: '12px', fontWeight: 700, flexWrap: 'wrap' }}>
+        <div style={{ marginTop: '36px', display: 'flex', justifyContent: 'center', gap: '20px', color: 'var(--bb-text-dim)', fontSize: '12px', fontWeight: 700, flexWrap: 'wrap' }}>
           <span>✓ 100% Mobile Ready (No Laptop Needed)</span>
           <span>✓ Bluetooth & Wi-Fi Thermal Printing</span>
           <span>✓ Windows 10/11 POS Ready</span>
@@ -412,15 +419,15 @@ const LandingPage = () => {
       </section>
 
       {/* About Section */}
-      <section id="about" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <section id="about" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid var(--bb-border-subtle)' }}>
         <AnimatedSection animation="fade-up" duration={1.2} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '48px', alignItems: 'center' }}>
           <div>
             <span style={{ color: '#0ea5e9', fontWeight: 900, textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.15em' }}>Complete POS Solution</span>
             <h2 style={{ fontSize: '32px', fontWeight: 900, marginTop: '8px', marginBottom: '20px', textTransform: 'uppercase' }}>About BestBill</h2>
-            <p style={{ color: '#94a3b8', fontSize: '16px', lineHeight: 1.7, marginBottom: '24px' }}>
+            <p style={{ color: 'var(--bb-text-muted)', fontSize: '16px', lineHeight: 1.7, marginBottom: '24px' }}>
               BestBill is a professional hotel billing software and restaurant management platform by <strong>BestBill Solutions Private Limited</strong>. Designed to support high-speed local business operations, it operates as the ultimate free hotel billing software option during your 1-month trial to manage offline registers, tables, order menus, KOT workflow, customer credits, and inventory seamlessly across PC and Android mobile devices.
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', color: '#e2e8f0', fontSize: '14px', fontWeight: 600 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', color: 'var(--bb-text-high)', fontSize: '14px', fontWeight: 600 }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" /> Billing & Invoicing</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" /> Android App POS</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" /> Live Table Grids</span>
@@ -434,31 +441,31 @@ const LandingPage = () => {
           <div className="glass-card" style={{ padding: '32px', borderRadius: '32px', borderLeft: '4px solid #0ea5e9' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '24px', alignItems: 'center' }}>
               <div>
-                <div style={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid rgba(56, 189, 248, 0.35)', backgroundColor: '#020617', boxShadow: '0 14px 32px rgba(0, 0, 0, 0.45)' }}>
+                <div style={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid var(--bb-border-card)', backgroundColor: '#020617', boxShadow: isLight ? '0 10px 26px rgba(15, 23, 42, 0.14)' : '0 14px 32px rgba(0, 0, 0, 0.45)' }}>
                   <img 
                     src="/founder-shubham-pilane.jpg" 
                     alt="Shubham Pilane - Founder and Director of BestBill Solutions Private Limited" 
                     style={{ width: '100%', height: 'auto', display: 'block' }}
                   />
                 </div>
-                <div style={{ marginTop: '10px', textAlign: 'center', fontSize: '12px', fontWeight: 800, color: '#38bdf8', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                <div style={{ marginTop: '10px', textAlign: 'center', fontSize: '12px', fontWeight: 800, color: 'var(--bb-sky-text)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                   Shubham Pilane • Founder & Director
                 </div>
               </div>
 
               <div>
-                <span style={{ display: 'inline-block', fontSize: '10px', fontWeight: 900, color: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '4px 10px', borderRadius: '100px', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
+                <span style={{ display: 'inline-block', fontSize: '10px', fontWeight: 900, color: 'var(--bb-sky-text)', backgroundColor: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '4px 10px', borderRadius: '100px', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
                   Leadership Desk
                 </span>
                 <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '12px' }}>Owner & Licensing Desk</h3>
-                <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6, marginBottom: '20px' }}>
-                  <strong>BestBill Solutions Private Limited</strong> is founded and led by Founder &amp; Director <strong>Shubham Pilane</strong>. We provide on-premises setup, hardware configuration guidance, Android APK installation, and direct customization support.
+                <p style={{ color: 'var(--bb-text-muted)', fontSize: '13.5px', lineHeight: 1.6, marginBottom: '20px' }}>
+                  <strong>BestBill Solutions Private Limited</strong> is founded and led by Founder &amp; Director <strong>Shubham Pilane</strong>. We provide on-premises setup, hardware configuration guidance, Android app installation, and direct customization support.
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '11px', fontSize: '13.5px', color: '#e2e8f0' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><User size={16} color="#38bdf8" style={{ flexShrink: 0 }} /> <span><strong>Founder & Director:</strong> Shubham Pilane</span></span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Building2 size={16} color="#38bdf8" style={{ flexShrink: 0 }} /> <span>BestBill Solutions Private Limited</span></span>
-                  <a href="tel:+919822401802" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', textDecoration: 'none' }}><Phone size={16} color="#38bdf8" style={{ flexShrink: 0 }} /> +91 9822401802</a>
-                  <a href="mailto:bestbillsolutions@gmail.com" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', textDecoration: 'none', wordBreak: 'break-all' }}><Mail size={16} color="#38bdf8" style={{ flexShrink: 0 }} /> bestbillsolutions@gmail.com</a>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '11px', fontSize: '13.5px', color: 'var(--bb-text-high)' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><User size={16} color="#0ea5e9" style={{ flexShrink: 0 }} /> <span><strong>Founder & Director:</strong> Shubham Pilane</span></span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Building2 size={16} color="#0ea5e9" style={{ flexShrink: 0 }} /> <span>BestBill Solutions Private Limited</span></span>
+                  <a href="tel:+919822401802" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--bb-text-high)', textDecoration: 'none' }}><Phone size={16} color="#0ea5e9" style={{ flexShrink: 0 }} /> +91 9822401802</a>
+                  <a href="mailto:bestbillsolutions@gmail.com" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--bb-text-high)', textDecoration: 'none', wordBreak: 'break-all' }}><Mail size={16} color="#0ea5e9" style={{ flexShrink: 0 }} /> bestbillsolutions@gmail.com</a>
                 </div>
               </div>
             </div>
@@ -467,17 +474,17 @@ const LandingPage = () => {
       </section>
 
       {/* NEW FEATURE: BestBill Android App Showcase Section */}
-      <section id="android" style={{ maxWidth: '1280px', margin: '0 auto', padding: '80px 24px', borderTop: '1px solid rgba(255,255,255,0.05)', backgroundColor: 'rgba(15, 23, 42, 0.4)', borderRadius: '32px', position: 'relative' }}>
+      <section id="android" style={{ maxWidth: '1280px', margin: '0 auto', padding: '80px 24px', borderTop: '1px solid var(--bb-border-subtle)', backgroundColor: 'var(--bb-bg-panel)', borderRadius: '32px', position: 'relative' }}>
         <div style={{ position: 'absolute', top: 0, right: '10%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)', filter: 'blur(50px)', pointerEvents: 'none' }}></div>
         
         <AnimatedSection animation="fade-up" style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(16,185,129,0.15)', color: '#34d399', padding: '6px 16px', borderRadius: '100px', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '16px', border: '1px solid rgba(16,185,129,0.3)' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(16,185,129,0.15)', color: 'var(--bb-emerald-text)', padding: '6px 16px', borderRadius: '100px', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '16px', border: '1px solid rgba(16,185,129,0.3)' }}>
             <Smartphone size={14} /> NEW FEATURE • NOW ON ANDROID MOBILE
           </div>
           <h2 style={{ fontSize: '38px', fontWeight: 950, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>
-            No PC or Laptop Needed — <span style={{ color: '#10b981' }}>Run 100% On Android</span>
+            No PC or Laptop Needed — <span style={{ color: 'var(--bb-emerald-text)' }}>Run 100% On Android</span>
           </h2>
-          <p style={{ color: '#94a3b8', fontSize: '17px', maxWidth: '750px', margin: '12px auto 0', lineHeight: 1.6 }}>
+          <p style={{ color: 'var(--bb-text-muted)', fontSize: '17px', maxWidth: '750px', margin: '12px auto 0', lineHeight: 1.6 }}>
             Turn your smartphone or tablet into a fully functional POS terminal! From printing bills to managing raw material stock and customer credit ledgers, experience complete control anywhere.
           </p>
         </AnimatedSection>
@@ -490,17 +497,17 @@ const LandingPage = () => {
               <Printer size={22} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Mobile Bill & KOT Printing</h3>
-            <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6 }}>
+            <p style={{ color: 'var(--bb-text-muted)', fontSize: '13.5px', lineHeight: 1.6 }}>
               Print instant thermal receipts and kitchen order tickets directly from your mobile device via Bluetooth or Wi-Fi printers (58mm & 80mm).
             </p>
           </div>
 
           <div className="glass-card" style={{ padding: '28px', borderRadius: '20px', borderTop: '3px solid #38bdf8', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ width: '44px', height: '44px', backgroundColor: 'rgba(56,189,248,0.15)', color: '#38bdf8', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '44px', height: '44px', backgroundColor: 'rgba(56,189,248,0.15)', color: '#0ea5e9', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Cpu size={22} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Full Stock & Inventory</h3>
-            <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6 }}>
+            <p style={{ color: 'var(--bb-text-muted)', fontSize: '13.5px', lineHeight: 1.6 }}>
               Add raw ingredients, manage recipe mappings, track physical stock levels, and check real-time stock valuation right from mobile.
             </p>
           </div>
@@ -510,7 +517,7 @@ const LandingPage = () => {
               <TrendingUp size={22} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Credit Management</h3>
-            <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6 }}>
+            <p style={{ color: 'var(--bb-text-muted)', fontSize: '13.5px', lineHeight: 1.6 }}>
               Keep digital ledger accounts for regular customers and vendors. Track outstanding balances and record settlements instantly on your phone.
             </p>
           </div>
@@ -520,7 +527,7 @@ const LandingPage = () => {
               <FileText size={22} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Sales & Analytics Reports</h3>
-            <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6 }}>
+            <p style={{ color: 'var(--bb-text-muted)', fontSize: '13.5px', lineHeight: 1.6 }}>
               Get detailed performance analytics: total dine-in orders, parcel collection summary, cash vs online totals, and export PDF reports easily.
             </p>
           </div>
@@ -541,7 +548,7 @@ const LandingPage = () => {
                 <img 
                   src="/free_thermal_printer_gift.png" 
                   alt="Free Wireless Thermal Receipt Printer Gift" 
-                  style={{ width: '100%', maxWidth: '380px', height: 'auto', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)', border: '1px solid rgba(255, 255, 255, 0.1)' }} 
+                  style={{ width: '100%', maxWidth: '380px', height: 'auto', borderRadius: '24px', boxShadow: isLight ? '0 16px 32px rgba(15, 23, 42, 0.18)' : '0 20px 40px rgba(0, 0, 0, 0.6)', border: '1px solid var(--bb-border-med)' }} 
                 />
                 <div style={{ position: 'absolute', bottom: '16px', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(239, 68, 68, 0.95)', color: 'white', padding: '8px 20px', borderRadius: '100px', fontWeight: 900, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', boxShadow: '0 8px 20px rgba(239,68,68,0.5)' }}>
                   <Gift size={16} /> FREE Wireless Thermal Printer
@@ -551,47 +558,47 @@ const LandingPage = () => {
 
             {/* Right Column: Pricing & Wireless Bluetooth Flow */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#34d399', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 900, width: 'fit-content' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: 'var(--bb-emerald-text)', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 900, width: 'fit-content' }}>
                 <Sparkles size={16} /> LIMITED TIME ANDROID BUNDLE
               </div>
               
-              <h3 style={{ fontSize: '32px', fontWeight: 950, color: 'white', lineHeight: 1.2 }}>
-                BestBill Android App Lifetime License — <span style={{ color: '#10b981' }}>₹11,999</span>
+              <h3 style={{ fontSize: '32px', fontWeight: 950, color: 'var(--bb-text-primary)', lineHeight: 1.2 }}>
+                BestBill Android App Lifetime License — <span style={{ color: 'var(--bb-emerald-text)' }}>₹11,999</span>
               </h3>
 
-              <p style={{ color: '#cbd5e1', fontSize: '15.5px', lineHeight: 1.6 }}>
+              <p style={{ color: 'var(--bb-text-body)', fontSize: '15.5px', lineHeight: 1.6 }}>
                 Get the complete BestBill Android POS Mobile App for a <strong>one-time payment of ₹11,999</strong> (No monthly subscription fees!) and get a <strong>High-Speed Wireless Thermal Receipt Printer FREE</strong> included in the box!
               </p>
 
               {/* Bluetooth Printing Workflow */}
-              <div style={{ backgroundColor: '#020617', padding: '20px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ fontSize: '13px', fontWeight: 900, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Bluetooth size={16} color="#38bdf8" /> How Wireless Bluetooth Printing Works:
+              <div style={{ backgroundColor: 'var(--bb-bg-sub)', padding: '20px', borderRadius: '18px', border: '1px solid var(--bb-border-card)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 900, color: 'var(--bb-sky-text)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Bluetooth size={16} color="#0ea5e9" /> How Wireless Bluetooth Printing Works:
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px', textAlign: 'center' }}>
-                  <div style={{ backgroundColor: 'rgba(30,41,59,0.5)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ backgroundColor: 'var(--bb-bg-chip)', padding: '12px', borderRadius: '12px', border: '1px solid var(--bb-border-subtle)' }}>
                     <Smartphone size={20} color="#10b981" style={{ margin: '0 auto 6px' }} />
                     <div style={{ fontSize: '12px', fontWeight: 800 }}>1. Mobile POS App</div>
-                    <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>Punch order / bill</div>
+                    <div style={{ fontSize: '10px', color: 'var(--bb-text-muted)', marginTop: '2px' }}>Punch order / bill</div>
                   </div>
 
-                  <div style={{ backgroundColor: 'rgba(30,41,59,0.5)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.3)' }}>
-                    <Bluetooth size={20} color="#38bdf8" style={{ margin: '0 auto 6px' }} />
+                  <div style={{ backgroundColor: 'var(--bb-bg-chip)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.3)' }}>
+                    <Bluetooth size={20} color="#0ea5e9" style={{ margin: '0 auto 6px' }} />
                     <div style={{ fontSize: '12px', fontWeight: 800 }}>2. Bluetooth Signal</div>
-                    <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>Instant wireless pair</div>
+                    <div style={{ fontSize: '10px', color: 'var(--bb-text-muted)', marginTop: '2px' }}>Instant wireless pair</div>
                   </div>
 
-                  <div style={{ backgroundColor: 'rgba(30,41,59,0.5)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(239,68,68,0.3)' }}>
+                  <div style={{ backgroundColor: 'var(--bb-bg-chip)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(239,68,68,0.3)' }}>
                     <Printer size={20} color="#ef4444" style={{ margin: '0 auto 6px' }} />
                     <div style={{ fontSize: '12px', fontWeight: 800 }}>3. Gift Printer</div>
-                    <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>Prints bill receipt</div>
+                    <div style={{ fontSize: '10px', color: 'var(--bb-text-muted)', marginTop: '2px' }}>Prints bill receipt</div>
                   </div>
                 </div>
               </div>
 
               {/* Perks List */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13px', fontWeight: 700, color: '#e2e8f0' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13px', fontWeight: 700, color: 'var(--bb-text-high)' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={15} color="#10b981" /> Lifetime License (₹11,999)</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={15} color="#10b981" /> FREE Gift Receipt Printer</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={15} color="#10b981" /> Zero Monthly Subscription</span>
@@ -608,11 +615,11 @@ const LandingPage = () => {
 
                 <a 
                   href="tel:+919822401802" 
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#38bdf8', fontWeight: 900, fontSize: '16px', textDecoration: 'none', transition: 'color 0.2s', width: 'fit-content' }}
-                  onMouseEnter={e => e.target.style.color = '#7dd3fc'}
-                  onMouseLeave={e => e.target.style.color = '#38bdf8'}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--bb-sky-text)', fontWeight: 900, fontSize: '16px', textDecoration: 'none', transition: 'color 0.2s', width: 'fit-content' }}
+                  onMouseEnter={e => e.target.style.color = 'var(--bb-sky-text-hover)'}
+                  onMouseLeave={e => e.target.style.color = 'var(--bb-sky-text)'}
                 >
-                  <Phone size={18} color="#38bdf8" /> Call / WhatsApp to Order: +91 9822401802
+                  <Phone size={18} color="#0ea5e9" /> Call / WhatsApp to Order: +91 9822401802
                 </a>
               </div>
 
@@ -624,9 +631,9 @@ const LandingPage = () => {
         {/* Interactive Mobile Screenshots Showcase */}
         <AnimatedSection animation="fade-up" className="glass-card" style={{ padding: '36px', borderRadius: '28px', border: '1px solid rgba(16,185,129,0.2)' }}>
           <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 900, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.15em' }}>LIVE MOBILE APP INTERFACE</span>
+            <span style={{ fontSize: '11px', fontWeight: 900, color: 'var(--bb-emerald-text)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>LIVE MOBILE APP INTERFACE</span>
             <h3 style={{ fontSize: '24px', fontWeight: 900, marginTop: '4px' }}>Explore BestBill Mobile App Screens</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '6px' }}>Click any feature tab below to preview the actual Android interface in action:</p>
+            <p style={{ color: 'var(--bb-text-muted)', fontSize: '14px', marginTop: '6px' }}>Click any feature tab below to preview the actual Android interface in action:</p>
           </div>
 
           {/* Navigation Tabs */}
@@ -638,9 +645,9 @@ const LandingPage = () => {
                 style={{
                   padding: '10px 18px',
                   borderRadius: '12px',
-                  border: activeMobileTab === idx ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.08)',
-                  backgroundColor: activeMobileTab === idx ? 'rgba(16,185,129,0.2)' : 'rgba(15,23,42,0.6)',
-                  color: activeMobileTab === idx ? '#34d399' : '#94a3b8',
+                  border: activeMobileTab === idx ? '1px solid #10b981' : '1px solid var(--bb-border-card)',
+                  backgroundColor: activeMobileTab === idx ? 'rgba(16,185,129,0.2)' : 'var(--bb-bg-panel-soft)',
+                  color: activeMobileTab === idx ? 'var(--bb-emerald-text)' : 'var(--bb-text-muted)',
                   fontWeight: 800,
                   fontSize: '13px',
                   cursor: 'pointer',
@@ -660,18 +667,18 @@ const LandingPage = () => {
             
             {/* Screen Details */}
             <div className="showcase-text-container" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'inline-block', backgroundColor: 'rgba(56,189,248,0.1)', color: '#38bdf8', padding: '4px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 800, width: 'fit-content' }}>
+              <div style={{ display: 'inline-block', backgroundColor: 'rgba(56,189,248,0.1)', color: 'var(--bb-sky-text)', padding: '4px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 800, width: 'fit-content' }}>
                 SCREEN {activeMobileTab + 1} OF {mobileShowcaseItems.length}
               </div>
-              <h4 style={{ fontSize: '26px', fontWeight: 900, color: 'white' }}>{mobileShowcaseItems[activeMobileTab].title}</h4>
-              <p style={{ color: '#cbd5e1', fontSize: '15px', lineHeight: 1.7 }}>
+              <h4 style={{ fontSize: '26px', fontWeight: 900, color: 'var(--bb-text-primary)' }}>{mobileShowcaseItems[activeMobileTab].title}</h4>
+              <p style={{ color: 'var(--bb-text-body)', fontSize: '15px', lineHeight: 1.7 }}>
                 {mobileShowcaseItems[activeMobileTab].subtitle}
               </p>
               
-              <div style={{ backgroundColor: '#020617', padding: '16px 20px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14} /> 100% Touch Optimized Navigation</span>
-                <span style={{ fontSize: '12px', fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14} /> Instant ESC/POS Printer Pairing</span>
-                <span style={{ fontSize: '12px', fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14} /> Works Completely Offline</span>
+              <div style={{ backgroundColor: 'var(--bb-bg-sub)', padding: '16px 20px', borderRadius: '14px', border: '1px solid var(--bb-border-subtle)', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--bb-emerald-text)', display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14} /> 100% Touch Optimized Navigation</span>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--bb-emerald-text)', display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14} /> Instant ESC/POS Printer Pairing</span>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--bb-emerald-text)', display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14} /> Works Completely Offline</span>
               </div>
 
               <button 
@@ -680,7 +687,7 @@ const LandingPage = () => {
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = '#047857'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = '#059669'}
               >
-                <DownloadCloud size={18} /> Download Android App (.APK)
+                <DownloadCloud size={18} /> Download Android App
               </button>
             </div>
 
@@ -720,10 +727,10 @@ const LandingPage = () => {
       </section>
 
       {/* Feature Showcase Grid */}
-      <section id="features" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <section id="features" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid var(--bb-border-subtle)' }}>
         <AnimatedSection animation="fade-up" duration={1} style={{ textAlign: 'center', marginBottom: '60px' }}>
           <h2 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>Key Software Modules</h2>
-          <p style={{ color: '#94a3b8', fontSize: '16px', marginTop: '8px' }}>Powering every aspect of your hospitality or retail venue offline on Desktop & Mobile.</p>
+          <p style={{ color: 'var(--bb-text-muted)', fontSize: '16px', marginTop: '8px' }}>Powering every aspect of your hospitality or retail venue offline on Desktop & Mobile.</p>
         </AnimatedSection>
 
         <AnimatedSection animation="fade-up" stagger={0.1} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
@@ -734,7 +741,7 @@ const LandingPage = () => {
               <Printer size={20} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Restaurant & Hotel Billing</h3>
-            <ul style={{ color: '#94a3b8', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <ul style={{ color: 'var(--bb-text-muted)', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <li>Fast Invoicing System</li>
               <li>GST Ready Billing</li>
               <li>Professional Invoice Printing</li>
@@ -749,7 +756,7 @@ const LandingPage = () => {
               <Grid size={20} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Table & Floor Management</h3>
-            <ul style={{ color: '#94a3b8', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <ul style={{ color: 'var(--bb-text-muted)', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <li>Table-wise Billing</li>
               <li>Section-wise Floor Grids</li>
               <li>Real-time Occupied / Available Status</li>
@@ -763,7 +770,7 @@ const LandingPage = () => {
               <Truck size={20} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Parcel & Token Counter</h3>
-            <ul style={{ color: '#94a3b8', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <ul style={{ color: 'var(--bb-text-muted)', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <li>Dedicated Parcel Counter</li>
               <li>Quick Parcel Billing</li>
               <li>Fast Food Token Counter</li>
@@ -777,7 +784,7 @@ const LandingPage = () => {
               <Coffee size={20} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>KOT Management</h3>
-            <ul style={{ color: '#94a3b8', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <ul style={{ color: 'var(--bb-text-muted)', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <li>KOT Ticket Generation</li>
               <li>Direct Kitchen Printing</li>
               <li>Kitchen Order Tracking</li>
@@ -791,7 +798,7 @@ const LandingPage = () => {
               <TrendingUp size={20} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Credit Management</h3>
-            <ul style={{ color: '#94a3b8', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <ul style={{ color: 'var(--bb-text-muted)', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <li>Customer Credit Ledger</li>
               <li>Vendor Credit Tracking</li>
               <li>Outstanding Balance Audit</li>
@@ -805,7 +812,7 @@ const LandingPage = () => {
               <Cpu size={20} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Inventory Management</h3>
-            <ul style={{ color: '#94a3b8', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <ul style={{ color: 'var(--bb-text-muted)', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <li>Raw Material Stock Tracking</li>
               <li>Low Stock Warnings</li>
               <li>Total Stock Valuation Audit</li>
@@ -819,7 +826,7 @@ const LandingPage = () => {
               <Layers size={20} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Lodging & Room Management</h3>
-            <ul style={{ color: '#94a3b8', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <ul style={{ color: 'var(--bb-text-muted)', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <li>Room Management & Tariffs</li>
               <li>Guest Check-In & Check-Out</li>
               <li>Lodging Invoicing</li>
@@ -832,7 +839,7 @@ const LandingPage = () => {
               <FileText size={20} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Billing History & Reports</h3>
-            <ul style={{ color: '#94a3b8', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <ul style={{ color: 'var(--bb-text-muted)', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <li>Detailed Billing History</li>
               <li>Daily, Monthly & Yearly Reports</li>
               <li>PDF Export capabilities</li>
@@ -846,8 +853,8 @@ const LandingPage = () => {
               <User size={20} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>User Experience</h3>
-            <ul style={{ color: '#94a3b8', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <li>Rich & Modern Dark Theme</li>
+            <ul style={{ color: 'var(--bb-text-muted)', fontSize: '13px', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <li>Rich & Modern Dark &amp; Light Theme</li>
               <li>Easy to Learn & High Speed</li>
               <li>Zero PC Requirement on Mobile</li>
             </ul>
@@ -857,36 +864,36 @@ const LandingPage = () => {
       </section>
 
       {/* Product Video & Screenshots Gallery */}
-      <section id="gallery" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <section id="gallery" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid var(--bb-border-subtle)' }}>
         <AnimatedSection animation="fade-up" style={{ textAlign: 'center', marginBottom: '40px' }}>
           <span style={{ color: '#0ea5e9', fontWeight: 900, textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.15em' }}>Visual Tour</span>
           <h2 style={{ fontSize: '32px', fontWeight: 900, marginTop: '8px', textTransform: 'uppercase' }}>Gallery (Screenshots & Video)</h2>
-          <p style={{ color: '#94a3b8', fontSize: '16px', marginTop: '8px' }}>Inspect the full interface of BestBill on Desktop PC and Android Mobile.</p>
+          <p style={{ color: 'var(--bb-text-muted)', fontSize: '16px', marginTop: '8px' }}>Inspect the full interface of BestBill on Desktop PC and Android Mobile.</p>
         </AnimatedSection>
 
         {/* Gallery Filter Buttons */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '40px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '40px', flexWrap: 'wrap' }}>
           <button
             onClick={() => setGalleryFilter('all')}
-            style={{ padding: '8px 20px', borderRadius: '100px', border: galleryFilter === 'all' ? '1px solid #0ea5e9' : '1px solid rgba(255,255,255,0.1)', backgroundColor: galleryFilter === 'all' ? '#0ea5e9' : 'rgba(30,41,59,0.5)', color: 'white', fontWeight: 800, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s' }}
+            style={{ padding: '8px 20px', borderRadius: '100px', border: galleryFilter === 'all' ? '1px solid #0ea5e9' : '1px solid var(--bb-border-med)', backgroundColor: galleryFilter === 'all' ? '#0ea5e9' : 'var(--bb-bg-chip)', color: galleryFilter === 'all' ? 'white' : 'var(--bb-text-high)', fontWeight: 800, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s' }}
           >
             All ({screenshots.length})
           </button>
           <button
             onClick={() => setGalleryFilter('desktop')}
-            style={{ padding: '8px 20px', borderRadius: '100px', border: galleryFilter === 'desktop' ? '1px solid #0ea5e9' : '1px solid rgba(255,255,255,0.1)', backgroundColor: galleryFilter === 'desktop' ? '#0ea5e9' : 'rgba(30,41,59,0.5)', color: 'white', fontWeight: 800, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{ padding: '8px 20px', borderRadius: '100px', border: galleryFilter === 'desktop' ? '1px solid #0ea5e9' : '1px solid var(--bb-border-med)', backgroundColor: galleryFilter === 'desktop' ? '#0ea5e9' : 'var(--bb-bg-chip)', color: galleryFilter === 'desktop' ? 'white' : 'var(--bb-text-high)', fontWeight: 800, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
             <Laptop size={14} /> Desktop PC (10)
           </button>
           <button
             onClick={() => setGalleryFilter('mobile')}
-            style={{ padding: '8px 20px', borderRadius: '100px', border: galleryFilter === 'mobile' ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.1)', backgroundColor: galleryFilter === 'mobile' ? '#10b981' : 'rgba(30,41,59,0.5)', color: 'white', fontWeight: 800, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{ padding: '8px 20px', borderRadius: '100px', border: galleryFilter === 'mobile' ? '1px solid #10b981' : '1px solid var(--bb-border-med)', backgroundColor: galleryFilter === 'mobile' ? '#10b981' : 'var(--bb-bg-chip)', color: galleryFilter === 'mobile' ? 'white' : 'var(--bb-text-high)', fontWeight: 800, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
             <Smartphone size={14} /> Android POS (5)
           </button>
           <button
             onClick={() => setGalleryFilter('admin')}
-            style={{ padding: '8px 20px', borderRadius: '100px', border: galleryFilter === 'admin' ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)', backgroundColor: galleryFilter === 'admin' ? '#38bdf8' : 'rgba(30,41,59,0.5)', color: 'white', fontWeight: 800, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{ padding: '8px 20px', borderRadius: '100px', border: galleryFilter === 'admin' ? '1px solid #0284c7' : '1px solid var(--bb-border-med)', backgroundColor: galleryFilter === 'admin' ? '#0284c7' : 'var(--bb-bg-chip)', color: galleryFilter === 'admin' ? 'white' : 'var(--bb-text-high)', fontWeight: 800, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
             <Globe size={14} /> Admin App (3)
           </button>
@@ -897,7 +904,7 @@ const LandingPage = () => {
           {/* Demo Video Player */}
           <AnimatedSection animation="slide-right" className="glass-card gallery-video-card" style={{ padding: '24px', borderRadius: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Product Walkthrough Video</h3>
-            <div style={{ width: '100%', backgroundColor: '#020617', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ width: '100%', backgroundColor: '#020617', borderRadius: '16px', border: '1px solid var(--bb-border-card)', overflow: 'hidden', display: 'flex', justifyContent: 'center' }}>
               <iframe 
                 src="https://www.youtube.com/embed/X3W4eDhLImU"
                 title="BestBill KOT Workflow Demo"
@@ -909,7 +916,7 @@ const LandingPage = () => {
             </div>
             <a 
               href="#setup-guide"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backgroundColor: 'rgba(14, 165, 233, 0.14)', border: '1px solid rgba(56, 189, 248, 0.35)', color: '#38bdf8', padding: '10px 14px', borderRadius: '12px', fontWeight: 800, fontSize: '12.5px', textDecoration: 'none' }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backgroundColor: 'rgba(14, 165, 233, 0.14)', border: '1px solid rgba(56, 189, 248, 0.35)', color: 'var(--bb-sky-text)', padding: '10px 14px', borderRadius: '12px', fontWeight: 800, fontSize: '12.5px', textDecoration: 'none' }}
             >
               <PlayCircle size={16} /> Watch Full Setup Guide Video ↓
             </a>
@@ -919,7 +926,7 @@ const LandingPage = () => {
           <AnimatedSection animation="slide-left" className="glass-card gallery-card gallery-photos-card" style={{ padding: '24px', borderRadius: '24px', display: 'flex', flexDirection: 'column', gap: '16px', gridColumn: 'span 2' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 800, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>Application Screenshot Gallery</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>Click any image to enlarge</span>
+              <span style={{ fontSize: '12px', color: 'var(--bb-text-muted)', fontWeight: 600 }}>Click any image to enlarge</span>
             </h3>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px', overflowY: 'auto', maxHeight: '550px', paddingRight: '8px' }} className="custom-scrollbar">
@@ -927,14 +934,14 @@ const LandingPage = () => {
               {filteredScreenshots.map((ss, idx) => {
                 const globalIndex = screenshots.findIndex(s => s.file === ss.file);
                 return (
-                  <div key={idx} style={{ backgroundColor: '#090d1f', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.borderColor = ss.category === 'mobile' ? '#10b981' : '#0ea5e9'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.transform = 'translateY(0)'; }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 900, color: ss.category === 'mobile' ? '#34d399' : '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{ss.title}</span>
-                      <span style={{ fontSize: '9px', backgroundColor: ss.category === 'mobile' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.1)', color: ss.category === 'mobile' ? '#34d399' : '#38bdf8', padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }}>
+                  <div key={idx} style={{ backgroundColor: 'var(--bb-bg-sub-alt)', border: '1px solid var(--bb-border-subtle)', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.borderColor = ss.category === 'mobile' ? '#10b981' : '#0ea5e9'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--bb-border-subtle)'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--bb-border-subtle)', paddingBottom: '8px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 900, color: ss.category === 'mobile' ? 'var(--bb-emerald-text)' : 'var(--bb-sky-text)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{ss.title}</span>
+                      <span style={{ fontSize: '9px', backgroundColor: ss.category === 'mobile' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.1)', color: ss.category === 'mobile' ? 'var(--bb-emerald-text)' : 'var(--bb-sky-text)', padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }}>
                         {ss.platform}
                       </span>
                     </div>
-                    <div style={{ width: '100%', height: '160px', backgroundColor: '#020617', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.02)', position: 'relative' }}>
+                    <div style={{ width: '100%', height: '160px', backgroundColor: '#020617', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--bb-border-faint)', position: 'relative' }}>
                       <img 
                         src={`/screenshots/${ss.file}`} 
                         alt={ss.title} 
@@ -955,12 +962,12 @@ const LandingPage = () => {
       </section>
 
       {/* User Manual & Documents */}
-      <AnimatedSection id="manual" animation="fade-up" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <AnimatedSection id="manual" animation="fade-up" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid var(--bb-border-subtle)' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '48px', alignItems: 'center' }}>
-          <div className="glass-card" style={{ padding: '40px', borderRadius: '32px', borderLeft: '4px solid #38bdf8' }}>
-            <span style={{ color: '#38bdf8', fontWeight: 900, textTransform: 'uppercase', fontSize: '11px' }}>User Manuals & Docs</span>
+          <div className="glass-card" style={{ padding: '40px', borderRadius: '32px', borderLeft: '4px solid #0ea5e9' }}>
+            <span style={{ color: 'var(--bb-sky-text)', fontWeight: 900, textTransform: 'uppercase', fontSize: '11px' }}>User Manuals & Docs</span>
             <h3 style={{ fontSize: '24px', fontWeight: 900, marginTop: '8px', marginBottom: '16px' }}>Documentation Guide</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6, marginBottom: '24px' }}>
+            <p style={{ color: 'var(--bb-text-muted)', fontSize: '14px', lineHeight: 1.6, marginBottom: '24px' }}>
               Access the complete BestBill offline guide. Learn printer port mapping, Bluetooth mobile thermal setup, KOT settings, layout customization, and database backup configurations step by step.
             </p>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -969,7 +976,7 @@ const LandingPage = () => {
                   toast.success("Starting User Manual PDF download...");
                   window.location.href = '/downloads/BestBill_User_Manual.pdf';
                 }}
-                style={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '12px 24px', borderRadius: '12px', fontWeight: 800, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                style={{ backgroundColor: 'var(--bb-bg-btn-dark)', border: '1px solid var(--bb-border-card)', color: 'var(--bb-text-primary)', padding: '12px 24px', borderRadius: '12px', fontWeight: 800, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
               >
                 <FileText size={16} /> User Manual PDF
               </button>
@@ -983,24 +990,24 @@ const LandingPage = () => {
               <div style={{ display: 'flex', gap: '16px' }}>
                 <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'rgba(14,165,233,0.1)', color: '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '12px', flexShrink: 0 }}>1</div>
                 <div>
-                  <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'white' }}>Quick Installation</h4>
-                  <p style={{ color: '#94a3b8', fontSize: '13px', marginTop: '2px' }}>Install executable on Windows PC or APK on any Android mobile phone / tablet.</p>
+                  <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--bb-text-primary)' }}>Quick Installation</h4>
+                  <p style={{ color: 'var(--bb-text-muted)', fontSize: '13px', marginTop: '2px' }}>Install the app on Windows PC or on any Android mobile phone / tablet.</p>
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: '16px' }}>
                 <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'rgba(14,165,233,0.1)', color: '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '12px', flexShrink: 0 }}>2</div>
                 <div>
-                  <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'white' }}>Hardware & Thermal Printer Setup</h4>
-                  <p style={{ color: '#94a3b8', fontSize: '13px', marginTop: '2px' }}>Pair Bluetooth or USB thermal receipt printer (58mm or 80mm paper size).</p>
+                  <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--bb-text-primary)' }}>Hardware & Thermal Printer Setup</h4>
+                  <p style={{ color: 'var(--bb-text-muted)', fontSize: '13px', marginTop: '2px' }}>Pair Bluetooth or USB thermal receipt printer (58mm or 80mm paper size).</p>
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: '16px' }}>
                 <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'rgba(14,165,233,0.1)', color: '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '12px', flexShrink: 0 }}>3</div>
                 <div>
-                  <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'white' }}>Load Categories & Start Billing</h4>
-                  <p style={{ color: '#94a3b8', fontSize: '13px', marginTop: '2px' }}>Populate food menus, floor tables, raw material stock, and start billing offline.</p>
+                  <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--bb-text-primary)' }}>Load Categories & Start Billing</h4>
+                  <p style={{ color: 'var(--bb-text-muted)', fontSize: '13px', marginTop: '2px' }}>Populate food menus, floor tables, raw material stock, and start billing offline.</p>
                 </div>
               </div>
 
@@ -1013,7 +1020,7 @@ const LandingPage = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px', alignItems: 'center' }}>
             
             {/* Widescreen 16:9 YouTube Walkthrough Video */}
-            <div style={{ width: '100%', backgroundColor: '#020617', borderRadius: '18px', overflow: 'hidden', border: '1px solid rgba(56, 189, 248, 0.25)', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}>
+            <div style={{ width: '100%', backgroundColor: '#020617', borderRadius: '18px', overflow: 'hidden', border: '1px solid rgba(56, 189, 248, 0.25)', boxShadow: isLight ? '0 16px 32px rgba(15, 23, 42, 0.16)' : '0 20px 40px rgba(0,0,0,0.4)' }}>
               <iframe
                 src="https://www.youtube.com/embed/J58Wsd0UIkM"
                 title="BestBill Full Setup Guide and App Walkthrough"
@@ -1026,23 +1033,23 @@ const LandingPage = () => {
 
             {/* Guide Summary & Direct YouTube Link */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', padding: '5px 12px', borderRadius: '100px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', width: 'fit-content', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(56, 189, 248, 0.12)', color: 'var(--bb-sky-text)', padding: '5px 12px', borderRadius: '100px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', width: 'fit-content', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
                 <PlayCircle size={14} /> Complete Setup Walkthrough
               </div>
 
-              <h3 style={{ fontSize: '26px', fontWeight: 950, color: 'white', lineHeight: 1.2 }}>
+              <h3 style={{ fontSize: '26px', fontWeight: 950, color: 'var(--bb-text-primary)', lineHeight: 1.2 }}>
                 Full Setup Guide &amp; Feature Walkthrough
               </h3>
 
-              <p style={{ color: '#94a3b8', fontSize: '14.5px', lineHeight: 1.65 }}>
+              <p style={{ color: 'var(--bb-text-muted)', fontSize: '14.5px', lineHeight: 1.65 }}>
                 Watch our complete step-by-step setup tutorial covering everything you need to go live in minutes:
               </p>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', fontSize: '13.5px', color: '#e2e8f0', fontWeight: 600 }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#38bdf8" style={{ flexShrink: 0 }} /> How to download &amp; install BestBill App</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#38bdf8" style={{ flexShrink: 0 }} /> Hotel, menu, tables &amp; counter configuration</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#38bdf8" style={{ flexShrink: 0 }} /> Thermal printer connection &amp; basic feature setup</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#38bdf8" style={{ flexShrink: 0 }} /> Detailed walkthrough of all BestBill modules</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', fontSize: '13.5px', color: 'var(--bb-text-high)', fontWeight: 600 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" style={{ flexShrink: 0 }} /> How to download &amp; install BestBill App</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" style={{ flexShrink: 0 }} /> Hotel, menu, tables &amp; counter configuration</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" style={{ flexShrink: 0 }} /> Thermal printer connection &amp; basic feature setup</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" style={{ flexShrink: 0 }} /> Detailed walkthrough of all BestBill modules</span>
               </div>
 
               <div style={{ paddingTop: '6px' }}>
@@ -1062,11 +1069,11 @@ const LandingPage = () => {
       </AnimatedSection>
 
       {/* Pricing Section */}
-      <section id="pricing" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <section id="pricing" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid var(--bb-border-subtle)' }}>
         <AnimatedSection animation="fade-up" style={{ textAlign: 'center', marginBottom: '48px' }}>
           <span style={{ color: '#0ea5e9', fontWeight: 900, textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.15em' }}>Transparent Setup Plans</span>
           <h2 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase', marginTop: '8px' }}>Pricing Plans</h2>
-          <p style={{ color: '#94a3b8', fontSize: '16px', marginTop: '8px', maxWidth: '720px', marginLeft: 'auto', marginRight: 'auto' }}>
+          <p style={{ color: 'var(--bb-text-muted)', fontSize: '16px', marginTop: '8px', maxWidth: '720px', marginLeft: 'auto', marginRight: 'auto' }}>
             Choose the exact setup for your restaurant or hotel: Mobile-only Android App, Single-Counter PC (1 Printer), or Full KOT Multi-Waiter PC + Kitchen Setup (2 Printers).
           </p>
         </AnimatedSection>
@@ -1075,7 +1082,7 @@ const LandingPage = () => {
           
           {/* 1. Android App */}
           <div className="glass-card" style={{ padding: '28px', borderRadius: '28px', border: '1.5px solid rgba(16,185,129,0.45)', boxShadow: '0 16px 36px rgba(16,185,129,0.1)', display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            <div style={{ borderRadius: '18px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#020617', aspectRatio: '16/9' }}>
+            <div style={{ borderRadius: '18px', overflow: 'hidden', border: '1px solid var(--bb-border-card)', backgroundColor: '#020617', aspectRatio: '16/9' }}>
               <img 
                 src="/pricing-android-setup.jpg" 
                 alt="BestBill Android App with Bluetooth Thermal Printer Setup" 
@@ -1084,35 +1091,35 @@ const LandingPage = () => {
             </div>
 
             <div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(16,185,129,0.15)', color: '#34d399', padding: '4px 12px', borderRadius: '100px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(16,185,129,0.15)', color: 'var(--bb-emerald-text)', padding: '4px 12px', borderRadius: '100px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 <Smartphone size={13} /> Part 1 • Android App Only
               </div>
-              <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'white', marginTop: '10px' }}>Android App POS</h3>
-              <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6, marginTop: '6px' }}>
+              <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'var(--bb-text-primary)', marginTop: '10px' }}>Android App POS</h3>
+              <p style={{ color: 'var(--bb-text-muted)', fontSize: '13.5px', lineHeight: 1.6, marginTop: '6px' }}>
                 Mobile-only BestBill app on your phone or tablet paired with a small Bluetooth thermal printer for fast billing anywhere — no PC needed.
               </p>
             </div>
 
             {/* Price Tiers */}
-            <div style={{ backgroundColor: '#020617', borderRadius: '18px', padding: '16px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#cbd5e1' }}>Monthly Plan</span>
-                <span style={{ fontSize: '20px', fontWeight: 900, color: 'white' }}>₹399 <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>/ month</span></span>
+            <div style={{ backgroundColor: 'var(--bb-bg-sub)', borderRadius: '18px', padding: '16px', border: '1px solid var(--bb-border-mid)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--bb-border-mid)' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--bb-text-body)' }}>Monthly Plan</span>
+                <span style={{ fontSize: '20px', fontWeight: 900, color: 'var(--bb-text-primary)' }}>₹399 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--bb-text-dim)' }}>/ month</span></span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#cbd5e1' }}>Yearly Plan</span>
-                <span style={{ fontSize: '20px', fontWeight: 900, color: '#38bdf8' }}>₹3,999 <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>/ year</span></span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--bb-border-mid)' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--bb-text-body)' }}>Yearly Plan</span>
+                <span style={{ fontSize: '20px', fontWeight: 900, color: 'var(--bb-sky-text)' }}>₹3,999 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--bb-text-dim)' }}>/ year</span></span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '2px' }}>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#34d399' }}>Lifetime Plan</div>
-                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#a7f3d0' }}>🎁 Bluetooth Printer FREE!</div>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--bb-emerald-text)' }}>Lifetime Plan</div>
+                  <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--bb-emerald-soft)' }}>🎁 Bluetooth Printer FREE!</div>
                 </div>
                 <span style={{ fontSize: '22px', fontWeight: 950, color: '#10b981' }}>₹11,999</span>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', fontSize: '13px', fontWeight: 600, color: '#e2e8f0' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', fontSize: '13px', fontWeight: 600, color: 'var(--bb-text-high)' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#10b981" style={{ flexShrink: 0 }} /> Mobile billing app (no PC/laptop required)</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#10b981" style={{ flexShrink: 0 }} /> Small wireless Bluetooth printer support</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#10b981" style={{ flexShrink: 0 }} /> Free thermal printer included on ₹11,999 Lifetime</span>
@@ -1127,8 +1134,8 @@ const LandingPage = () => {
           </div>
 
           {/* 2. PC Setup (Basic Counter) */}
-          <div className="glass-card" style={{ padding: '28px', borderRadius: '28px', border: '1.5px solid rgba(56,189,248,0.3)', display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            <div style={{ borderRadius: '18px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#020617', aspectRatio: '16/9' }}>
+          <div className="glass-card" style={{ padding: '28px', borderRadius: '28px', border: '1.5px solid rgba(56,189,248,0.35)', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            <div style={{ borderRadius: '18px', overflow: 'hidden', border: '1px solid var(--bb-border-card)', backgroundColor: '#020617', aspectRatio: '16/9' }}>
               <img 
                 src="/pricing-basic-counter.jpg" 
                 alt="BestBill Basic Counter PC Setup with Single Thermal Printer" 
@@ -1137,43 +1144,43 @@ const LandingPage = () => {
             </div>
 
             <div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(56,189,248,0.12)', color: '#38bdf8', padding: '4px 12px', borderRadius: '100px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(56,189,248,0.12)', color: 'var(--bb-sky-text)', padding: '4px 12px', borderRadius: '100px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 <Monitor size={13} /> Part 2 • Basic Counter (1 Printer)
               </div>
-              <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'white', marginTop: '10px' }}>PC Setup (Basic Counter)</h3>
-              <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6, marginTop: '6px' }}>
+              <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'var(--bb-text-primary)', marginTop: '10px' }}>PC Setup (Basic Counter)</h3>
+              <p style={{ color: 'var(--bb-text-muted)', fontSize: '13.5px', lineHeight: 1.6, marginTop: '6px' }}>
                 For counter-only operations using your counter PC/laptop — no waiter captain apps and no separate kitchen printer. Print both <strong>final bills &amp; KOTs</strong> from the same 1 counter printer.
               </p>
             </div>
 
             {/* Price Tiers */}
-            <div style={{ backgroundColor: '#020617', borderRadius: '18px', padding: '16px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#cbd5e1' }}>Monthly Plan</span>
-                <span style={{ fontSize: '20px', fontWeight: 900, color: 'white' }}>₹599 <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>/ month</span></span>
+            <div style={{ backgroundColor: 'var(--bb-bg-sub)', borderRadius: '18px', padding: '16px', border: '1px solid var(--bb-border-mid)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--bb-border-mid)' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--bb-text-body)' }}>Monthly Plan</span>
+                <span style={{ fontSize: '20px', fontWeight: 900, color: 'var(--bb-text-primary)' }}>₹599 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--bb-text-dim)' }}>/ month</span></span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#cbd5e1' }}>Yearly Plan</span>
-                <span style={{ fontSize: '20px', fontWeight: 900, color: '#38bdf8' }}>₹5,999 <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>/ year</span></span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--bb-border-mid)' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--bb-text-body)' }}>Yearly Plan</span>
+                <span style={{ fontSize: '20px', fontWeight: 900, color: 'var(--bb-sky-text)' }}>₹5,999 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--bb-text-dim)' }}>/ year</span></span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '2px' }}>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#38bdf8' }}>Lifetime Plan</div>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>Software only (without printer)</div>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--bb-sky-text)' }}>Lifetime Plan</div>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--bb-text-dim)' }}>Software only (without printer)</div>
                 </div>
-                <span style={{ fontSize: '22px', fontWeight: 950, color: 'white' }}>₹11,999</span>
+                <span style={{ fontSize: '22px', fontWeight: 950, color: 'var(--bb-text-primary)' }}>₹14,999</span>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', fontSize: '13px', fontWeight: 600, color: '#e2e8f0' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#38bdf8" style={{ flexShrink: 0 }} /> Windows PC / Laptop counter POS software</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#38bdf8" style={{ flexShrink: 0 }} /> Generates Final Bills &amp; KOTs from 1 counter printer</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#38bdf8" style={{ flexShrink: 0 }} /> No Captain App / No separate kitchen printer</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', fontSize: '13px', fontWeight: 600, color: 'var(--bb-text-high)' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" style={{ flexShrink: 0 }} /> Windows PC / Laptop counter POS software</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" style={{ flexShrink: 0 }} /> Generates Final Bills &amp; KOTs from 1 counter printer</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" style={{ flexShrink: 0 }} /> No Captain App / No separate kitchen printer</span>
             </div>
 
             <a
               href="tel:+919822401802"
-              style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backgroundColor: '#1e293b', border: '1px solid rgba(56,189,248,0.35)', color: 'white', padding: '13px 18px', borderRadius: '12px', fontWeight: 800, fontSize: '14px', textDecoration: 'none' }}
+              style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backgroundColor: '#0284c7', border: 'none', color: 'white', padding: '13px 18px', borderRadius: '12px', fontWeight: 800, fontSize: '14px', textDecoration: 'none', boxShadow: '0 8px 20px rgba(2,132,199,0.28)' }}
             >
               <Phone size={15} /> Get Basic Counter Plan
             </a>
@@ -1190,35 +1197,35 @@ const LandingPage = () => {
             </div>
 
             <div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(14,165,233,0.18)', color: '#38bdf8', padding: '4px 12px', borderRadius: '100px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(14,165,233,0.18)', color: 'var(--bb-sky-text)', padding: '4px 12px', borderRadius: '100px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 <Users size={13} /> Part 3 • Full KOT (2 Printers + Waiter Apps)
               </div>
-              <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'white', marginTop: '10px' }}>PC Setup (Full KOT)</h3>
-              <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6, marginTop: '6px' }}>
+              <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'var(--bb-text-primary)', marginTop: '10px' }}>PC Setup (Full KOT)</h3>
+              <p style={{ color: 'var(--bb-text-muted)', fontSize: '13.5px', lineHeight: 1.6, marginTop: '6px' }}>
                 Everything in Basic Counter <strong>plus 10+ Waiter / Captain Mobile Apps</strong> for table-side ordering and a <strong>separate Kitchen KOT Printer</strong> (2-printer setup).
               </p>
             </div>
 
             {/* Price Tiers */}
-            <div style={{ backgroundColor: '#020617', borderRadius: '18px', padding: '16px', border: '1px solid rgba(14,165,233,0.25)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#cbd5e1' }}>Monthly Plan</span>
-                <span style={{ fontSize: '20px', fontWeight: 900, color: 'white' }}>₹899 <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>/ month</span></span>
+            <div style={{ backgroundColor: 'var(--bb-bg-sub)', borderRadius: '18px', padding: '16px', border: '1px solid rgba(14,165,233,0.3)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--bb-border-mid)' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--bb-text-body)' }}>Monthly Plan</span>
+                <span style={{ fontSize: '20px', fontWeight: 900, color: 'var(--bb-text-primary)' }}>₹899 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--bb-text-dim)' }}>/ month</span></span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#cbd5e1' }}>Yearly Plan</span>
-                <span style={{ fontSize: '20px', fontWeight: 900, color: '#38bdf8' }}>₹8,999 <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>/ year</span></span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--bb-border-mid)' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--bb-text-body)' }}>Yearly Plan</span>
+                <span style={{ fontSize: '20px', fontWeight: 900, color: 'var(--bb-sky-text)' }}>₹8,999 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--bb-text-dim)' }}>/ year</span></span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '2px' }}>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#38bdf8' }}>Lifetime Plan</div>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>Software only (without printers)</div>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--bb-sky-text)' }}>Lifetime Plan</div>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--bb-text-dim)' }}>Software only (without printers)</div>
                 </div>
-                <span style={{ fontSize: '22px', fontWeight: 950, color: '#38bdf8' }}>₹19,999</span>
+                <span style={{ fontSize: '22px', fontWeight: 950, color: 'var(--bb-sky-text)' }}>₹19,999</span>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', fontSize: '13px', fontWeight: 600, color: '#e2e8f0' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', fontSize: '13px', fontWeight: 600, color: 'var(--bb-text-high)' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" style={{ flexShrink: 0 }} /> Basic Counter PC setup + <strong>10+ Captain Waiter Apps</strong></span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" style={{ flexShrink: 0 }} /> <strong>2-Printer Setup:</strong> Counter printer + Separate Kitchen printer</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" style={{ flexShrink: 0 }} /> Software-only license (printers purchased separately)</span>
@@ -1234,18 +1241,18 @@ const LandingPage = () => {
 
         </AnimatedSection>
 
-        <div style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto', color: '#cbd5e1', fontSize: '14px', lineHeight: 1.6 }}>
+        <div style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto', color: 'var(--bb-text-body)', fontSize: '14px', lineHeight: 1.6 }}>
           <p style={{ marginBottom: '12px' }}>
             <strong>Note:</strong> Only the <strong>Android App Lifetime Plan (₹11,999)</strong> includes a <strong>FREE wireless Bluetooth thermal printer</strong>. Basic Counter PC &amp; Full KOT PC plans are software-only licenses (printers not included).
           </p>
-          <a href="tel:+919822401802" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#38bdf8', fontSize: '18px', fontWeight: 900, textDecoration: 'none' }}>
+          <a href="tel:+919822401802" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--bb-sky-text)', fontSize: '18px', fontWeight: 900, textDecoration: 'none' }}>
             <Phone size={18} /> +91 9822401802
           </a>
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" style={{ maxWidth: '850px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <section id="faq" style={{ maxWidth: '850px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid var(--bb-border-subtle)' }}>
         <AnimatedSection animation="fade-up" style={{ textAlign: 'center', marginBottom: '40px' }}>
           <h2 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>Frequently Asked Questions</h2>
         </AnimatedSection>
@@ -1254,16 +1261,16 @@ const LandingPage = () => {
           {faqs.map((faq, index) => (
             <div 
               key={index} 
-              style={{ backgroundColor: 'rgba(30,41,59,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', overflow: 'hidden', cursor: 'pointer' }}
+              style={{ backgroundColor: 'var(--bb-bg-faq)', border: '1px solid var(--bb-border-subtle)', borderRadius: '16px', overflow: 'hidden', cursor: 'pointer' }}
               onClick={() => setActiveFaq(activeFaq === index ? null : index)}
             >
               <div style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 700 }}>
                 <span>{faq.q}</span>
-                {activeFaq === index ? <ChevronUp size={18} color="#0ea5e9" /> : <ChevronDown size={18} color="#94a3b8" />}
+                {activeFaq === index ? <ChevronUp size={18} color="#0ea5e9" /> : <ChevronDown size={18} color="var(--bb-text-muted)" />}
               </div>
               
               {activeFaq === index && (
-                <div style={{ padding: '0 24px 20px', color: '#94a3b8', fontSize: '14px', lineHeight: 1.6, borderTop: '1px solid rgba(255,255,255,0.02)', paddingTop: '16px' }}>
+                <div style={{ padding: '0 24px 20px', color: 'var(--bb-text-muted)', fontSize: '14px', lineHeight: 1.6, borderTop: '1px solid var(--bb-border-faint)', paddingTop: '16px' }}>
                   {faq.a}
                 </div>
               )}
@@ -1273,15 +1280,15 @@ const LandingPage = () => {
       </section>
 
       {/* Company Details & Registration Section (COI) */}
-      <section id="company" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <section id="company" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid var(--bb-border-subtle)' }}>
         <AnimatedSection animation="fade-up" style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(14, 165, 233, 0.12)', color: '#38bdf8', padding: '6px 16px', borderRadius: '100px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '14px', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(14, 165, 233, 0.12)', color: 'var(--bb-sky-text)', padding: '6px 16px', borderRadius: '100px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '14px', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
             <FileCheck2 size={14} /> Registered Under Companies Act, 2013
           </div>
           <h2 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>
-            Company Details &amp; <span style={{ color: '#38bdf8' }}>Corporate Registration</span>
+            Company Details &amp; <span style={{ color: 'var(--bb-sky-text)' }}>Corporate Registration</span>
           </h2>
-          <p style={{ color: '#94a3b8', fontSize: '15px', maxWidth: '720px', margin: '10px auto 0', lineHeight: 1.6 }}>
+          <p style={{ color: 'var(--bb-text-muted)', fontSize: '15px', maxWidth: '720px', margin: '10px auto 0', lineHeight: 1.6 }}>
             Official incorporation details of <strong>BestBill Solutions Private Limited</strong> as per the Certificate of Incorporation issued by the Ministry of Corporate Affairs, Government of India.
           </p>
         </AnimatedSection>
@@ -1291,31 +1298,31 @@ const LandingPage = () => {
           {/* Card 1: Legal Entity */}
           <div className="glass-card" style={{ padding: '32px', borderRadius: '24px', borderTop: '3px solid #0ea5e9', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-              <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(14,165,233,0.12)', color: '#38bdf8', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(14,165,233,0.12)', color: '#0ea5e9', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Building2 size={20} />
               </div>
               <div>
-                <span style={{ fontSize: '10px', fontWeight: 900, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Legal Entity</span>
-                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginTop: '2px' }}>Corporate Identity</h3>
+                <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--bb-sky-text)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Legal Entity</span>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--bb-text-primary)', marginTop: '2px' }}>Corporate Identity</h3>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px', color: '#cbd5e1', lineHeight: 1.6 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px', color: 'var(--bb-text-body)', lineHeight: 1.6 }}>
               <div>
-                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Company Name</div>
-                <div style={{ fontWeight: 800, color: 'white' }}>BestBill Solutions Private Limited</div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--bb-text-dim)', textTransform: 'uppercase' }}>Company Name</div>
+                <div style={{ fontWeight: 800, color: 'var(--bb-text-primary)' }}>BestBill Solutions Private Limited</div>
               </div>
               <div>
-                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Company Structure</div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--bb-text-dim)', textTransform: 'uppercase' }}>Company Structure</div>
                 <div>Private Limited (Company limited by shares)</div>
               </div>
               <div>
-                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Date of Incorporation</div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--bb-text-dim)', textTransform: 'uppercase' }}>Date of Incorporation</div>
                 <div>16 November 2026</div>
               </div>
               <div>
-                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Founder &amp; Director</div>
-                <div style={{ fontWeight: 700, color: '#e2e8f0' }}>Shubham Pilane</div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--bb-text-dim)', textTransform: 'uppercase' }}>Founder &amp; Director</div>
+                <div style={{ fontWeight: 700, color: 'var(--bb-text-high)' }}>Shubham Pilane</div>
               </div>
             </div>
           </div>
@@ -1327,26 +1334,26 @@ const LandingPage = () => {
                 <FileCheck2 size={20} />
               </div>
               <div>
-                <span style={{ fontSize: '10px', fontWeight: 900, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Government Records</span>
-                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginTop: '2px' }}>MCA Registration</h3>
+                <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--bb-emerald-text)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Government Records</span>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--bb-text-primary)', marginTop: '2px' }}>MCA Registration</h3>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px', color: '#cbd5e1', lineHeight: 1.6 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px', color: 'var(--bb-text-body)', lineHeight: 1.6 }}>
               <div>
-                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Corporate Identity Number (CIN)</div>
-                <div style={{ fontWeight: 800, color: '#38bdf8', fontFamily: 'monospace', fontSize: '14px' }}>U62090PN2026PTC262563</div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--bb-text-dim)', textTransform: 'uppercase' }}>Corporate Identity Number (CIN)</div>
+                <div style={{ fontWeight: 800, color: 'var(--bb-sky-text)', fontFamily: 'monospace', fontSize: '14px' }}>U62090PN2026PTC262563</div>
               </div>
               <div>
-                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Governing Act</div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--bb-text-dim)', textTransform: 'uppercase' }}>Governing Act</div>
                 <div>Companies Act, 2013 (18 of 2013)</div>
               </div>
               <div>
-                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Issuing Authority</div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--bb-text-dim)', textTransform: 'uppercase' }}>Issuing Authority</div>
                 <div>Ministry of Corporate Affairs (MCA), Central Registration Centre, Govt. of India</div>
               </div>
               <div>
-                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Official Verification</div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--bb-text-dim)', textTransform: 'uppercase' }}>Official Verification</div>
                 <div>Verified on mca.gov.in</div>
               </div>
             </div>
@@ -1355,18 +1362,18 @@ const LandingPage = () => {
           {/* Card 3: Registered Office Address */}
           <div className="glass-card" style={{ padding: '32px', borderRadius: '24px', borderTop: '3px solid #38bdf8', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-              <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(56,189,248,0.12)', color: '#38bdf8', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: '42px', height: '42px', backgroundColor: 'rgba(56,189,248,0.12)', color: '#0ea5e9', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <MapPin size={20} />
               </div>
               <div>
-                <span style={{ fontSize: '10px', fontWeight: 900, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Official Location</span>
-                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginTop: '2px' }}>Registered Office Address</h3>
+                <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--bb-sky-text)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Official Location</span>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--bb-text-primary)', marginTop: '2px' }}>Registered Office Address</h3>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13.5px', color: '#cbd5e1', lineHeight: 1.65 }}>
-              <div style={{ backgroundColor: 'rgba(15,23,42,0.7)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', padding: '14px 16px' }}>
-                <div style={{ fontWeight: 800, color: 'white', marginBottom: '6px' }}>BestBill Solutions Private Limited</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13.5px', color: 'var(--bb-text-body)', lineHeight: 1.65 }}>
+              <div style={{ backgroundColor: 'var(--bb-bg-soft-tint)', border: '1px solid var(--bb-border-mid)', borderRadius: '14px', padding: '14px 16px' }}>
+                <div style={{ fontWeight: 800, color: 'var(--bb-text-primary)', marginBottom: '6px' }}>BestBill Solutions Private Limited</div>
                 <div>
                   Flat No. 201, B Wing, Karha Vastu,<br />
                   Near Swagat Hotel, Saswad, Purandar,<br />
@@ -1374,8 +1381,8 @@ const LandingPage = () => {
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
-                <a href="tel:+919822401802" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', textDecoration: 'none' }}><Phone size={15} color="#38bdf8" /> +91 9822401802</a>
-                <a href="mailto:bestbillsolutions@gmail.com" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0', textDecoration: 'none' }}><Mail size={15} color="#38bdf8" /> bestbillsolutions@gmail.com</a>
+                <a href="tel:+919822401802" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--bb-text-high)', textDecoration: 'none' }}><Phone size={15} color="#0ea5e9" /> +91 9822401802</a>
+                <a href="mailto:bestbillsolutions@gmail.com" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--bb-text-high)', textDecoration: 'none' }}><Mail size={15} color="#0ea5e9" /> bestbillsolutions@gmail.com</a>
               </div>
             </div>
           </div>
@@ -1384,16 +1391,16 @@ const LandingPage = () => {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px 100px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <section id="contact" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px 100px', borderTop: '1px solid var(--bb-border-subtle)' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '48px' }}>
           
           <AnimatedSection animation="slide-right" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div>
               <h2 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>Contact Us</h2>
-              <p style={{ color: '#94a3b8', fontSize: '15px', marginTop: '8px' }}>Get in touch directly with <strong>BestBill Solutions Private Limited</strong> for product activation, Android APK setup, custom bills, or service desk configuration.</p>
+              <p style={{ color: 'var(--bb-text-muted)', fontSize: '15px', marginTop: '8px' }}>Get in touch directly with <strong>BestBill Solutions Private Limited</strong> for product activation, Android app setup, custom bills, or service desk configuration.</p>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', color: '#cbd5e1', fontSize: '14px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', color: 'var(--bb-text-body)', fontSize: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <Building2 size={16} color="#0ea5e9" style={{ flexShrink: 0 }} />
                 <span><strong>Company:</strong> BestBill Solutions Private Limited</span>
@@ -1404,11 +1411,11 @@ const LandingPage = () => {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <Phone size={16} color="#0ea5e9" style={{ flexShrink: 0 }} />
-                <a href="tel:+919822401802" style={{ color: '#cbd5e1', textDecoration: 'none' }}>+91 9822401802</a>
+                <a href="tel:+919822401802" style={{ color: 'var(--bb-text-body)', textDecoration: 'none' }}>+91 9822401802</a>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <Mail size={16} color="#0ea5e9" style={{ flexShrink: 0 }} />
-                <a href="mailto:bestbillsolutions@gmail.com" style={{ color: '#cbd5e1', textDecoration: 'none' }}>bestbillsolutions@gmail.com</a>
+                <a href="mailto:bestbillsolutions@gmail.com" style={{ color: 'var(--bb-text-body)', textDecoration: 'none' }}>bestbillsolutions@gmail.com</a>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                 <MapPin size={16} color="#0ea5e9" style={{ flexShrink: 0, marginTop: '2px' }} />
@@ -1422,49 +1429,53 @@ const LandingPage = () => {
             
             <form onSubmit={handleContactSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Full Name</label>
+                <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--bb-text-dim)', textTransform: 'uppercase' }}>Full Name</label>
                 <input 
                   type="text" 
                   name="name" 
                   value={formData.name} 
                   onChange={handleInputChange} 
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 600 }}
+                  className="themed-input"
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--bb-border-card)', backgroundColor: 'var(--bb-bg-sub)', color: 'var(--bb-text-primary)', outline: 'none', fontWeight: 600 }}
                   placeholder="e.g. Rahul Sharma"
                 />
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Email Address</label>
+                <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--bb-text-dim)', textTransform: 'uppercase' }}>Email Address</label>
                 <input 
                   type="email" 
                   name="email" 
                   value={formData.email} 
                   onChange={handleInputChange} 
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 600 }}
+                  className="themed-input"
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--bb-border-card)', backgroundColor: 'var(--bb-bg-sub)', color: 'var(--bb-text-primary)', outline: 'none', fontWeight: 600 }}
                   placeholder="e.g. rahul@example.com"
                 />
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Mobile Number</label>
+                <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--bb-text-dim)', textTransform: 'uppercase' }}>Mobile Number</label>
                 <input 
                   type="tel" 
                   name="phone" 
                   value={formData.phone} 
                   onChange={handleInputChange} 
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 600 }}
+                  className="themed-input"
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--bb-border-card)', backgroundColor: 'var(--bb-bg-sub)', color: 'var(--bb-text-primary)', outline: 'none', fontWeight: 600 }}
                   placeholder="e.g. +91 9822401802"
                 />
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Message / Requirements</label>
+                <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--bb-text-dim)', textTransform: 'uppercase' }}>Message / Requirements</label>
                 <textarea 
                   name="message" 
                   rows={3} 
                   value={formData.message} 
                   onChange={handleInputChange} 
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 600, resize: 'none' }}
+                  className="themed-input"
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--bb-border-card)', backgroundColor: 'var(--bb-bg-sub)', color: 'var(--bb-text-primary)', outline: 'none', fontWeight: 600, resize: 'none' }}
                   placeholder="Inquire about Android App, Basic Counter PC, or Full KOT setup..."
                 />
               </div>
@@ -1485,17 +1496,17 @@ const LandingPage = () => {
       </section>
 
       {/* Footer */}
-      <footer style={{ backgroundColor: '#010409', borderTop: '1px solid rgba(255,255,255,0.05)', padding: '40px 24px', textAlign: 'center' }}>
+      <footer style={{ backgroundColor: 'var(--bb-bg-footer)', borderTop: '1px solid var(--bb-border-subtle)', padding: '40px 24px', textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
           <span style={{ fontSize: '18px', fontWeight: 800 }}>BestBill Solutions Private Limited</span>
         </div>
-        <p style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+        <p style={{ color: 'var(--bb-text-muted)', fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
           Founder &amp; Director: <strong>Shubham Pilane</strong> | Phone: +91 9822401802 | Email: bestbillsolutions@gmail.com
         </p>
-        <p style={{ color: '#64748b', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>
+        <p style={{ color: 'var(--bb-text-dim)', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>
           CIN: U62090PN2026PTC262563 • Registered Office: Flat No. 201, B Wing, Karha Vastu, Near Swagat Hotel, Saswad, Purandar, Pune - 412301, Maharashtra
         </p>
-        <p style={{ color: '#475569', fontSize: '12px', fontWeight: 600, margin: 0 }}>
+        <p style={{ color: 'var(--bb-text-footer)', fontSize: '12px', fontWeight: 600, margin: 0 }}>
           © {new Date().getFullYear()} BestBill Solutions Private Limited. All rights reserved.
         </p>
       </footer>
@@ -1504,22 +1515,22 @@ const LandingPage = () => {
       {showDownloadModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-          backgroundColor: 'rgba(2, 6, 23, 0.9)', zIndex: 9999,
+          backgroundColor: 'rgba(2, 6, 23, 0.78)', zIndex: 9999,
           display: 'flex', justifyContent: 'center', alignItems: 'center',
           backdropFilter: 'blur(10px)', padding: '24px'
         }}
         onClick={() => setShowDownloadModal(false)}
         >
           <div style={{
-            backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)',
+            backgroundColor: 'var(--bb-bg-modal)', border: '1px solid var(--bb-border-med)',
             borderRadius: '28px', maxWidth: '850px', width: '100%', padding: '36px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)', position: 'relative'
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', position: 'relative', color: 'var(--bb-text-primary)'
           }}
           onClick={e => e.stopPropagation()}
           >
             <button 
               onClick={() => setShowDownloadModal(false)}
-              style={{ position: 'absolute', top: '20px', right: '20px', backgroundColor: 'rgba(255,255,255,0.05)', border: 'none', color: '#94a3b8', width: '36px', height: '36px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: '20px', right: '20px', backgroundColor: 'var(--bb-bg-close)', border: 'none', color: 'var(--bb-text-muted)', width: '36px', height: '36px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
             >
               <X size={18} />
             </button>
@@ -1529,7 +1540,7 @@ const LandingPage = () => {
                 <Download size={24} />
               </div>
               <h3 style={{ fontSize: '24px', fontWeight: 900 }}>Select Download Platform</h3>
-              <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '6px' }}>Choose the edition of BestBill you want to download:</p>
+              <p style={{ color: 'var(--bb-text-muted)', fontSize: '14px', marginTop: '6px' }}>Choose the edition of BestBill you want to download:</p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
@@ -1537,7 +1548,7 @@ const LandingPage = () => {
               {/* Windows Option */}
               <div 
                 onClick={handleDownloadWindows}
-                style={{ backgroundColor: '#020617', border: '1px solid rgba(14,165,233,0.3)', borderRadius: '20px', padding: '24px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.2s', textAlign: 'center' }}
+                style={{ backgroundColor: 'var(--bb-bg-sub)', border: '1px solid rgba(14,165,233,0.3)', borderRadius: '20px', padding: '24px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.2s', textAlign: 'center' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = '#0ea5e9'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(14,165,233,0.3)'; e.currentTarget.style.transform = 'translateY(0)'; }}
               >
@@ -1545,18 +1556,18 @@ const LandingPage = () => {
                   <Laptop size={20} />
                 </div>
                 <h4 style={{ fontSize: '18px', fontWeight: 800 }}>Windows PC Edition</h4>
-                <p style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.5 }}>
-                  BestBill Setup 1.0.0.exe for Windows 10 & 11 POS billing stations.
+                <p style={{ color: 'var(--bb-text-muted)', fontSize: '12px', lineHeight: 1.5 }}>
+                  BestBill Desktop App for Windows 10 & 11 POS billing stations.
                 </p>
                 <button style={{ width: '100%', marginTop: 'auto', padding: '10px', backgroundColor: '#0ea5e9', border: 'none', color: 'white', borderRadius: '8px', fontWeight: 800, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                  <Download size={14} /> Download .EXE
+                  <Download size={14} /> Download Desktop Application
                 </button>
               </div>
 
               {/* Android Option */}
               <div 
                 onClick={handleDownloadAndroid}
-                style={{ backgroundColor: '#020617', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '20px', padding: '24px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.2s', textAlign: 'center' }}
+                style={{ backgroundColor: 'var(--bb-bg-sub)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '20px', padding: '24px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.2s', textAlign: 'center' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = '#10b981'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(16,185,129,0.3)'; e.currentTarget.style.transform = 'translateY(0)'; }}
               >
@@ -1564,30 +1575,30 @@ const LandingPage = () => {
                   <Smartphone size={20} />
                 </div>
                 <h4 style={{ fontSize: '18px', fontWeight: 800 }}>Android Mobile Edition</h4>
-                <p style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.5 }}>
-                  BestBill Mobile POS APK for Android phones & tablets (No PC needed).
+                <p style={{ color: 'var(--bb-text-muted)', fontSize: '12px', lineHeight: 1.5 }}>
+                  BestBill Mobile POS App for Android phones & tablets (No PC needed).
                 </p>
                 <button style={{ width: '100%', marginTop: 'auto', padding: '10px', backgroundColor: '#059669', border: 'none', color: 'white', borderRadius: '8px', fontWeight: 800, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                  <Download size={14} /> Download .APK
+                  <Download size={14} /> Download Android App
                 </button>
               </div>
 
               {/* Admin Remote App Option */}
               <div 
                 onClick={handleDownloadAdminApk}
-                style={{ backgroundColor: '#020617', border: '1px solid rgba(56,189,248,0.3)', borderRadius: '20px', padding: '24px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.2s', textAlign: 'center' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#38bdf8'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
+                style={{ backgroundColor: 'var(--bb-bg-sub)', border: '1px solid rgba(56,189,248,0.3)', borderRadius: '20px', padding: '24px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.2s', textAlign: 'center' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#0ea5e9'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(56,189,248,0.3)'; e.currentTarget.style.transform = 'translateY(0)'; }}
               >
-                <div style={{ width: '40px', height: '40px', backgroundColor: 'rgba(56,189,248,0.1)', color: '#38bdf8', borderRadius: '10px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '40px', height: '40px', backgroundColor: 'rgba(56,189,248,0.1)', color: '#0ea5e9', borderRadius: '10px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Globe size={20} />
                 </div>
                 <h4 style={{ fontSize: '18px', fontWeight: 800 }}>Admin Remote App</h4>
-                <p style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.5 }}>
+                <p style={{ color: 'var(--bb-text-muted)', fontSize: '12px', lineHeight: 1.5 }}>
                   Monitor store live sales & analytics remotely from anywhere in the world.
                 </p>
                 <button style={{ width: '100%', marginTop: 'auto', padding: '10px', backgroundColor: '#0284c7', border: 'none', color: 'white', borderRadius: '8px', fontWeight: 800, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                  <Download size={14} /> Download Admin APK
+                  <Download size={14} /> Download Admin App
                 </button>
               </div>
 

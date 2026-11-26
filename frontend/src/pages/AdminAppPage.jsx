@@ -27,8 +27,11 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import AnimatedSection from '../animations/AnimatedSection';
+import { useTheme } from '../hooks/useTheme';
+import ThemeToggle from '../components/ThemeToggle';
 
 const AdminAppPage = () => {
+  const { isLight, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState(0);
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
   const pageRef = useRef(null);
@@ -58,7 +61,7 @@ const AdminAppPage = () => {
   ];
 
   const handleDownloadAdminApk = () => {
-    toast.success("Starting BestBill Admin App APK download...", { icon: '📲' });
+    toast.success("Starting BestBill Admin App download...", { icon: '📲' });
     const link = document.createElement('a');
     link.href = 'https://storage.googleapis.com/bestbill-public-logos/BestBill%20Admin%201.0.0.apk';
     link.setAttribute('download', 'BestBill Admin 1.0.0.apk');
@@ -68,24 +71,26 @@ const AdminAppPage = () => {
   };
 
   return (
-    <div ref={pageRef} style={{ backgroundColor: '#020617', color: 'white', minHeight: '100vh', fontFamily: 'Inter, sans-serif', overflowX: 'hidden', width: '100%' }}>
+    <div ref={pageRef} style={{ backgroundColor: 'var(--bb-bg)', color: 'var(--bb-text-primary)', minHeight: '100vh', fontFamily: 'Inter, sans-serif', overflowX: 'hidden', width: '100%', transition: 'background-color 0.25s ease, color 0.25s ease' }}>
       
       {/* Header Bar */}
-      <header className="glass-effect" style={{ position: 'sticky', top: 0, zIndex: 1000, width: '100%', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <header className="glass-effect" style={{ position: 'sticky', top: 0, zIndex: 1000, width: '100%', borderBottom: '1px solid var(--bb-border-subtle)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'white' }}>
+            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'var(--bb-text-primary)' }}>
               <img src="/logo.svg" alt="BestBill Logo" style={{ width: '36px', height: '36px', borderRadius: '9px', boxShadow: '0 0 15px rgba(16, 185, 129, 0.4)' }} />
               <span style={{ fontSize: '20px', fontWeight: 900, letterSpacing: '-0.03em' }}>Best<span style={{ color: '#10b981' }}>Bill</span></span>
             </Link>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <ThemeToggle isLight={isLight} onToggle={toggleTheme} />
+
             <Link 
               to="/" 
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8', textDecoration: 'none', fontWeight: 700, fontSize: '14px', transition: 'color 0.2s', whiteSpace: 'nowrap' }}
-              onMouseEnter={e => e.target.style.color = '#38bdf8'}
-              onMouseLeave={e => e.target.style.color = '#94a3b8'}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--bb-text-muted)', textDecoration: 'none', fontWeight: 700, fontSize: '14px', transition: 'color 0.2s', whiteSpace: 'nowrap' }}
+              onMouseEnter={e => e.target.style.color = 'var(--bb-sky-text)'}
+              onMouseLeave={e => e.target.style.color = 'var(--bb-text-muted)'}
             >
               <ArrowLeft size={16} /> Back to Main Site
             </Link>
@@ -96,7 +101,7 @@ const AdminAppPage = () => {
               onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
               onMouseLeave={e => e.target.style.transform = 'scale(1)'}
             >
-              <Download size={14} /> Download Admin APK
+              <Download size={14} /> Download Admin App
             </button>
           </div>
         </div>
@@ -108,16 +113,16 @@ const AdminAppPage = () => {
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '100px', padding: '8px 20px', marginBottom: '24px' }}>
-            <Globe size={16} color="#34d399" />
-            <span style={{ fontSize: '12px', fontWeight: 900, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.1em' }}>REMOTE POS MONITORING FOR DESKTOP USERS</span>
+            <Globe size={16} color="var(--bb-emerald-text)" />
+            <span style={{ fontSize: '12px', fontWeight: 900, color: 'var(--bb-emerald-text)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>REMOTE POS MONITORING FOR DESKTOP USERS</span>
           </div>
 
           <h1 style={{ fontSize: '52px', fontWeight: 950, lineHeight: 1.15, letterSpacing: '-0.03em', maxWidth: '960px', margin: '0 auto 24px', textTransform: 'uppercase' }}>
             Track Live Sales Data From <br />
-            <span style={{ background: 'linear-gradient(to right, #34d399, #10b981, #38bdf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Anywhere In The World</span>
+            <span className="admin-gradient-text">Anywhere In The World</span>
           </h1>
 
-          <p style={{ color: '#94a3b8', fontSize: '18px', maxWidth: '780px', margin: '0 auto 36px', lineHeight: 1.6, fontWeight: 500 }}>
+          <p style={{ color: 'var(--bb-text-muted)', fontSize: '18px', maxWidth: '780px', margin: '0 auto 36px', lineHeight: 1.6, fontWeight: 500 }}>
             Using BestBill Desktop Application at your store offline? Now you don't need to be physically present at the billing counter! With <strong>BestBill Admin App</strong>, track live store sales, collection summaries, occupied tables, and item reports remotely from your mobile phone.
           </p>
 
@@ -128,18 +133,18 @@ const AdminAppPage = () => {
               onMouseEnter={e => e.target.style.transform = 'translateY(-2px)'}
               onMouseLeave={e => e.target.style.transform = 'translateY(0)'}
             >
-              <Smartphone size={20} /> Download BestBill Admin App (.APK)
+              <Smartphone size={20} /> Download BestBill Admin App
             </button>
 
             <Link 
               to="/" 
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(30,41,59,0.6)', border: '1px solid rgba(255,255,255,0.08)', color: '#e2e8f0', padding: '16px 28px', borderRadius: '16px', fontWeight: 800, fontSize: '16px', textDecoration: 'none', transition: 'all 0.2s' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'var(--bb-bg-chip-alt)', border: '1px solid var(--bb-border-card)', color: 'var(--bb-text-high)', padding: '16px 28px', borderRadius: '16px', fontWeight: 800, fontSize: '16px', textDecoration: 'none', transition: 'all 0.2s' }}
             >
               Explore Desktop Software
             </Link>
           </div>
 
-          <div style={{ marginTop: '36px', display: 'flex', justifyContent: 'center', gap: '24px', color: '#64748b', fontSize: '12px', fontWeight: 700, flexWrap: 'wrap' }}>
+          <div style={{ marginTop: '36px', display: 'flex', justifyContent: 'center', gap: '24px', color: 'var(--bb-text-dim)', fontSize: '12px', fontWeight: 700, flexWrap: 'wrap' }}>
             <span>✓ Remote Live Sales Stream</span>
             <span>✓ Multi-Outlet Support</span>
             <span>✓ Encrypted Owner Login</span>
@@ -149,12 +154,12 @@ const AdminAppPage = () => {
       </section>
 
       {/* Real Screenshots Interactive Showcase */}
-      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <AnimatedSection animation="fade-up" className="glass-card" style={{ padding: '36px', borderRadius: '32px', border: '1px solid rgba(16,185,129,0.3)', backgroundColor: 'rgba(15,23,42,0.8)' }}>
+      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid var(--bb-border-subtle)' }}>
+        <AnimatedSection animation="fade-up" className="glass-card" style={{ padding: '36px', borderRadius: '32px', border: '1px solid rgba(16,185,129,0.3)', backgroundColor: 'var(--bb-bg-panel-strong)' }}>
           <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 900, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.15em' }}>REAL ADMIN APP SCREENSHOTS</span>
+            <span style={{ fontSize: '11px', fontWeight: 900, color: 'var(--bb-emerald-text)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>REAL ADMIN APP SCREENSHOTS</span>
             <h2 style={{ fontSize: '32px', fontWeight: 900, marginTop: '4px' }}>Inside BestBill Admin Mobile Interface</h2>
-            <p style={{ color: '#94a3b8', fontSize: '15px', marginTop: '6px' }}>Click through the tabs below to preview actual live screens of the Admin App:</p>
+            <p style={{ color: 'var(--bb-text-muted)', fontSize: '15px', marginTop: '6px' }}>Click through the tabs below to preview actual live screens of the Admin App:</p>
           </div>
 
           {/* Navigation Tabs */}
@@ -166,9 +171,9 @@ const AdminAppPage = () => {
                 style={{
                   padding: '10px 20px',
                   borderRadius: '12px',
-                  border: activeTab === idx ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.08)',
-                  backgroundColor: activeTab === idx ? 'rgba(16,185,129,0.2)' : 'rgba(15,23,42,0.6)',
-                  color: activeTab === idx ? '#34d399' : '#94a3b8',
+                  border: activeTab === idx ? '1px solid #10b981' : '1px solid var(--bb-border-card)',
+                  backgroundColor: activeTab === idx ? 'rgba(16,185,129,0.2)' : 'var(--bb-bg-panel-soft)',
+                  color: activeTab === idx ? 'var(--bb-emerald-text)' : 'var(--bb-text-muted)',
                   fontWeight: 800,
                   fontSize: '13px',
                   cursor: 'pointer',
@@ -188,31 +193,31 @@ const AdminAppPage = () => {
             
             {/* Left Column: Screen details */}
             <div className="admin-showcase-text" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              <div style={{ display: 'inline-block', backgroundColor: 'rgba(56,189,248,0.1)', color: '#38bdf8', padding: '4px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 800, width: 'fit-content' }}>
+              <div style={{ display: 'inline-block', backgroundColor: 'rgba(56,189,248,0.1)', color: 'var(--bb-sky-text)', padding: '4px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 800, width: 'fit-content' }}>
                 SCREEN {activeTab + 1} OF {adminShowcaseItems.length}
               </div>
 
-              <h3 style={{ fontSize: '28px', fontWeight: 900, color: 'white' }}>{adminShowcaseItems[activeTab].title}</h3>
+              <h3 style={{ fontSize: '28px', fontWeight: 900, color: 'var(--bb-text-primary)' }}>{adminShowcaseItems[activeTab].title}</h3>
               
-              <p style={{ color: '#cbd5e1', fontSize: '15px', lineHeight: 1.7 }}>
+              <p style={{ color: 'var(--bb-text-body)', fontSize: '15px', lineHeight: 1.7 }}>
                 {adminShowcaseItems[activeTab].subtitle}
               </p>
 
-              <div style={{ backgroundColor: '#020617', padding: '18px 20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ backgroundColor: 'var(--bb-bg-sub)', padding: '18px 20px', borderRadius: '16px', border: '1px solid var(--bb-border-mid)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--bb-emerald-text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <CheckCircle2 size={15} /> Real-time Store Data Sync
                 </span>
-                <span style={{ fontSize: '12px', fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--bb-emerald-text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <CheckCircle2 size={15} /> One-tap PDF Audit Reports
                 </span>
-                <span style={{ fontSize: '12px', fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--bb-emerald-text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <CheckCircle2 size={15} /> Multi-Outlet Hotel & Outlet Selector
                 </span>
               </div>
 
               <button 
                 onClick={() => setSelectedImageIndex(activeTab)}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(56,189,248,0.15)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.3)', padding: '12px 20px', borderRadius: '12px', fontWeight: 800, fontSize: '13px', cursor: 'pointer', width: 'fit-content' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(56,189,248,0.15)', color: 'var(--bb-sky-text)', border: '1px solid rgba(56,189,248,0.3)', padding: '12px 20px', borderRadius: '12px', fontWeight: 800, fontSize: '13px', cursor: 'pointer', width: 'fit-content' }}
               >
                 🔍 View Full Screen Image
               </button>
@@ -266,10 +271,10 @@ const AdminAppPage = () => {
       </section>
 
       {/* Problem vs Solution Section */}
-      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: '50px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <AnimatedSection animation="fade-up" className="glass-card" style={{ padding: '40px', borderRadius: '32px', border: '1px solid rgba(16,185,129,0.25)', backgroundColor: 'rgba(15,23,42,0.6)' }}>
+      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: '50px 24px', borderTop: '1px solid var(--bb-border-subtle)' }}>
+        <AnimatedSection animation="fade-up" className="glass-card" style={{ padding: '40px', borderRadius: '32px', border: '1px solid rgba(16,185,129,0.25)', backgroundColor: 'var(--bb-bg-panel-soft)' }}>
           <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 900, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.15em' }}>WHY BESTBILL ADMIN APP?</span>
+            <span style={{ fontSize: '12px', fontWeight: 900, color: 'var(--bb-emerald-text)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>WHY BESTBILL ADMIN APP?</span>
             <h2 style={{ fontSize: '32px', fontWeight: 900, marginTop: '6px' }}>Never Lose Track of Your Store Revenue</h2>
           </div>
 
@@ -281,18 +286,18 @@ const AdminAppPage = () => {
                 ❌ Previously Without Admin App
               </div>
               <h3 style={{ fontSize: '20px', fontWeight: 800 }}>Locked to Store Computer</h3>
-              <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6 }}>
+              <p style={{ color: 'var(--bb-text-muted)', fontSize: '14px', lineHeight: 1.6 }}>
                 Since Desktop POS runs offline on your shop PC, you could only check daily sales, cash collection, and table performance when physically present at the shop register.
               </p>
             </div>
 
             {/* Now / Solution */}
             <div style={{ backgroundColor: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '20px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#34d399', fontWeight: 900, fontSize: '12px', textTransform: 'uppercase' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--bb-emerald-text)', fontWeight: 900, fontSize: '12px', textTransform: 'uppercase' }}>
                 ✨ Now With BestBill Admin App
               </div>
               <h3 style={{ fontSize: '20px', fontWeight: 800 }}>Live Worldwide Monitoring</h3>
-              <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.6 }}>
+              <p style={{ color: 'var(--bb-text-body)', fontSize: '14px', lineHeight: 1.6 }}>
                 Your desktop billing data syncs securely to your mobile Admin App. Monitor live sales totals, parcel orders, cash vs online collection, and table occupancy anywhere globally!
               </p>
             </div>
@@ -302,11 +307,11 @@ const AdminAppPage = () => {
       </section>
 
       {/* Core Features */}
-      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid var(--bb-border-subtle)' }}>
         <AnimatedSection animation="fade-up" style={{ textAlign: 'center', marginBottom: '50px' }}>
-          <span style={{ color: '#34d399', fontWeight: 900, textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.15em' }}>OWNER CONTROL DESK</span>
+          <span style={{ color: 'var(--bb-emerald-text)', fontWeight: 900, textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.15em' }}>OWNER CONTROL DESK</span>
           <h2 style={{ fontSize: '34px', fontWeight: 900, marginTop: '6px', textTransform: 'uppercase' }}>Key Admin App Features</h2>
-          <p style={{ color: '#94a3b8', fontSize: '16px', marginTop: '8px' }}>Designed specifically for business owners to stay in control 24/7.</p>
+          <p style={{ color: 'var(--bb-text-muted)', fontSize: '16px', marginTop: '8px' }}>Designed specifically for business owners to stay in control 24/7.</p>
         </AnimatedSection>
 
         <AnimatedSection animation="fade-up" stagger={0.1} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
@@ -316,17 +321,17 @@ const AdminAppPage = () => {
               <TrendingUp size={22} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Real-time Sales Analytics</h3>
-            <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6 }}>
+            <p style={{ color: 'var(--bb-text-muted)', fontSize: '13.5px', lineHeight: 1.6 }}>
               Instant breakdown of total revenue, dine-in collection, parcel orders, cash in register, and online payments updated live.
             </p>
           </div>
 
           <div className="glass-card" style={{ padding: '30px', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ width: '44px', height: '44px', backgroundColor: 'rgba(56,189,248,0.15)', color: '#38bdf8', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '44px', height: '44px', backgroundColor: 'rgba(56,189,248,0.15)', color: '#0ea5e9', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Radio size={22} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Live Table Grid Stream</h3>
-            <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6 }}>
+            <p style={{ color: 'var(--bb-text-muted)', fontSize: '13.5px', lineHeight: 1.6 }}>
               Check which tables are occupied, view active bill totals, and monitor ongoing KOT order volume from your phone.
             </p>
           </div>
@@ -336,7 +341,7 @@ const AdminAppPage = () => {
               <Layers size={22} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Multi-Branch Outlets</h3>
-            <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6 }}>
+            <p style={{ color: 'var(--bb-text-muted)', fontSize: '13.5px', lineHeight: 1.6 }}>
               Own more than one restaurant or hotel branch? Switch between different store terminals from a single Admin App login.
             </p>
           </div>
@@ -346,7 +351,7 @@ const AdminAppPage = () => {
               <PieChart size={22} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Item Performance Reports</h3>
-            <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6 }}>
+            <p style={{ color: 'var(--bb-text-muted)', fontSize: '13.5px', lineHeight: 1.6 }}>
               Identify best-selling dishes, peak dining hours, and itemized sales metrics to make smart business decisions.
             </p>
           </div>
@@ -356,7 +361,7 @@ const AdminAppPage = () => {
               <Clock size={22} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Daily & Monthly PDF Export</h3>
-            <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6 }}>
+            <p style={{ color: 'var(--bb-text-muted)', fontSize: '13.5px', lineHeight: 1.6 }}>
               Generate and download official PDF audit reports for accounting, Tax/GST filings, and financial reviews anytime.
             </p>
           </div>
@@ -366,7 +371,7 @@ const AdminAppPage = () => {
               <Lock size={22} />
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Owner Encrypted Access</h3>
-            <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6 }}>
+            <p style={{ color: 'var(--bb-text-muted)', fontSize: '13.5px', lineHeight: 1.6 }}>
               Protected by owner-only authentication and biometric security. Only authorized business owners can view financial data.
             </p>
           </div>
@@ -375,9 +380,9 @@ const AdminAppPage = () => {
       </section>
 
       {/* 3-Step Simple Setup */}
-      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid var(--bb-border-subtle)' }}>
         <AnimatedSection animation="fade-up" style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <span style={{ color: '#38bdf8', fontWeight: 900, textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.15em' }}>EASY SETUP</span>
+          <span style={{ color: 'var(--bb-sky-text)', fontWeight: 900, textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.15em' }}>EASY SETUP</span>
           <h2 style={{ fontSize: '32px', fontWeight: 900, marginTop: '6px' }}>How BestBill Admin App Works</h2>
         </AnimatedSection>
 
@@ -386,23 +391,23 @@ const AdminAppPage = () => {
           <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', borderLeft: '4px solid #10b981' }}>
             <div style={{ fontSize: '14px', fontWeight: 900, color: '#10b981', marginBottom: '8px' }}>STEP 1</div>
             <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px' }}>Run Desktop POS at Store</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6 }}>
+            <p style={{ color: 'var(--bb-text-muted)', fontSize: '14px', lineHeight: 1.6 }}>
               Keep BestBill Desktop Application running on your store counter billing PC for daily fast offline billing.
             </p>
           </div>
 
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', borderLeft: '4px solid #38bdf8' }}>
-            <div style={{ fontSize: '14px', fontWeight: 900, color: '#38bdf8', marginBottom: '8px' }}>STEP 2</div>
-            <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px' }}>Install BestBill Admin APK</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6 }}>
-              Download and install the **BestBill Admin App APK** on your personal Android smartphone or tablet.
+          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', borderLeft: '4px solid #0ea5e9' }}>
+            <div style={{ fontSize: '14px', fontWeight: 900, color: 'var(--bb-sky-text)', marginBottom: '8px' }}>STEP 2</div>
+            <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px' }}>Install BestBill Admin App</h3>
+            <p style={{ color: 'var(--bb-text-muted)', fontSize: '14px', lineHeight: 1.6 }}>
+              Download and install the <strong>BestBill Admin App</strong> on your personal Android smartphone or tablet.
             </p>
           </div>
 
           <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', borderLeft: '4px solid #a855f7' }}>
             <div style={{ fontSize: '14px', fontWeight: 900, color: '#a855f7', marginBottom: '8px' }}>STEP 3</div>
             <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px' }}>View Live Sales Anywhere</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6 }}>
+            <p style={{ color: 'var(--bb-text-muted)', fontSize: '14px', lineHeight: 1.6 }}>
               Log in securely with your owner credentials and monitor live sales, orders, and reports anywhere in the world!
             </p>
           </div>
@@ -418,10 +423,10 @@ const AdminAppPage = () => {
           </div>
           
           <h2 style={{ fontSize: '32px', fontWeight: 950, textTransform: 'uppercase' }}>
-            Download BestBill Admin App (.APK)
+            Download BestBill Admin App
           </h2>
-          <p style={{ color: '#94a3b8', fontSize: '16px', maxWidth: '600px', margin: '12px auto 28px', lineHeight: 1.6 }}>
-            Stay connected to your store 24/7. Download the Android APK file directly and pair your desktop store billing counter in minutes.
+          <p style={{ color: 'var(--bb-text-muted)', fontSize: '16px', maxWidth: '600px', margin: '12px auto 28px', lineHeight: 1.6 }}>
+            Stay connected to your store 24/7. Download the Android app directly and pair your desktop store billing counter in minutes.
           </p>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
@@ -431,12 +436,12 @@ const AdminAppPage = () => {
               onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
               onMouseLeave={e => e.target.style.transform = 'scale(1)'}
             >
-              <Smartphone size={20} /> Download BestBill Admin APK
+              <Smartphone size={20} /> Download BestBill Admin App
             </button>
 
             <a 
               href="tel:+919822401802"
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(30,41,59,0.6)', border: '1px solid rgba(255,255,255,0.08)', color: '#e2e8f0', padding: '16px 28px', borderRadius: '16px', fontWeight: 800, fontSize: '16px', textDecoration: 'none' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'var(--bb-bg-chip-alt)', border: '1px solid var(--bb-border-card)', color: 'var(--bb-text-high)', padding: '16px 28px', borderRadius: '16px', fontWeight: 800, fontSize: '16px', textDecoration: 'none' }}
             >
               <Phone size={18} /> Contact Customer Care (+91 9822401802)
             </a>
@@ -445,17 +450,17 @@ const AdminAppPage = () => {
       </section>
 
       {/* Footer */}
-      <footer style={{ backgroundColor: '#010409', borderTop: '1px solid rgba(255,255,255,0.05)', padding: '40px 24px', textAlign: 'center' }}>
+      <footer style={{ backgroundColor: 'var(--bb-bg-footer)', borderTop: '1px solid var(--bb-border-subtle)', padding: '40px 24px', textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
           <span style={{ fontSize: '18px', fontWeight: 800 }}>BestBill Solutions Private Limited</span>
         </div>
-        <p style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+        <p style={{ color: 'var(--bb-text-muted)', fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
           Founder &amp; Director: <strong>Shubham Pilane</strong> | Phone: +91 9822401802 | Email: bestbillsolutions@gmail.com
         </p>
-        <p style={{ color: '#64748b', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>
+        <p style={{ color: 'var(--bb-text-dim)', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>
           CIN: U62090PN2026PTC262563 • Registered Office: Flat No. 201, B Wing, Karha Vastu, Near Swagat Hotel, Saswad, Purandar, Pune - 412301, Maharashtra
         </p>
-        <p style={{ color: '#475569', fontSize: '12px', fontWeight: 600, margin: 0 }}>
+        <p style={{ color: 'var(--bb-text-footer)', fontSize: '12px', fontWeight: 600, margin: 0 }}>
           © {new Date().getFullYear()} BestBill Solutions Private Limited. All rights reserved.
         </p>
       </footer>
