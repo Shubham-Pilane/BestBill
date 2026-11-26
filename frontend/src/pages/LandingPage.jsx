@@ -37,7 +37,11 @@ import {
   Globe,
   Menu,
   Building2,
-  FileCheck2
+  FileCheck2,
+  PlayCircle,
+  ExternalLink,
+  Users,
+  Monitor
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import gsap from 'gsap';
@@ -273,7 +277,6 @@ const LandingPage = () => {
             <a href="#android" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Android App</a>
             <a href="#features" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Features</a>
             <a href="#gallery" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Gallery</a>
-            <a href="#plans" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Plans</a>
             <a href="#pricing" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Pricing</a>
             <a href="#company" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Company</a>
             <a href="#contact" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '14px', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#38bdf8'} onMouseLeave={e => e.target.style.color = '#94a3b8'}>Contact</a>
@@ -298,7 +301,6 @@ const LandingPage = () => {
             <a href="#android" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Android App</a>
             <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Features</a>
             <a href="#gallery" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Gallery</a>
-            <a href="#plans" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Plans</a>
             <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Pricing</a>
             <a href="#company" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Company</a>
             <a href="#contact" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e2e8f0', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Contact</a>
@@ -554,11 +556,11 @@ const LandingPage = () => {
               </div>
               
               <h3 style={{ fontSize: '32px', fontWeight: 950, color: 'white', lineHeight: 1.2 }}>
-                BestBill Android App Lifetime License — <span style={{ color: '#10b981' }}>₹12,000</span>
+                BestBill Android App Lifetime License — <span style={{ color: '#10b981' }}>₹11,999</span>
               </h3>
 
               <p style={{ color: '#cbd5e1', fontSize: '15.5px', lineHeight: 1.6 }}>
-                Get the complete BestBill Android POS Mobile App for a <strong>one-time payment of ₹12,000</strong> (No monthly subscription fees!) and get a <strong>High-Speed Wireless Thermal Receipt Printer FREE</strong> included in the box!
+                Get the complete BestBill Android POS Mobile App for a <strong>one-time payment of ₹11,999</strong> (No monthly subscription fees!) and get a <strong>High-Speed Wireless Thermal Receipt Printer FREE</strong> included in the box!
               </p>
 
               {/* Bluetooth Printing Workflow */}
@@ -590,7 +592,7 @@ const LandingPage = () => {
 
               {/* Perks List */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13px', fontWeight: 700, color: '#e2e8f0' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={15} color="#10b981" /> Lifetime License (₹12,000)</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={15} color="#10b981" /> Lifetime License (₹11,999)</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={15} color="#10b981" /> FREE Gift Receipt Printer</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={15} color="#10b981" /> Zero Monthly Subscription</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={15} color="#10b981" /> Direct Bluetooth POS Printing</span>
@@ -601,7 +603,7 @@ const LandingPage = () => {
                 <div 
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#10b981', color: 'white', padding: '14px 24px', borderRadius: '14px', fontWeight: 900, fontSize: '15px', width: 'fit-content', boxShadow: '0 8px 20px rgba(16,185,129,0.3)', userSelect: 'none' }}
                 >
-                  <Sparkles size={18} /> Special Offer: ₹12,000 Lifetime Plan + Free Printer
+                  <Sparkles size={18} /> Special Offer: ₹11,999 Lifetime Plan + Free Printer
                 </div>
 
                 <a 
@@ -905,6 +907,12 @@ const LandingPage = () => {
                 style={{ width: '100%', aspectRatio: '9/16', maxHeight: '500px', display: 'block' }}
               ></iframe>
             </div>
+            <a 
+              href="#setup-guide"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backgroundColor: 'rgba(14, 165, 233, 0.14)', border: '1px solid rgba(56, 189, 248, 0.35)', color: '#38bdf8', padding: '10px 14px', borderRadius: '12px', fontWeight: 800, fontSize: '12.5px', textDecoration: 'none' }}
+            >
+              <PlayCircle size={16} /> Watch Full Setup Guide Video ↓
+            </a>
           </AnimatedSection>
 
           {/* Screenshots Gallery */}
@@ -999,105 +1007,236 @@ const LandingPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Complete YouTube Setup Guide & Feature Walkthrough */}
+        <div id="setup-guide" className="glass-card" style={{ marginTop: '48px', padding: '32px', borderRadius: '28px', borderTop: '3px solid #38bdf8' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px', alignItems: 'center' }}>
+            
+            {/* Widescreen 16:9 YouTube Walkthrough Video */}
+            <div style={{ width: '100%', backgroundColor: '#020617', borderRadius: '18px', overflow: 'hidden', border: '1px solid rgba(56, 189, 248, 0.25)', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}>
+              <iframe
+                src="https://www.youtube.com/embed/J58Wsd0UIkM"
+                title="BestBill Full Setup Guide and App Walkthrough"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                style={{ width: '100%', aspectRatio: '16/9', display: 'block' }}
+              ></iframe>
+            </div>
+
+            {/* Guide Summary & Direct YouTube Link */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', padding: '5px 12px', borderRadius: '100px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', width: 'fit-content', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+                <PlayCircle size={14} /> Complete Setup Walkthrough
+              </div>
+
+              <h3 style={{ fontSize: '26px', fontWeight: 950, color: 'white', lineHeight: 1.2 }}>
+                Full Setup Guide &amp; Feature Walkthrough
+              </h3>
+
+              <p style={{ color: '#94a3b8', fontSize: '14.5px', lineHeight: 1.65 }}>
+                Watch our complete step-by-step setup tutorial covering everything you need to go live in minutes:
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', fontSize: '13.5px', color: '#e2e8f0', fontWeight: 600 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#38bdf8" style={{ flexShrink: 0 }} /> How to download &amp; install BestBill App</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#38bdf8" style={{ flexShrink: 0 }} /> Hotel, menu, tables &amp; counter configuration</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#38bdf8" style={{ flexShrink: 0 }} /> Thermal printer connection &amp; basic feature setup</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#38bdf8" style={{ flexShrink: 0 }} /> Detailed walkthrough of all BestBill modules</span>
+              </div>
+
+              <div style={{ paddingTop: '6px' }}>
+                <a
+                  href="https://youtu.be/J58Wsd0UIkM?si=C5iXqIsygIwx1kbl"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#0ea5e9', color: 'white', padding: '12px 22px', borderRadius: '12px', fontWeight: 800, fontSize: '14px', textDecoration: 'none', boxShadow: '0 8px 20px rgba(14,165,233,0.35)' }}
+                >
+                  <PlayCircle size={17} /> Watch Full Guide on YouTube <ExternalLink size={14} />
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </AnimatedSection>
-
-      {/* Plans Section */}
-      <section id="plans" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <AnimatedSection animation="fade-up" style={{ textAlign: 'center', marginBottom: '60px' }}>
-          <h2 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>Software Packages</h2>
-          <p style={{ color: '#94a3b8', fontSize: '16px', marginTop: '8px' }}>Select the package setup suitable for your business layout.</p>
-        </AnimatedSection>
-
-        <AnimatedSection animation="fade-up" stagger={0.2} style={{ display: 'flex', justifyContent: 'center', gap: '32px', flexWrap: 'wrap' }}>
-          
-          {/* Basic Plan */}
-          <div className="glass-card" style={{ padding: '40px', borderRadius: '28px', width: '100%', maxWidth: '420px', display: 'flex', flexDirection: 'column', gap: '24px', transition: 'transform 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-8px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
-            <div>
-              <span style={{ fontSize: '11px', fontWeight: 900, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Recommended for Cafes & Small Outlets</span>
-              <h3 style={{ fontSize: '26px', fontWeight: 900, marginTop: '6px' }}>Basic Plan</h3>
-            </div>
-            <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.5 }}>
-              Standard suite designed for small hotels, cafes, and food points to manage billing registers on PC or Android.
-            </p>
-            <hr style={{ borderColor: 'rgba(255,255,255,0.05)' }} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', fontWeight: 600 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#10b981" /> Windows PC & Android App</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#10b981" /> Fast Billing & Invoicing</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#10b981" /> Table & Floor Management</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#10b981" /> Parcel Counter & Token POS</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#10b981" /> Credit Management</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#10b981" /> Menu Management</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#10b981" /> Billing Reports & Exports</span>
-            </div>
-          </div>
-
-          {/* Gold Plan */}
-          <div className="glass-card" style={{ padding: '40px', borderRadius: '28px', width: '100%', maxWidth: '420px', display: 'flex', flexDirection: 'column', gap: '24px', border: '2px solid #0ea5e9', boxShadow: '0 20px 40px rgba(14,165,233,0.1)', transition: 'transform 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-8px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
-            <div>
-              <span style={{ fontSize: '11px', fontWeight: 900, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>All-in-One Enterprise POS</span>
-              <h3 style={{ fontSize: '26px', fontWeight: 900, marginTop: '6px' }}>Gold Plan</h3>
-            </div>
-            <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.5 }}>
-              A complete, unified solution covering advanced stock inventory, lodging books, and kitchen monitors across PC & Mobile.
-            </p>
-            <hr style={{ borderColor: 'rgba(255,255,255,0.05)' }} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', fontWeight: 600 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#38bdf8' }}>★ Everything in Basic Plan Plus:</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" /> Advanced Raw Material Inventory</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" /> KOT Queue & Direct Kitchen Print</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" /> Bluetooth Mobile Printing</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" /> Waiter Management</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" /> Lodging & Room Management</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" /> Advanced Analytics & PDF Export</span>
-            </div>
-          </div>
-
-        </AnimatedSection>
-      </section>
 
       {/* Pricing Section */}
       <section id="pricing" style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <AnimatedSection animation="fade-up" style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <h2 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>Pricing Plans</h2>
-          <p style={{ color: '#94a3b8', fontSize: '16px', marginTop: '8px' }}>Transparent pricing for PC & Android setup. Select your subscription period.</p>
+        <AnimatedSection animation="fade-up" style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <span style={{ color: '#0ea5e9', fontWeight: 900, textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.15em' }}>Transparent Setup Plans</span>
+          <h2 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase', marginTop: '8px' }}>Pricing Plans</h2>
+          <p style={{ color: '#94a3b8', fontSize: '16px', marginTop: '8px', maxWidth: '720px', marginLeft: 'auto', marginRight: 'auto' }}>
+            Choose the exact setup for your restaurant or hotel: Mobile-only Android App, Single-Counter PC (1 Printer), or Full KOT Multi-Waiter PC + Kitchen Setup (2 Printers).
+          </p>
         </AnimatedSection>
 
-        <AnimatedSection animation="fade-up" stagger={0.15} style={{ display: 'flex', justifyContent: 'center', gap: '24px', flexWrap: 'wrap', marginBottom: '40px' }}>
+        <AnimatedSection animation="fade-up" stagger={0.15} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: '28px', marginBottom: '40px', alignItems: 'stretch' }}>
           
-          {/* Monthly */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', width: '100%', maxWidth: '280px', textAlign: 'center', transition: 'transform 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
-            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>Monthly Plan</span>
-            <div style={{ fontSize: '32px', fontWeight: 900, color: 'white', margin: '12px 0' }}>₹499</div>
-            <span style={{ color: '#64748b', fontSize: '12px' }}>billed monthly</span>
+          {/* 1. Android App */}
+          <div className="glass-card" style={{ padding: '28px', borderRadius: '28px', border: '1.5px solid rgba(16,185,129,0.45)', boxShadow: '0 16px 36px rgba(16,185,129,0.1)', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            <div style={{ borderRadius: '18px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#020617', aspectRatio: '16/9' }}>
+              <img 
+                src="/pricing-android-setup.jpg" 
+                alt="BestBill Android App with Bluetooth Thermal Printer Setup" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            </div>
+
+            <div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(16,185,129,0.15)', color: '#34d399', padding: '4px 12px', borderRadius: '100px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                <Smartphone size={13} /> Part 1 • Android App Only
+              </div>
+              <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'white', marginTop: '10px' }}>Android App POS</h3>
+              <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6, marginTop: '6px' }}>
+                Mobile-only BestBill app on your phone or tablet paired with a small Bluetooth thermal printer for fast billing anywhere — no PC needed.
+              </p>
+            </div>
+
+            {/* Price Tiers */}
+            <div style={{ backgroundColor: '#020617', borderRadius: '18px', padding: '16px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#cbd5e1' }}>Monthly Plan</span>
+                <span style={{ fontSize: '20px', fontWeight: 900, color: 'white' }}>₹399 <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>/ month</span></span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#cbd5e1' }}>Yearly Plan</span>
+                <span style={{ fontSize: '20px', fontWeight: 900, color: '#38bdf8' }}>₹3,999 <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>/ year</span></span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '2px' }}>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#34d399' }}>Lifetime Plan</div>
+                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#a7f3d0' }}>🎁 Bluetooth Printer FREE!</div>
+                </div>
+                <span style={{ fontSize: '22px', fontWeight: 950, color: '#10b981' }}>₹11,999</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', fontSize: '13px', fontWeight: 600, color: '#e2e8f0' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#10b981" style={{ flexShrink: 0 }} /> Mobile billing app (no PC/laptop required)</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#10b981" style={{ flexShrink: 0 }} /> Small wireless Bluetooth printer support</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#10b981" style={{ flexShrink: 0 }} /> Free thermal printer included on ₹11,999 Lifetime</span>
+            </div>
+
+            <a
+              href="tel:+919822401802"
+              style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backgroundColor: '#059669', color: 'white', padding: '13px 18px', borderRadius: '12px', fontWeight: 800, fontSize: '14px', textDecoration: 'none' }}
+            >
+              <Phone size={15} /> Get Android App Plan
+            </a>
           </div>
 
-          {/* Yearly */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', width: '100%', maxWidth: '280px', textAlign: 'center', border: '1px solid rgba(56,189,248,0.2)', transition: 'transform 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
-            <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 800, textTransform: 'uppercase' }}>Yearly Plan</span>
-            <div style={{ fontSize: '32px', fontWeight: 900, color: '#38bdf8', margin: '12px 0' }}>₹5,999</div>
-            <span style={{ color: '#64748b', fontSize: '12px' }}>billed annually</span>
+          {/* 2. PC Setup (Basic Counter) */}
+          <div className="glass-card" style={{ padding: '28px', borderRadius: '28px', border: '1.5px solid rgba(56,189,248,0.3)', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            <div style={{ borderRadius: '18px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#020617', aspectRatio: '16/9' }}>
+              <img 
+                src="/pricing-basic-counter.jpg" 
+                alt="BestBill Basic Counter PC Setup with Single Thermal Printer" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            </div>
+
+            <div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(56,189,248,0.12)', color: '#38bdf8', padding: '4px 12px', borderRadius: '100px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                <Monitor size={13} /> Part 2 • Basic Counter (1 Printer)
+              </div>
+              <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'white', marginTop: '10px' }}>PC Setup (Basic Counter)</h3>
+              <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6, marginTop: '6px' }}>
+                For counter-only operations using your counter PC/laptop — no waiter captain apps and no separate kitchen printer. Print both <strong>final bills &amp; KOTs</strong> from the same 1 counter printer.
+              </p>
+            </div>
+
+            {/* Price Tiers */}
+            <div style={{ backgroundColor: '#020617', borderRadius: '18px', padding: '16px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#cbd5e1' }}>Monthly Plan</span>
+                <span style={{ fontSize: '20px', fontWeight: 900, color: 'white' }}>₹599 <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>/ month</span></span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#cbd5e1' }}>Yearly Plan</span>
+                <span style={{ fontSize: '20px', fontWeight: 900, color: '#38bdf8' }}>₹5,999 <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>/ year</span></span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '2px' }}>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#38bdf8' }}>Lifetime Plan</div>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>Software only (without printer)</div>
+                </div>
+                <span style={{ fontSize: '22px', fontWeight: 950, color: 'white' }}>₹11,999</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', fontSize: '13px', fontWeight: 600, color: '#e2e8f0' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#38bdf8" style={{ flexShrink: 0 }} /> Windows PC / Laptop counter POS software</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#38bdf8" style={{ flexShrink: 0 }} /> Generates Final Bills &amp; KOTs from 1 counter printer</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#38bdf8" style={{ flexShrink: 0 }} /> No Captain App / No separate kitchen printer</span>
+            </div>
+
+            <a
+              href="tel:+919822401802"
+              style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backgroundColor: '#1e293b', border: '1px solid rgba(56,189,248,0.35)', color: 'white', padding: '13px 18px', borderRadius: '12px', fontWeight: 800, fontSize: '14px', textDecoration: 'none' }}
+            >
+              <Phone size={15} /> Get Basic Counter Plan
+            </a>
           </div>
 
-          {/* Android Lifetime Combo Offer */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', width: '100%', maxWidth: '280px', textAlign: 'center', border: '2px solid #10b981', boxShadow: '0 12px 30px rgba(16,185,129,0.15)', transition: 'transform 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
-            <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 900, textTransform: 'uppercase', backgroundColor: 'rgba(16,185,129,0.15)', padding: '4px 10px', borderRadius: '100px' }}>🎁 Android Combo Offer</span>
-            <div style={{ fontSize: '32px', fontWeight: 900, color: '#34d399', margin: '12px 0 4px' }}>₹12,000</div>
-            <div style={{ color: '#a7f3d0', fontSize: '11px', fontWeight: 800, marginBottom: '6px' }}>Lifetime License + FREE Printer</div>
-            <span style={{ color: '#64748b', fontSize: '11px' }}>One-time payment • Zero monthly fee</span>
-          </div>
+          {/* 3. PC Setup (Full KOT) */}
+          <div className="glass-card" style={{ padding: '28px', borderRadius: '28px', border: '2px solid #0ea5e9', boxShadow: '0 20px 44px rgba(14,165,233,0.16)', display: 'flex', flexDirection: 'column', gap: '18px', position: 'relative' }}>
+            <div style={{ borderRadius: '18px', overflow: 'hidden', border: '1px solid rgba(56,189,248,0.25)', backgroundColor: '#020617', aspectRatio: '16/9' }}>
+              <img 
+                src="/pricing-full-kot.jpg" 
+                alt="BestBill Full KOT Setup with Counter PC, Captain Mobile Apps and Kitchen Printer" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            </div>
 
-          {/* Desktop Lifetime */}
-          <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', width: '100%', maxWidth: '280px', textAlign: 'center', transition: 'transform 0.3s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
-            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase' }}>Desktop Lifetime</span>
-            <div style={{ fontSize: '32px', fontWeight: 900, color: 'white', margin: '12px 0' }}>₹14,999</div>
-            <span style={{ color: '#64748b', fontSize: '12px' }}>one-time PC license</span>
+            <div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(14,165,233,0.18)', color: '#38bdf8', padding: '4px 12px', borderRadius: '100px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                <Users size={13} /> Part 3 • Full KOT (2 Printers + Waiter Apps)
+              </div>
+              <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'white', marginTop: '10px' }}>PC Setup (Full KOT)</h3>
+              <p style={{ color: '#94a3b8', fontSize: '13.5px', lineHeight: 1.6, marginTop: '6px' }}>
+                Everything in Basic Counter <strong>plus 10+ Waiter / Captain Mobile Apps</strong> for table-side ordering and a <strong>separate Kitchen KOT Printer</strong> (2-printer setup).
+              </p>
+            </div>
+
+            {/* Price Tiers */}
+            <div style={{ backgroundColor: '#020617', borderRadius: '18px', padding: '16px', border: '1px solid rgba(14,165,233,0.25)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#cbd5e1' }}>Monthly Plan</span>
+                <span style={{ fontSize: '20px', fontWeight: 900, color: 'white' }}>₹899 <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>/ month</span></span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#cbd5e1' }}>Yearly Plan</span>
+                <span style={{ fontSize: '20px', fontWeight: 900, color: '#38bdf8' }}>₹8,999 <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>/ year</span></span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '2px' }}>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#38bdf8' }}>Lifetime Plan</div>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>Software only (without printers)</div>
+                </div>
+                <span style={{ fontSize: '22px', fontWeight: 950, color: '#38bdf8' }}>₹19,999</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', fontSize: '13px', fontWeight: 600, color: '#e2e8f0' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" style={{ flexShrink: 0 }} /> Basic Counter PC setup + <strong>10+ Captain Waiter Apps</strong></span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" style={{ flexShrink: 0 }} /> <strong>2-Printer Setup:</strong> Counter printer + Separate Kitchen printer</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#0ea5e9" style={{ flexShrink: 0 }} /> Software-only license (printers purchased separately)</span>
+            </div>
+
+            <a
+              href="tel:+919822401802"
+              style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backgroundColor: '#0ea5e9', color: 'white', padding: '13px 18px', borderRadius: '12px', fontWeight: 800, fontSize: '14px', textDecoration: 'none', boxShadow: '0 8px 20px rgba(14,165,233,0.35)' }}
+            >
+              <Phone size={15} /> Get Full KOT Setup
+            </a>
           </div>
 
         </AnimatedSection>
 
-        <div style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto', color: '#cbd5e1', fontSize: '14px', lineHeight: 1.6 }}>
+        <div style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto', color: '#cbd5e1', fontSize: '14px', lineHeight: 1.6 }}>
           <p style={{ marginBottom: '12px' }}>
-            <strong>For detailed information regarding Basic Plan, Gold Plan, Android APK setup, and licensing, please contact customer care.</strong>
+            <strong>Note:</strong> Only the <strong>Android App Lifetime Plan (₹11,999)</strong> includes a <strong>FREE wireless Bluetooth thermal printer</strong>. Basic Counter PC &amp; Full KOT PC plans are software-only licenses (printers not included).
           </p>
           <a href="tel:+919822401802" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#38bdf8', fontSize: '18px', fontWeight: 900, textDecoration: 'none' }}>
             <Phone size={18} /> +91 9822401802
@@ -1326,7 +1465,7 @@ const LandingPage = () => {
                   value={formData.message} 
                   onChange={handleInputChange} 
                   style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#020617', color: 'white', outline: 'none', fontWeight: 600, resize: 'none' }}
-                  placeholder="Inquire about pricing, Android APK setup, or Gold plan modules..."
+                  placeholder="Inquire about Android App, Basic Counter PC, or Full KOT setup..."
                 />
               </div>
 
